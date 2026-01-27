@@ -13,6 +13,14 @@ const eslintConfig = defineConfig([
     "build/**",
     "next-env.d.ts",
   ]),
+  {
+    rules: {
+      'no-var': 'off', // no-varルールをオフにする
+      '@typescript-eslint/no-unused-vars': 'error', // 未使用変数を警告レベルに変更
+      '@typescript-eslint/no-explicit-any': 'error', // any型の使用をエラーレベルに変更
+      '@typescript-eslint/no-empty-object-type': 'off', // 空のオブジェクト型の使用を許可する
+    },
+  },
 ]);
 
 export default eslintConfig;

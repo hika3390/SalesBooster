@@ -61,28 +61,37 @@ export default function SalesBar({ person, index, maxSales, top20Index, columnWi
       className="flex-1 h-full flex flex-col justify-end items-center"
       style={{ minWidth: `${columnWidth}px` }}
     >
-      {/* 売上金額表示 */}
-      {person.sales > 0 && (
-        <div className="text-sm font-bold mb-1 text-gray-800 whitespace-nowrap">
-          {person.sales}万円
-        </div>
-      )}
-
       {/* 円柱バー */}
       {person.sales > 0 && (
         <div
           className="relative flex flex-col items-center"
-          style={{ height: `${barHeight}%`, minHeight: '30px', width: `${cylinderWidth}px` }}
+          style={{ height: `${barHeight}%`, minHeight: '50px', width: `${cylinderWidth}px` }}
         >
+          {/* 売上金額バッジ - 円柱の上に浮かぶ */}
+          <div
+            className="absolute left-1/2 transform -translate-x-1/2 z-30 whitespace-nowrap"
+            style={{ top: '-28px' }}
+          >
+            <div
+              className="px-2 py-1 rounded-full text-white font-bold text-xs shadow-lg"
+              style={{
+                background: colors.main,
+                boxShadow: `0 2px 8px ${colors.main}80`,
+              }}
+            >
+              {person.sales}万円
+            </div>
+          </div>
+
           {/* 上部の楕円（蓋） */}
           <div
             className="absolute top-0 left-0 right-0 z-10"
             style={{
-              height: '12px',
+              height: '14px',
               background: colors.topGradient,
               borderRadius: '50%',
-              transform: 'translateY(-6px)',
-              boxShadow: 'inset 0 -2px 4px rgba(0,0,0,0.1)',
+              transform: 'translateY(-7px)',
+              boxShadow: 'inset 0 -2px 4px rgba(0,0,0,0.15)',
             }}
           />
 

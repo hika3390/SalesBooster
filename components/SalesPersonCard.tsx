@@ -58,7 +58,7 @@ export default function SalesPersonCard({ person, index, top20Index, low20Index,
         <div className="text-[9px] text-gray-600 mb-1">メンバー</div>
         <div className="relative mb-1.5">
           {/* プロフィール画像 */}
-          <div className="w-11 h-11 rounded-full bg-gray-300 overflow-hidden border border-white shadow-sm">
+          <div className="w-20 h-20 rounded-full bg-gray-300 overflow-hidden border border-white shadow-sm">
             {person.imageUrl ? (
               <img
                 src={person.imageUrl}

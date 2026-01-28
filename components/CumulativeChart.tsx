@@ -4,6 +4,7 @@ import React from 'react';
 import SalesBar from './SalesBar';
 import SalesPersonCard from './SalesPersonCard';
 import TeamFooter from './TeamFooter';
+import { COLUMN_WIDTH } from '../constants/chart';
 
 interface SalesPerson {
   rank: number;
@@ -28,7 +29,7 @@ export default function CumulativeChart({ salesData }: CumulativeChartProps) {
   const low20Index = Math.floor(salesData.length * 0.8);
 
   // 各カラムの固定幅
-  const columnWidth = 72;
+  const columnWidth = COLUMN_WIDTH;
 
   // チーム合計の計算
   const totalSales = salesData.reduce((sum, person) => sum + person.sales, 0);

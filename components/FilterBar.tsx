@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 
 type ViewType = '期間グラフ' | '累計グラフ' | '推移グラフ' | 'レポート' | 'レコード';
+type PeriodUnit = '月' | '週' | '日';
 
 interface FilterBarProps {
   onViewChange?: (view: ViewType) => void;
@@ -10,10 +11,13 @@ interface FilterBarProps {
 
 export default function FilterBar({ onViewChange }: FilterBarProps = {}) {
   const [selectedView, setSelectedView] = useState<ViewType>('期間グラフ');
-  const [selectedDate, setSelectedDate] = useState('2025年12月');
+  const [periodUnit, setPeriodUnit] = useState<PeriodUnit>('月');
   const [periodType, setPeriodType] = useState<'単月' | '期間'>('単月');
   const [startMonth, setStartMonth] = useState('2025年07月');
   const [endMonth, setEndMonth] = useState('2025年01月');
+
+  // 日付を統一管理
+  const [selectedDate, setSelectedDate] = useState(new Date(2025, 11, 1)); // 2025年12月
 
   const handleViewChange = (view: ViewType) => {
     setSelectedView(view);
@@ -22,36 +26,240 @@ export default function FilterBar({ onViewChange }: FilterBarProps = {}) {
     }
   };
 
+  // 前へ移動（単位に応じて）
+  const goToPrevious = () => {
+    const newDate = new Date(selectedDate);
+    switch (periodUnit) {
+      case '月':
+        newDate.setMonth(newDate.getMonth() - 1);
+        break;
+      case '週':
+        newDate.setDate(newDate.getDate() - 7);
+        break;
+      case '日':
+        newDate.setDate(newDate.getDate() - 1);
+        break;
+    }
+    setSelectedDate(newDate);
+  };
+
+  // 次へ移動（単位に応じて）
+  const goToNext = () => {
+    const newDate = new Date(selectedDate);
+    switch (periodUnit) {
+      case '月':
+        newDate.setMonth(newDate.getMonth() + 1);
+        break;
+      case '週':
+        newDate.setDate(newDate.getDate() + 7);
+        break;
+      case '日':
+        newDate.setDate(newDate.getDate() + 1);
+        break;
+    }
+    setSelectedDate(newDate);
+  };
+
+  // 今日/今週/今月に戻る
+  const goToCurrent = () => {
+    setSelectedDate(new Date());
+  };
+
+  // 現在のボタンラベル取得
+  const getCurrentLabel = (): string => {
+    switch (periodUnit) {
+      case '月':
+        return '今月';
+      case '週':
+        return '今週';
+      case '日':
+        return '今日';
+    }
+  };
+
+  // 日付表示フォーマット
+  const formatDate = (): string => {
+    const year = selectedDate.getFullYear();
+    const month = selectedDate.getMonth() + 1;
+    const day = selectedDate.getDate();
+
+    switch (periodUnit) {
+      case '月':
+        return `${year}年${String(month).padStart(2, '0')}月`;
+      case '週': {
+        // 週の開始日（月曜日）を計算
+        const dayOfWeek = selectedDate.getDay();
+        const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+        const monday = new Date(selectedDate);
+        monday.setDate(selectedDate.getDate() + mondayOffset);
+        const sunday = new Date(monday);
+        sunday.setDate(monday.getDate() + 6);
+
+        const startStr = `${monday.getMonth() + 1}/${monday.getDate()}`;
+        const endStr = `${sunday.getMonth() + 1}/${sunday.getDate()}`;
+        return `${year}年 ${startStr}〜${endStr}`;
+      }
+      case '日':
+        return `${year}年${String(month).padStart(2, '0')}月${String(day).padStart(2, '0')}日`;
+    }
+  };
+
+  // ドロップダウン用の選択肢を生成
+  const generateDateOptions = () => {
+    const options: string[] = [];
+
+    switch (periodUnit) {
+      case '月': {
+        // 2024年1月から2026年12月まで
+        for (let year = 2024; year <= 2026; year++) {
+          for (let month = 1; month <= 12; month++) {
+            options.push(`${year}年${String(month).padStart(2, '0')}月`);
+          }
+        }
+        break;
+      }
+      case '週': {
+        // 現在の前後6ヶ月の週を生成
+        const now = new Date();
+        const startDate = new Date(now);
+        startDate.setMonth(now.getMonth() - 6);
+        // 月曜日に調整
+        const dayOfWeek = startDate.getDay();
+        const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+        startDate.setDate(startDate.getDate() + mondayOffset);
+
+        for (let i = 0; i < 52; i++) {
+          const monday = new Date(startDate);
+          monday.setDate(startDate.getDate() + (i * 7));
+          const sunday = new Date(monday);
+          sunday.setDate(monday.getDate() + 6);
+
+          const year = monday.getFullYear();
+          const startStr = `${monday.getMonth() + 1}/${monday.getDate()}`;
+          const endStr = `${sunday.getMonth() + 1}/${sunday.getDate()}`;
+          options.push(`${year}年 ${startStr}〜${endStr}`);
+        }
+        break;
+      }
+      case '日': {
+        // 現在の前後3ヶ月の日を生成
+        const now = new Date();
+        const startDate = new Date(now);
+        startDate.setMonth(now.getMonth() - 1);
+
+        for (let i = 0; i < 90; i++) {
+          const date = new Date(startDate);
+          date.setDate(startDate.getDate() + i);
+          const year = date.getFullYear();
+          const month = date.getMonth() + 1;
+          const day = date.getDate();
+          options.push(`${year}年${String(month).padStart(2, '0')}月${String(day).padStart(2, '0')}日`);
+        }
+        break;
+      }
+    }
+
+    return options;
+  };
+
+  // ドロップダウンの値が変更された時
+  const handleDateChange = (value: string) => {
+    switch (periodUnit) {
+      case '月': {
+        const match = value.match(/(\d+)年(\d+)月/);
+        if (match) {
+          setSelectedDate(new Date(parseInt(match[1]), parseInt(match[2]) - 1, 1));
+        }
+        break;
+      }
+      case '週': {
+        const match = value.match(/(\d+)年\s*(\d+)\/(\d+)/);
+        if (match) {
+          setSelectedDate(new Date(parseInt(match[1]), parseInt(match[2]) - 1, parseInt(match[3])));
+        }
+        break;
+      }
+      case '日': {
+        const match = value.match(/(\d+)年(\d+)月(\d+)日/);
+        if (match) {
+          setSelectedDate(new Date(parseInt(match[1]), parseInt(match[2]) - 1, parseInt(match[3])));
+        }
+        break;
+      }
+    }
+  };
+
   const viewTabs: ViewType[] = ['期間グラフ', '累計グラフ', '推移グラフ', 'レポート', 'レコード'];
+  const periodUnits: PeriodUnit[] = ['月', '週', '日'];
 
   // 累計グラフまたは推移グラフの場合は期間選択を表示
   const isCumulativeView = selectedView === '累計グラフ';
   const isTrendView = selectedView === '推移グラフ';
   const showPeriodSelection = isCumulativeView || isTrendView;
 
+  const dateOptions = generateDateOptions();
+  const currentDateStr = formatDate();
+
   return (
     <div className="bg-gray-50 border-b border-gray-200">
       {/* 1段目: グループとメンバー */}
       <div className="px-4 py-3 border-b border-gray-200">
-        <div className="flex items-center space-x-4">
-          {/* グループ選択 */}
-          <div className="flex items-center space-x-2">
-            <label className="text-sm text-gray-600">グループ</label>
-            <select className="border border-gray-300 rounded px-3 py-1 text-sm bg-white">
-              <option>&lt;3Aグループ&gt;支店1</option>
-              <option>グループ2</option>
-              <option>グループ3</option>
-            </select>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            {/* グループ選択 */}
+            <div className="flex items-center space-x-2">
+              <label className="text-sm text-gray-600">グループ</label>
+              <select className="border border-gray-300 rounded px-3 py-1 text-sm bg-white">
+                <option>&lt;3Aグループ&gt;支店1</option>
+                <option>グループ2</option>
+                <option>グループ3</option>
+              </select>
+            </div>
+
+            {/* メンバー/グループ全員 */}
+            <div className="flex items-center space-x-2">
+              <label className="text-sm text-gray-600">メンバー</label>
+              <select className="border border-gray-300 rounded px-3 py-1 text-sm bg-white">
+                <option>グループ全員</option>
+                <option>メンバー1</option>
+                <option>メンバー2</option>
+              </select>
+            </div>
           </div>
 
-          {/* メンバー/グループ全員 */}
-          <div className="flex items-center space-x-2">
-            <label className="text-sm text-gray-600">メンバー</label>
-            <select className="border border-gray-300 rounded px-3 py-1 text-sm bg-white">
-              <option>グループ全員</option>
-              <option>メンバー1</option>
-              <option>メンバー2</option>
-            </select>
+          {/* グラフアイコンタブ */}
+          <div className="flex items-center space-x-1">
+            {/* 棒グラフアイコン */}
+            <button className="p-2 hover:bg-gray-200 rounded border border-gray-300 bg-white">
+              <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M4 20h4V10H4v10zm6 0h4V4h-4v16zm6 0h4v-8h-4v8z"/>
+              </svg>
+            </button>
+            {/* 折れ線グラフアイコン */}
+            <button className="p-2 hover:bg-gray-200 rounded border border-gray-300 bg-white">
+              <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4v16" />
+              </svg>
+            </button>
+            {/* テーブルアイコン */}
+            <button className="p-2 hover:bg-gray-200 rounded border border-gray-300 bg-white">
+              <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M3 3h18v18H3V3zm2 2v4h6V5H5zm8 0v4h6V5h-6zM5 11v4h6v-4H5zm8 0v4h6v-4h-6zM5 17v2h6v-2H5zm8 0v2h6v-2h-6z"/>
+              </svg>
+            </button>
+            {/* 複合グラフアイコン */}
+            <button className="p-2 hover:bg-gray-200 rounded border border-gray-300 bg-white">
+              <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M4 20h4v-6H4v6zm6 0h4V8h-4v12zm6 0h4v-4h-4v4z"/>
+                <path fill="none" stroke="currentColor" strokeWidth={2} d="M2 16l5-5 4 4 6-6 5 5"/>
+              </svg>
+            </button>
+            {/* ダッシュボードアイコン */}
+            <button className="p-2 hover:bg-gray-200 rounded border border-gray-300 bg-white">
+              <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M3 3h8v10H3V3zm10 0h8v6h-8V3zM3 15h8v6H3v-6zm10-4h8v10h-8V11z"/>
+              </svg>
+            </button>
           </div>
         </div>
       </div>
@@ -71,6 +279,21 @@ export default function FilterBar({ onViewChange }: FilterBarProps = {}) {
                   onClick={() => handleViewChange(view)}
                 >
                   {view}
+                </button>
+              ))}
+            </div>
+
+            {/* 月/週/日 切り替えボタン */}
+            <div className="flex items-center border border-gray-300 rounded bg-white">
+              {periodUnits.map((unit, index) => (
+                <button
+                  key={unit}
+                  className={`px-3 py-1 text-sm ${index > 0 ? 'border-l border-gray-300' : ''} ${
+                    periodUnit === unit ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-100'
+                  }`}
+                  onClick={() => setPeriodUnit(unit)}
+                >
+                  {unit}
                 </button>
               ))}
             </div>
@@ -136,45 +359,47 @@ export default function FilterBar({ onViewChange }: FilterBarProps = {}) {
                 )}
               </div>
             ) : (
-              /* その他のグラフ用: 通常の月選択 */
+              /* その他のグラフ用: 前/今/次ナビゲーション */
               <div className="flex items-center space-x-2">
-                <button className="p-1 hover:bg-gray-200 rounded">
-                  <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                  </svg>
-                </button>
-                <button className="p-1 hover:bg-gray-200 rounded">
-                  <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                </button>
-                <button className="p-1 hover:bg-gray-200 rounded">
-                  <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-                  </svg>
-                </button>
-                <button className="p-1 hover:bg-gray-200 rounded">
+                {/* 前へボタン */}
+                <button
+                  className="p-1 hover:bg-gray-200 rounded border border-gray-300 bg-white"
+                  onClick={goToPrevious}
+                >
                   <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                   </svg>
                 </button>
 
-                {/* 今月ボタン */}
-                <button className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-100">
-                  今月
+                {/* 今月/今週/今日ボタン */}
+                <button
+                  className="px-3 py-1 text-sm border border-gray-300 rounded bg-white hover:bg-gray-100"
+                  onClick={goToCurrent}
+                >
+                  {getCurrentLabel()}
                 </button>
 
-                <button className="p-1 hover:bg-gray-200 rounded">
+                {/* 次へボタン */}
+                <button
+                  className="p-1 hover:bg-gray-200 rounded border border-gray-300 bg-white"
+                  onClick={goToNext}
+                >
                   <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
                 </button>
 
-                {/* 日付表示 */}
-                <select className="border border-gray-300 rounded px-3 py-1 text-sm bg-white">
-                  <option>2025年12月</option>
-                  <option>2025年11月</option>
-                  <option>2025年10月</option>
+                {/* 日付選択ドロップダウン */}
+                <select
+                  className="border border-gray-300 rounded px-3 py-1 text-sm bg-white"
+                  value={currentDateStr}
+                  onChange={(e) => handleDateChange(e.target.value)}
+                >
+                  {dateOptions.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
                 </select>
               </div>
             )}

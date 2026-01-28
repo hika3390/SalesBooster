@@ -49,8 +49,7 @@ export default function SalesPersonCard({ person, index, top20Index, low20Index,
     >
       {/* 順位 */}
       <div className="text-center py-2 border-b border-gray-200 bg-gray-50">
-        <div className="text-[9px] text-gray-600 mb-0.5">順位</div>
-        <div className="text-xs font-bold text-gray-800">{person.rank}位</div>
+        <div className="text-lg font-bold text-gray-800">{person.rank}位</div>
       </div>
 
       {/* メンバー */}

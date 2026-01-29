@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog } from '@/components/common/Dialog';
+import AddMemberModal from './AddMemberModal';
 
 interface Member {
   id: number;
@@ -18,6 +19,7 @@ const statusLabel: Record<string, string> = { ACTIVE: '有効', INACTIVE: '無�
 export default function MemberSettings() {
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   const fetchMembers = async () => {
     try {
@@ -53,7 +55,10 @@ export default function MemberSettings() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-bold text-gray-800">メンバー設定</h2>
-        <button className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors">
+        <button
+          onClick={() => setIsAddModalOpen(true)}
+          className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
+        >
           メンバーを追加
         </button>
       </div>
@@ -91,6 +96,12 @@ export default function MemberSettings() {
           </tbody>
         </table>
       </div>
+
+      <AddMemberModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onAdded={fetchMembers}
+      />
     </div>
   );
 }

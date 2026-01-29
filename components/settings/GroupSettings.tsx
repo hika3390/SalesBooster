@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog } from '@/components/common/Dialog';
+import AddGroupModal from './AddGroupModal';
 
 interface Group {
   id: number;
@@ -14,6 +15,7 @@ interface Group {
 export default function GroupSettings() {
   const [groups, setGroups] = useState<Group[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   const fetchGroups = async () => {
     try {
@@ -49,7 +51,10 @@ export default function GroupSettings() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-bold text-gray-800">グループ設定</h2>
-        <button className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors">
+        <button
+          onClick={() => setIsAddModalOpen(true)}
+          className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
+        >
           グループを追加
         </button>
       </div>
@@ -78,6 +83,12 @@ export default function GroupSettings() {
           </div>
         ))}
       </div>
+
+      <AddGroupModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onAdded={fetchGroups}
+      />
     </div>
   );
 }

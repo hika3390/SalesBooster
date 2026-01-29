@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import GroupMemberSelector from './filter/GroupMemberSelector';
 import GraphIconTabs from './filter/GraphIconTabs';
 import ViewTabs from './filter/ViewTabs';

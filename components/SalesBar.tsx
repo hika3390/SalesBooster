@@ -1,7 +1,5 @@
 'use client';
 
-import React from 'react';
-
 interface SalesPerson {
   rank: number;
   name: string;
@@ -100,7 +98,6 @@ export default function SalesBar({ person, index, maxSales, top20Index, columnWi
             className="absolute inset-0"
             style={{
               background: colors.gradient,
-              borderRadius: '0',
               boxShadow: colors.glow,
             }}
           />

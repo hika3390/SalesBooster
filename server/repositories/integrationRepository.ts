@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma';
-import { IntegrationStatus } from '@/app/generated/prisma/client';
+import { IntegrationStatus } from '@prisma/client';
 
 export const integrationRepository = {
   findAll() {

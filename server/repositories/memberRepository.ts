@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma';
-import { MemberRole, MemberStatus } from '@/app/generated/prisma/client';
+import { MemberRole, MemberStatus } from '@prisma/client';
 
 export const memberRepository = {
   findAll() {

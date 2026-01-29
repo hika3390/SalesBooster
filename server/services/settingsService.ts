@@ -1,6 +1,6 @@
 import { systemSettingRepository } from '../repositories/systemSettingRepository';
 import { integrationRepository } from '../repositories/integrationRepository';
-import { IntegrationStatus } from '@/app/generated/prisma/client';
+import { IntegrationStatus } from '@prisma/client';
 
 export const settingsService = {
   async getAllSettings() {

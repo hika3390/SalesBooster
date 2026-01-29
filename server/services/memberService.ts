@@ -1,5 +1,5 @@
 import { memberRepository } from '../repositories/memberRepository';
-import { MemberRole, MemberStatus } from '@/app/generated/prisma/client';
+import { MemberRole, MemberStatus } from '@prisma/client';
 
 export const memberService = {
   async getAll() {

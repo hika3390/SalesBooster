@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
+import EditTargetModal from './EditTargetModal';
 
 interface Target {
   id: number;
@@ -16,6 +17,7 @@ interface Target {
 export default function TargetSettings() {
   const [targets, setTargets] = useState<Target[]>([]);
   const [loading, setLoading] = useState(true);
+  const [editingTarget, setEditingTarget] = useState<Target | null>(null);
 
   const fetchTargets = async () => {
     try {
@@ -70,13 +72,20 @@ export default function TargetSettings() {
                 <td className="px-6 py-4 text-sm text-right text-gray-700">{target.quarterly}万円</td>
                 <td className="px-6 py-4 text-sm text-right text-gray-700">{target.annual}万円</td>
                 <td className="px-6 py-4 text-right">
-                  <button className="text-blue-600 hover:text-blue-800 text-sm">編集</button>
+                  <button onClick={() => setEditingTarget(target)} className="text-blue-600 hover:text-blue-800 text-sm">編集</button>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+
+      <EditTargetModal
+        isOpen={!!editingTarget}
+        onClose={() => setEditingTarget(null)}
+        onUpdated={fetchTargets}
+        target={editingTarget}
+      />
     </div>
   );
 }

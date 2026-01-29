@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Dialog } from '@/components/common/Dialog';
 import AddMemberModal from './AddMemberModal';
+import EditMemberModal from './EditMemberModal';
 
 interface Member {
   id: number;
@@ -11,6 +12,7 @@ interface Member {
   role: string;
   status: string;
   department: string | null;
+  departmentId?: number | null;
 }
 
 const roleLabel: Record<string, string> = { SALES: '営業', MANAGER: 'マネージャー' };
@@ -20,6 +22,7 @@ export default function MemberSettings() {
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [editingMember, setEditingMember] = useState<Member | null>(null);
 
   const fetchMembers = async () => {
     try {
@@ -88,7 +91,7 @@ export default function MemberSettings() {
                   </span>
                 </td>
                 <td className="px-6 py-4 text-right">
-                  <button className="text-blue-600 hover:text-blue-800 text-sm mr-3">編集</button>
+                  <button onClick={() => setEditingMember(member)} className="text-blue-600 hover:text-blue-800 text-sm mr-3">編集</button>
                   <button onClick={() => handleDelete(member.id)} className="text-red-600 hover:text-red-800 text-sm">削除</button>
                 </td>
               </tr>
@@ -101,6 +104,13 @@ export default function MemberSettings() {
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         onAdded={fetchMembers}
+      />
+
+      <EditMemberModal
+        isOpen={!!editingMember}
+        onClose={() => setEditingMember(null)}
+        onUpdated={fetchMembers}
+        member={editingMember}
       />
     </div>
   );

@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import { Dialog } from '@/components/common/Dialog';
 import AddGroupModal from './AddGroupModal';
+import EditGroupModal from './EditGroupModal';
+import GroupMembersModal from './GroupMembersModal';
 
 interface Group {
   id: number;
@@ -16,6 +18,8 @@ export default function GroupSettings() {
   const [groups, setGroups] = useState<Group[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [editingGroup, setEditingGroup] = useState<Group | null>(null);
+  const [membersGroup, setMembersGroup] = useState<Group | null>(null);
 
   const fetchGroups = async () => {
     try {
@@ -62,13 +66,8 @@ export default function GroupSettings() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {groups.map((group) => (
           <div key={group.id} className="bg-white rounded-lg border border-gray-200 p-5 hover:shadow-md transition-shadow">
-            <div className="flex items-center justify-between mb-3">
+            <div className="mb-3">
               <h3 className="font-semibold text-gray-800">{group.name}</h3>
-              <button className="text-gray-400 hover:text-gray-600">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
-                </svg>
-              </button>
             </div>
             <div className="space-y-2 text-sm text-gray-600">
               <div className="flex justify-between">
@@ -77,7 +76,8 @@ export default function GroupSettings() {
               </div>
             </div>
             <div className="mt-4 flex space-x-2">
-              <button className="flex-1 px-3 py-1.5 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">編集</button>
+              <button onClick={() => setMembersGroup(group)} className="flex-1 px-3 py-1.5 text-sm border border-blue-300 text-blue-600 rounded-lg hover:bg-blue-50 transition-colors">メンバー</button>
+              <button onClick={() => setEditingGroup(group)} className="flex-1 px-3 py-1.5 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">編集</button>
               <button onClick={() => handleDelete(group.id)} className="flex-1 px-3 py-1.5 text-sm border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition-colors">削除</button>
             </div>
           </div>
@@ -88,6 +88,20 @@ export default function GroupSettings() {
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         onAdded={fetchGroups}
+      />
+
+      <EditGroupModal
+        isOpen={!!editingGroup}
+        onClose={() => setEditingGroup(null)}
+        onUpdated={fetchGroups}
+        group={editingGroup}
+      />
+
+      <GroupMembersModal
+        isOpen={!!membersGroup}
+        onClose={() => setMembersGroup(null)}
+        onUpdated={fetchGroups}
+        group={membersGroup}
       />
     </div>
   );

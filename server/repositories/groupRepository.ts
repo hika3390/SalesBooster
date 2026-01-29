@@ -31,15 +31,12 @@ export const groupRepository = {
     return prisma.group.delete({ where: { id } });
   },
 
-  addMember(groupId: number, memberId: number) {
-    return prisma.groupMember.create({
-      data: { groupId, memberId },
-    });
-  },
-
-  removeMember(groupId: number, memberId: number) {
-    return prisma.groupMember.delete({
-      where: { groupId_memberId: { groupId, memberId } },
-    });
+  async syncMembers(groupId: number, memberIds: number[]) {
+    await prisma.$transaction([
+      prisma.groupMember.deleteMany({ where: { groupId } }),
+      prisma.groupMember.createMany({
+        data: memberIds.map((memberId) => ({ groupId, memberId })),
+      }),
+    ]);
   },
 };

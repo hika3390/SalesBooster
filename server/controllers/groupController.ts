@@ -49,4 +49,21 @@ export const groupController = {
       return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
     }
   },
+
+  async syncMembers(request: NextRequest, groupId: number) {
+    try {
+      const body = await request.json();
+      const { memberIds } = body;
+
+      if (!Array.isArray(memberIds)) {
+        return NextResponse.json({ error: 'memberIds must be an array' }, { status: 400 });
+      }
+
+      await groupService.syncMembers(groupId, memberIds);
+      return NextResponse.json({ success: true });
+    } catch (error) {
+      console.error('Failed to sync group members:', error);
+      return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    }
+  },
 };

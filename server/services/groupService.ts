@@ -31,11 +31,7 @@ export const groupService = {
     return groupRepository.delete(id);
   },
 
-  async addMember(groupId: number, memberId: number) {
-    return groupRepository.addMember(groupId, memberId);
-  },
-
-  async removeMember(groupId: number, memberId: number) {
-    return groupRepository.removeMember(groupId, memberId);
+  async syncMembers(groupId: number, memberIds: number[]) {
+    return groupRepository.syncMembers(groupId, memberIds);
   },
 };

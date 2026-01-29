@@ -82,26 +82,11 @@ export default function SalesPersonCard({ person, index, top20Index, low20Index,
         )}
       </div>
 
-      {/* 実績金額 */}
+      {/* 実績金額・達成率 */}
       <div className="text-center py-2 border-b border-gray-200">
-        <div className="text-[9px] text-gray-600 mb-1">実績<br/>金額</div>
-        <div className="text-[11px] font-bold text-gray-800 leading-tight">{person.sales}万円</div>
-        <div className="text-[8px] text-gray-500 mt-0.5">({person.target}万円)</div>
-      </div>
-
-      {/* 目標 */}
-      <div className="text-center py-2 border-b border-gray-200">
-        <div className="text-[9px] text-gray-600 mb-1">目標</div>
-        <div className="text-[11px] font-semibold text-gray-700">
-          {person.target}万円
-        </div>
-      </div>
-
-      {/* 達成率 */}
-      <div className="text-center py-2 border-b border-gray-200">
-        <div className="text-[9px] text-gray-600 mb-1">達成率</div>
+        <div className="text-base font-bold text-gray-800">{person.sales}万円</div>
         <div
-          className={`text-[11px] font-bold ${
+          className={`text-sm font-bold mt-1 ${
             person.achievement >= 100
               ? 'text-red-600'
               : person.achievement >= 80
@@ -110,6 +95,14 @@ export default function SalesPersonCard({ person, index, top20Index, low20Index,
           }`}
         >
           {person.achievement}%
+        </div>
+      </div>
+
+      {/* 目標 */}
+      <div className="text-center py-2 border-b border-gray-200">
+        <div className="text-[9px] text-gray-600 mb-1">目標</div>
+        <div className="text-[11px] font-semibold text-gray-700">
+          {person.target}万円
         </div>
       </div>
     </div>

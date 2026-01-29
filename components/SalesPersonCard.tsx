@@ -1,14 +1,6 @@
 'use client';
 
-interface SalesPerson {
-  rank: number;
-  name: string;
-  sales: number;
-  target: number;
-  achievement: number;
-  imageUrl?: string;
-  department?: string;
-}
+import { SalesPerson } from '@/types';
 
 interface SalesPersonCardProps {
   person: SalesPerson;

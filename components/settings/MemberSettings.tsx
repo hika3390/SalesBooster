@@ -1,14 +1,53 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { Dialog } from '@/components/common/Dialog';
+
+interface Member {
+  id: number;
+  name: string;
+  email: string;
+  role: string;
+  status: string;
+  department: string | null;
+}
+
+const roleLabel: Record<string, string> = { SALES: '営業', MANAGER: 'マネージャー' };
+const statusLabel: Record<string, string> = { ACTIVE: '有効', INACTIVE: '無効' };
 
 export default function MemberSettings() {
-  const members = [
-    { id: 1, name: '田中太郎', email: 'tanaka@example.com', role: '営業', status: '有効' },
-    { id: 2, name: '鈴木花子', email: 'suzuki@example.com', role: '営業', status: '有効' },
-    { id: 3, name: '佐藤次郎', email: 'sato@example.com', role: 'マネージャー', status: '有効' },
-    { id: 4, name: '山田美咲', email: 'yamada@example.com', role: '営業', status: '無効' },
-  ];
+  const [members, setMembers] = useState<Member[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchMembers = async () => {
+    try {
+      const res = await fetch('/api/members');
+      if (res.ok) setMembers(await res.json());
+    } catch (error) {
+      console.error('Failed to fetch members:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchMembers();
+  }, []);
+
+  const handleDelete = async (id: number) => {
+    const confirmed = await Dialog.confirm('このメンバーを削除しますか？');
+    if (!confirmed) return;
+    try {
+      const res = await fetch(`/api/members/${id}`, { method: 'DELETE' });
+      if (res.ok) fetchMembers();
+    } catch (error) {
+      console.error('Failed to delete member:', error);
+    }
+  };
+
+  if (loading) {
+    return <div className="text-center py-8 text-gray-500">読み込み中...</div>;
+  }
 
   return (
     <div>
@@ -35,17 +74,17 @@ export default function MemberSettings() {
               <tr key={member.id} className="border-b border-gray-100 hover:bg-gray-50">
                 <td className="px-6 py-4 text-sm font-medium text-gray-800">{member.name}</td>
                 <td className="px-6 py-4 text-sm text-gray-600">{member.email}</td>
-                <td className="px-6 py-4 text-sm text-gray-600">{member.role}</td>
+                <td className="px-6 py-4 text-sm text-gray-600">{roleLabel[member.role] || member.role}</td>
                 <td className="px-6 py-4">
                   <span className={`px-2 py-1 text-xs rounded-full font-medium ${
-                    member.status === '有効' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
+                    member.status === 'ACTIVE' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
                   }`}>
-                    {member.status}
+                    {statusLabel[member.status] || member.status}
                   </span>
                 </td>
                 <td className="px-6 py-4 text-right">
                   <button className="text-blue-600 hover:text-blue-800 text-sm mr-3">編集</button>
-                  <button className="text-red-600 hover:text-red-800 text-sm">削除</button>
+                  <button onClick={() => handleDelete(member.id)} className="text-red-600 hover:text-red-800 text-sm">削除</button>
                 </td>
               </tr>
             ))}

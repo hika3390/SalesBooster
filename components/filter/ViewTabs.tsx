@@ -1,8 +1,7 @@
 'use client';
 
 import React from 'react';
-
-type ViewType = '期間グラフ' | '累計グラフ' | '推移グラフ' | 'レポート' | 'レコード';
+import { ViewType } from '@/types';
 
 interface ViewTabsProps {
   selectedView: ViewType;

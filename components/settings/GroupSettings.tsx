@@ -1,13 +1,49 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { Dialog } from '@/components/common/Dialog';
+
+interface Group {
+  id: number;
+  name: string;
+  members: number;
+  managerId: number | null;
+  memberList: { id: number; name: string }[];
+}
 
 export default function GroupSettings() {
-  const groups = [
-    { id: 1, name: '3Aグループ 支店1', members: 8, manager: '佐藤次郎' },
-    { id: 2, name: '3Bグループ 支店2', members: 6, manager: '高橋一郎' },
-    { id: 3, name: '3Cグループ 本社', members: 10, manager: '伊藤健太' },
-  ];
+  const [groups, setGroups] = useState<Group[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchGroups = async () => {
+    try {
+      const res = await fetch('/api/groups');
+      if (res.ok) setGroups(await res.json());
+    } catch (error) {
+      console.error('Failed to fetch groups:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchGroups();
+  }, []);
+
+  const handleDelete = async (id: number) => {
+    const confirmed = await Dialog.confirm('このグループを削除しますか？');
+    if (!confirmed) return;
+    try {
+      const res = await fetch(`/api/groups/${id}`, { method: 'DELETE' });
+      if (res.ok) fetchGroups();
+    } catch (error) {
+      console.error('Failed to delete group:', error);
+    }
+  };
+
+  if (loading) {
+    return <div className="text-center py-8 text-gray-500">読み込み中...</div>;
+  }
 
   return (
     <div>
@@ -34,14 +70,10 @@ export default function GroupSettings() {
                 <span>メンバー数</span>
                 <span className="font-medium text-gray-800">{group.members}名</span>
               </div>
-              <div className="flex justify-between">
-                <span>マネージャー</span>
-                <span className="font-medium text-gray-800">{group.manager}</span>
-              </div>
             </div>
             <div className="mt-4 flex space-x-2">
               <button className="flex-1 px-3 py-1.5 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">編集</button>
-              <button className="flex-1 px-3 py-1.5 text-sm border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition-colors">削除</button>
+              <button onClick={() => handleDelete(group.id)} className="flex-1 px-3 py-1.5 text-sm border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition-colors">削除</button>
             </div>
           </div>
         ))}

@@ -1,8 +1,7 @@
 'use client';
 
 import React from 'react';
-
-type PeriodUnit = '月' | '週' | '日';
+import { PeriodUnit } from '@/types';
 
 interface PeriodUnitToggleProps {
   periodUnit: PeriodUnit;

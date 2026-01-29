@@ -1,0 +1,140 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enum ───
+
+enum MemberStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum MemberRole {
+  SALES
+  MANAGER
+}
+
+enum IntegrationStatus {
+  DISCONNECTED
+  CONNECTED
+}
+
+// ─── Auth Model ───
+
+model User {
+  id        String     @id @default(cuid())
+  email     String     @unique
+  password  String
+  name      String?
+  sessions  Session[]
+  auditLogs AuditLog[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ─── Business Model ───
+
+model Department {
+  id        Int      @id @default(autoincrement())
+  name      String
+  members   Member[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Member {
+  id           Int            @id @default(autoincrement())
+  name         String
+  email        String         @unique
+  role         MemberRole     @default(SALES)
+  status       MemberStatus   @default(ACTIVE)
+  imageUrl     String?
+  departmentId Int?
+  department   Department?    @relation(fields: [departmentId], references: [id])
+  salesRecords SalesRecord[]
+  targets      Target[]
+  groupMembers GroupMember[]
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+}
+
+model Group {
+  id        Int           @id @default(autoincrement())
+  name      String
+  managerId Int?
+  members   GroupMember[]
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+}
+
+model GroupMember {
+  id       Int    @id @default(autoincrement())
+  groupId  Int
+  memberId Int
+  group    Group  @relation(fields: [groupId], references: [id])
+  member   Member @relation(fields: [memberId], references: [id])
+
+  @@unique([groupId, memberId])
+}
+
+model SalesRecord {
+  id          Int      @id @default(autoincrement())
+  memberId    Int
+  amount      Int
+  description String?
+  recordDate  DateTime
+  member      Member   @relation(fields: [memberId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Target {
+  id        Int    @id @default(autoincrement())
+  memberId  Int
+  monthly   Int
+  quarterly Int
+  annual    Int
+  year      Int
+  month     Int
+  member    Member @relation(fields: [memberId], references: [id])
+
+  @@unique([memberId, year, month])
+}
+
+model SystemSetting {
+  id    Int    @id @default(autoincrement())
+  key   String @unique
+  value String
+}
+
+model Integration {
+  id          Int               @id @default(autoincrement())
+  name        String
+  description String
+  status      IntegrationStatus @default(DISCONNECTED)
+  icon        String
+  config      Json?
+}
+
+model AuditLog {
+  id        Int      @id @default(autoincrement())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  action    String
+  detail    String?
+  createdAt DateTime @default(now())
+}

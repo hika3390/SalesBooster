@@ -1,14 +1,40 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+
+interface Target {
+  id: number;
+  memberId: number;
+  memberName: string;
+  monthly: number;
+  quarterly: number;
+  annual: number;
+  year: number;
+  month: number;
+}
 
 export default function TargetSettings() {
-  const targets = [
-    { name: '田中太郎', monthly: 500, quarterly: 1500, annual: 6000 },
-    { name: '鈴木花子', monthly: 450, quarterly: 1350, annual: 5400 },
-    { name: '佐藤次郎', monthly: 600, quarterly: 1800, annual: 7200 },
-    { name: '山田美咲', monthly: 400, quarterly: 1200, annual: 4800 },
-  ];
+  const [targets, setTargets] = useState<Target[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchTargets = async () => {
+    try {
+      const res = await fetch('/api/targets');
+      if (res.ok) setTargets(await res.json());
+    } catch (error) {
+      console.error('Failed to fetch targets:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchTargets();
+  }, []);
+
+  if (loading) {
+    return <div className="text-center py-8 text-gray-500">読み込み中...</div>;
+  }
 
   return (
     <div>
@@ -37,9 +63,9 @@ export default function TargetSettings() {
             </tr>
           </thead>
           <tbody>
-            {targets.map((target, i) => (
-              <tr key={i} className="border-b border-gray-100 hover:bg-gray-50">
-                <td className="px-6 py-4 text-sm font-medium text-gray-800">{target.name}</td>
+            {targets.map((target) => (
+              <tr key={target.id} className="border-b border-gray-100 hover:bg-gray-50">
+                <td className="px-6 py-4 text-sm font-medium text-gray-800">{target.memberName}</td>
                 <td className="px-6 py-4 text-sm text-right text-gray-700">{target.monthly}万円</td>
                 <td className="px-6 py-4 text-sm text-right text-gray-700">{target.quarterly}万円</td>
                 <td className="px-6 py-4 text-sm text-right text-gray-700">{target.annual}万円</td>

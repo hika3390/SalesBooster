@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Modal from './common/Modal';
 
 interface SalesInputModalProps {
@@ -17,30 +17,69 @@ interface SalesInputData {
   memo: string;
 }
 
+interface MemberOption {
+  id: number;
+  name: string;
+  department: string | null;
+}
+
 export default function SalesInputModal({ isOpen, onClose, onSubmit }: SalesInputModalProps) {
-  const [member, setMember] = useState('');
+  const [memberId, setMemberId] = useState('');
   const [amount, setAmount] = useState('');
   const [contracts, setContracts] = useState('1');
   const [orderDate, setOrderDate] = useState(() => {
     const now = new Date();
-    return now.toISOString().slice(0, 16); // YYYY-MM-DDTHH:mm format
+    return now.toISOString().slice(0, 16);
   });
   const [memo, setMemo] = useState('');
+  const [members, setMembers] = useState<MemberOption[]>([]);
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = () => {
-    onSubmit({
-      member,
-      amount: parseInt(amount) || 0,
-      contracts: parseInt(contracts) || 0,
-      orderDate,
-      memo,
-    });
-    // フォームをリセット
-    setMember('');
-    setAmount('');
-    setContracts('1');
-    setMemo('');
-    onClose();
+  useEffect(() => {
+    if (isOpen) {
+      fetch('/api/members')
+        .then((res) => res.json())
+        .then((data) => setMembers(data))
+        .catch(console.error);
+    }
+  }, [isOpen]);
+
+  const handleSubmit = async () => {
+    if (!memberId || !amount) return;
+
+    setSubmitting(true);
+    try {
+      const res = await fetch('/api/sales', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          memberId: Number(memberId),
+          amount: parseInt(amount) || 0,
+          description: memo || undefined,
+          recordDate: new Date(orderDate).toISOString(),
+        }),
+      });
+
+      if (res.ok) {
+        const selectedMember = members.find((m) => m.id === Number(memberId));
+        onSubmit({
+          member: selectedMember?.name || '',
+          amount: parseInt(amount) || 0,
+          contracts: parseInt(contracts) || 0,
+          orderDate,
+          memo,
+        });
+        setMemberId('');
+        setAmount('');
+        setContracts('1');
+        setMemo('');
+        onClose();
+      }
+    } catch (error) {
+      console.error('Failed to create sales record:', error);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleCancel = () => {
@@ -51,15 +90,16 @@ export default function SalesInputModal({ isOpen, onClose, onSubmit }: SalesInpu
     <>
       <button
         onClick={handleCancel}
-        className="px-8 py-2 border border-gray-300 rounded text-sm text-gray-700 hover:bg-gray-100"
+        className="px-6 py-2.5 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
       >
         キャンセル
       </button>
       <button
         onClick={handleSubmit}
-        className="px-8 py-2 bg-blue-900 text-white rounded text-sm hover:bg-blue-800"
+        disabled={submitting || !memberId || !amount}
+        className="px-6 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors"
       >
-        追　加
+        {submitting ? '送信中...' : '追　加'}
       </button>
     </>
   );
@@ -77,22 +117,14 @@ export default function SalesInputModal({ isOpen, onClose, onSubmit }: SalesInpu
           <label className="w-24 text-sm text-gray-700 text-right pr-4">メンバー</label>
           <div className="flex-1 flex items-center space-x-2">
             <select
-              value={member}
-              onChange={(e) => setMember(e.target.value)}
+              value={memberId}
+              onChange={(e) => setMemberId(e.target.value)}
               className="flex-1 border border-gray-300 rounded px-3 py-2 text-sm bg-white"
             >
-              <option value="">選択してく...</option>
-              <option value="伊藤 敬人">伊藤 敬人</option>
-              <option value="西山 知輝">西山 知輝</option>
-              <option value="高嶋 直樹">高嶋 直樹</option>
-              <option value="岩ヶ谷 由紀">岩ヶ谷 由紀</option>
-              <option value="岡崎 淳介">岡崎 淳介</option>
-            </select>
-            <span className="text-gray-400">&lt;</span>
-            <select className="border border-gray-300 rounded px-3 py-2 text-sm bg-white">
-              <option>全社</option>
-              <option>本社</option>
-              <option>支店1</option>
+              <option value="">選択してください...</option>
+              {members.map((m) => (
+                <option key={m.id} value={m.id}>{m.name}</option>
+              ))}
             </select>
           </div>
         </div>

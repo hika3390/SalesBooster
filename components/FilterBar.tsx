@@ -6,9 +6,7 @@ import GraphIconTabs from './filter/GraphIconTabs';
 import ViewTabs from './filter/ViewTabs';
 import PeriodUnitToggle from './filter/PeriodUnitToggle';
 import PeriodNavigator from './filter/PeriodNavigator';
-
-type ViewType = '期間グラフ' | '累計グラフ' | '推移グラフ' | 'レポート' | 'レコード';
-type PeriodUnit = '月' | '週' | '日';
+import { ViewType, PeriodUnit } from '@/types';
 
 interface FilterBarProps {
   onViewChange?: (view: ViewType) => void;

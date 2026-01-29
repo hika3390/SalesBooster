@@ -7,16 +7,7 @@ import SalesBar from './SalesBar';
 import SalesPersonCard from './SalesPersonCard';
 import TeamFooter from './TeamFooter';
 import { COLUMN_WIDTH } from '../constants/chart';
-
-interface SalesPerson {
-  rank: number;
-  name: string;
-  sales: number;
-  target: number;
-  achievement: number;
-  imageUrl?: string;
-  department?: string;
-}
+import { SalesPerson } from '@/types';
 
 interface SalesPerformanceProps {
   salesData: SalesPerson[];

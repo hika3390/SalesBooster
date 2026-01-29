@@ -10,9 +10,10 @@ import { ViewType, PeriodUnit } from '@/types';
 
 interface FilterBarProps {
   onViewChange?: (view: ViewType) => void;
+  onFilterChange?: (filter: { groupId: string; memberId: string }) => void;
 }
 
-export default function FilterBar({ onViewChange }: FilterBarProps = {}) {
+export default function FilterBar({ onViewChange, onFilterChange }: FilterBarProps = {}) {
   const [selectedView, setSelectedView] = useState<ViewType>('期間グラフ');
   const [periodUnit, setPeriodUnit] = useState<PeriodUnit>('月');
 
@@ -30,7 +31,7 @@ export default function FilterBar({ onViewChange }: FilterBarProps = {}) {
       {/* 1段目: グループとメンバー */}
       <div className="px-4 py-3 border-b border-gray-200">
         <div className="flex items-center justify-between">
-          <GroupMemberSelector />
+          <GroupMemberSelector onFilterChange={onFilterChange} />
           <GraphIconTabs />
         </div>
       </div>

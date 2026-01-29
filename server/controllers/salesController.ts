@@ -1,5 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { salesService } from '../services/salesService';
+import { groupService } from '../services/groupService';
+
+async function resolveMemberIds(searchParams: URLSearchParams): Promise<number[] | undefined> {
+  const memberId = searchParams.get('memberId');
+  const groupId = searchParams.get('groupId');
+
+  if (memberId) {
+    return [Number(memberId)];
+  }
+
+  if (groupId) {
+    const group = await groupService.getById(Number(groupId));
+    if (group) {
+      return group.members.map((gm) => gm.memberId);
+    }
+    return [];
+  }
+
+  return undefined;
+}
 
 export const salesController = {
   async getSalesByPeriod(request: NextRequest) {
@@ -8,7 +28,8 @@ export const salesController = {
     const month = Number(searchParams.get('month')) || new Date().getMonth() + 1;
 
     try {
-      const data = await salesService.getSalesByPeriod(year, month);
+      const memberIds = await resolveMemberIds(searchParams);
+      const data = await salesService.getSalesByPeriod(year, month, memberIds);
       return NextResponse.json(data);
     } catch (error) {
       console.error('Failed to fetch sales data:', error);
@@ -46,7 +67,8 @@ export const salesController = {
     const endMonth = Number(searchParams.get('endMonth')) || new Date().getMonth() + 1;
 
     try {
-      const data = await salesService.getCumulativeSales(year, startMonth, endMonth);
+      const memberIds = await resolveMemberIds(searchParams);
+      const data = await salesService.getCumulativeSales(year, startMonth, endMonth, memberIds);
       return NextResponse.json(data);
     } catch (error) {
       console.error('Failed to fetch cumulative sales data:', error);
@@ -60,7 +82,8 @@ export const salesController = {
     const months = Number(searchParams.get('months')) || 6;
 
     try {
-      const data = await salesService.getTrendData(year, months);
+      const memberIds = await resolveMemberIds(searchParams);
+      const data = await salesService.getTrendData(year, months, memberIds);
       return NextResponse.json(data);
     } catch (error) {
       console.error('Failed to fetch trend data:', error);

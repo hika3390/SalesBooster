@@ -8,14 +8,18 @@ type MemberWithDepartment = Awaited<ReturnType<typeof memberRepository.findAll>>
 type SalesRecordWithMember = Awaited<ReturnType<typeof salesRecordRepository.findByPeriod>>[number];
 
 export const salesService = {
-  async getSalesByPeriod(year: number, month: number): Promise<SalesPerson[]> {
+  async getSalesByPeriod(year: number, month: number, memberIds?: number[]): Promise<SalesPerson[]> {
     const startDate = new Date(year, month - 1, 1);
     const endDate = new Date(year, month, 0, 23, 59, 59);
 
-    const [records, members] = await Promise.all([
-      salesRecordRepository.findByPeriod(startDate, endDate),
+    const [records, allMembers] = await Promise.all([
+      salesRecordRepository.findByPeriod(startDate, endDate, memberIds),
       memberRepository.findAll(),
     ]);
+
+    const members = memberIds
+      ? allMembers.filter((m: MemberWithDepartment) => memberIds.includes(m.id))
+      : allMembers;
 
     // メンバーごとの売上合計を計算
     const salesByMember = new Map<number, number>();
@@ -59,14 +63,18 @@ export const salesService = {
     return salesPeople;
   },
 
-  async getCumulativeSales(year: number, startMonth: number, endMonth: number): Promise<SalesPerson[]> {
+  async getCumulativeSales(year: number, startMonth: number, endMonth: number, memberIds?: number[]): Promise<SalesPerson[]> {
     const startDate = new Date(year, startMonth - 1, 1);
     const endDate = new Date(year, endMonth, 0, 23, 59, 59);
 
-    const [records, members] = await Promise.all([
-      salesRecordRepository.findByPeriod(startDate, endDate),
+    const [records, allMembers] = await Promise.all([
+      salesRecordRepository.findByPeriod(startDate, endDate, memberIds),
       memberRepository.findAll(),
     ]);
+
+    const members = memberIds
+      ? allMembers.filter((m: MemberWithDepartment) => memberIds.includes(m.id))
+      : allMembers;
 
     const salesByMember = new Map<number, number>();
     for (const record of records) {
@@ -104,7 +112,7 @@ export const salesService = {
     return salesPeople;
   },
 
-  async getTrendData(year: number, months: number) {
+  async getTrendData(year: number, months: number, memberIds?: number[]) {
     const results: { month: string; sales: number; displayMonth: string }[] = [];
 
     for (let i = 0; i < months; i++) {
@@ -115,7 +123,7 @@ export const salesService = {
       const startDate = new Date(y, m - 1, 1);
       const endDate = new Date(y, m, 0, 23, 59, 59);
 
-      const records = await salesRecordRepository.findByPeriod(startDate, endDate);
+      const records = await salesRecordRepository.findByPeriod(startDate, endDate, memberIds);
       const totalSalesYen = records.reduce((sum: number, r: SalesRecordWithMember) => sum + r.amount, 0);
 
       results.push({

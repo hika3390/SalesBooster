@@ -22,6 +22,7 @@ export default function Home() {
   const [cumulativeSalesData, setCumulativeSalesData] = useState<SalesPerson[]>([]);
   const [trendData, setTrendData] = useState<TrendData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState<{ groupId: string; memberId: string }>({ groupId: '', memberId: '' });
 
   const now = new Date();
   const year = now.getFullYear();
@@ -30,10 +31,15 @@ export default function Home() {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
+      const filterParams = new URLSearchParams();
+      if (filter.memberId) filterParams.set('memberId', filter.memberId);
+      else if (filter.groupId) filterParams.set('groupId', filter.groupId);
+      const filterQuery = filterParams.toString() ? `&${filterParams.toString()}` : '';
+
       const [salesRes, cumulativeRes, trendRes] = await Promise.all([
-        fetch(`/api/sales?year=${year}&month=${month}`),
-        fetch(`/api/sales/cumulative?year=${year}&startMonth=1&endMonth=${month}`),
-        fetch(`/api/sales/trend?year=${year}&months=12`),
+        fetch(`/api/sales?year=${year}&month=${month}${filterQuery}`),
+        fetch(`/api/sales/cumulative?year=${year}&startMonth=1&endMonth=${month}${filterQuery}`),
+        fetch(`/api/sales/trend?year=${year}&months=12${filterQuery}`),
       ]);
 
       if (salesRes.ok) setSalesData(await salesRes.json());
@@ -44,7 +50,7 @@ export default function Home() {
     } finally {
       setLoading(false);
     }
-  }, [year, month]);
+  }, [year, month, filter]);
 
   useEffect(() => {
     fetchData();
@@ -67,16 +73,30 @@ export default function Home() {
     fetchData();
   };
 
+  const isDataEmpty =
+    (currentView === '期間グラフ' && salesData.length === 0) ||
+    (currentView === '累計グラフ' && cumulativeSalesData.length === 0) ||
+    (currentView === '推移グラフ' && trendData.every((d) => d.sales === 0));
+
+  const emptyMessage = (
+    <div className="mx-6 my-4 p-12 bg-white rounded shadow-sm text-center">
+      <div className="text-gray-400 text-lg mb-2">該当する売上データがありません</div>
+      <div className="text-gray-400 text-sm">フィルター条件を変更してください</div>
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-gray-100">
       <Header onAddSalesClick={handleAddSalesClick} />
-      <FilterBar onViewChange={handleViewChange} />
+      <FilterBar onViewChange={handleViewChange} onFilterChange={setFilter} />
 
       <main className="w-full">
         {loading ? (
           <div className="mx-6 my-4 p-8 bg-white rounded shadow-sm text-center text-gray-500">
             データを読み込み中...
           </div>
+        ) : isDataEmpty ? (
+          emptyMessage
         ) : currentView === '累計グラフ' ? (
           <CumulativeChart salesData={cumulativeSalesData} />
         ) : currentView === '期間グラフ' ? (

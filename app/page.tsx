@@ -123,8 +123,9 @@ export default function Home() {
 
       <main className="w-full">
         {loading ? (
-          <div className="mx-6 my-4 p-8 bg-white rounded shadow-sm text-center text-gray-500">
-            データを読み込み中...
+          <div className="mx-6 my-4 p-12 bg-white rounded shadow-sm flex flex-col items-center justify-center">
+            <div className="w-8 h-8 border-4 border-gray-200 border-t-blue-600 rounded-full animate-spin"></div>
+            <div className="mt-3 text-sm text-gray-500">データを読み込み中...</div>
           </div>
         ) : isDataEmpty ? (
           emptyMessage

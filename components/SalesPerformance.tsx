@@ -19,6 +19,8 @@ export default function SalesPerformance({ salesData }: SalesPerformanceProps) {
   const [changedNames, setChangedNames] = useState<Set<string>>(new Set());
   const [bannerNames, setBannerNames] = useState<string[]>([]);
 
+  const animationFrameRef = useRef<number | null>(null);
+
   useEffect(() => {
     const prev = prevDataRef.current;
     prevDataRef.current = salesData;
@@ -32,13 +34,31 @@ export default function SalesPerformance({ salesData }: SalesPerformanceProps) {
         }
       }
       if (changed.size > 0) {
-        setChangedNames(changed);
-        setBannerNames(Array.from(changed));
+        // 一度クリアしてアニメーションクラスを外す
+        setChangedNames(new Set());
+        setBannerNames([]);
+
+        // 前回のrAFが残っていればキャンセル
+        if (animationFrameRef.current) {
+          cancelAnimationFrame(animationFrameRef.current);
+        }
+
+        // 次フレームで再設定 → CSSアニメーションが再トリガーされる
+        animationFrameRef.current = requestAnimationFrame(() => {
+          setChangedNames(changed);
+          setBannerNames(Array.from(changed));
+        });
+
         const timer = setTimeout(() => {
           setChangedNames(new Set());
           setBannerNames([]);
         }, 5000);
-        return () => clearTimeout(timer);
+        return () => {
+          clearTimeout(timer);
+          if (animationFrameRef.current) {
+            cancelAnimationFrame(animationFrameRef.current);
+          }
+        };
       }
     }
   }, [salesData]);

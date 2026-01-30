@@ -1,21 +1,35 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import GroupMemberSelector from './filter/GroupMemberSelector';
 import GraphIconTabs from './filter/GraphIconTabs';
 import ViewTabs from './filter/ViewTabs';
 import PeriodUnitToggle from './filter/PeriodUnitToggle';
-import PeriodNavigator from './filter/PeriodNavigator';
+import PeriodNavigator, { PeriodSelection } from './filter/PeriodNavigator';
 import { ViewType, PeriodUnit } from '@/types';
 
 interface FilterBarProps {
   onViewChange?: (view: ViewType) => void;
   onFilterChange?: (filter: { groupId: string; memberId: string }) => void;
+  onPeriodChange?: (period: PeriodSelection) => void;
 }
 
-export default function FilterBar({ onViewChange, onFilterChange }: FilterBarProps = {}) {
+export interface DateRange {
+  minDate: string;
+  maxDate: string;
+}
+
+export default function FilterBar({ onViewChange, onFilterChange, onPeriodChange }: FilterBarProps = {}) {
   const [selectedView, setSelectedView] = useState<ViewType>('期間グラフ');
   const [periodUnit, setPeriodUnit] = useState<PeriodUnit>('月');
+  const [dateRange, setDateRange] = useState<DateRange | null>(null);
+
+  useEffect(() => {
+    fetch('/api/sales/date-range')
+      .then((res) => res.ok ? res.json() : null)
+      .then(setDateRange)
+      .catch(() => setDateRange(null));
+  }, []);
 
   const handleViewChange = (view: ViewType) => {
     setSelectedView(view);
@@ -42,7 +56,7 @@ export default function FilterBar({ onViewChange, onFilterChange }: FilterBarPro
           <div className="flex items-center space-x-4">
             <ViewTabs selectedView={selectedView} onViewChange={handleViewChange} />
             <PeriodUnitToggle periodUnit={periodUnit} onPeriodUnitChange={setPeriodUnit} />
-            <PeriodNavigator periodUnit={periodUnit} showPeriodSelection={showPeriodSelection} />
+            <PeriodNavigator periodUnit={periodUnit} showPeriodSelection={showPeriodSelection} dateRange={dateRange} onPeriodChange={onPeriodChange} />
           </div>
 
           <div className="flex items-center space-x-4">

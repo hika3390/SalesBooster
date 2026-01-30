@@ -25,41 +25,42 @@ export default function SalesPerformance({ salesData, recordCount }: SalesPerfor
     const prev = prevDataRef.current;
     prevDataRef.current = salesData;
 
-    if (prev.length > 0) {
-      const changed = new Set<string>();
-      for (const person of salesData) {
-        const prevPerson = prev.find((p) => p.name === person.name);
-        if (prevPerson && prevPerson.sales !== person.sales) {
-          changed.add(person.name);
-        }
+    // prevが空の場合はアニメーション不要（初回表示 or フィルター変更後のデータクリアからの復帰）
+    if (prev.length === 0) return;
+
+    const changed = new Set<string>();
+    for (const person of salesData) {
+      const prevPerson = prev.find((p) => p.name === person.name);
+      if (prevPerson && prevPerson.sales !== person.sales) {
+        changed.add(person.name);
       }
-      if (changed.size > 0) {
-        // 一度クリアしてアニメーションクラスを外す
+    }
+    if (changed.size > 0) {
+      // 一度クリアしてアニメーションクラスを外す
+      setChangedNames(new Set());
+      setBannerNames([]);
+
+      // 前回のrAFが残っていればキャンセル
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+
+      // 次フレームで再設定 → CSSアニメーションが再トリガーされる
+      animationFrameRef.current = requestAnimationFrame(() => {
+        setChangedNames(changed);
+        setBannerNames(Array.from(changed));
+      });
+
+      const timer = setTimeout(() => {
         setChangedNames(new Set());
         setBannerNames([]);
-
-        // 前回のrAFが残っていればキャンセル
+      }, 5000);
+      return () => {
+        clearTimeout(timer);
         if (animationFrameRef.current) {
           cancelAnimationFrame(animationFrameRef.current);
         }
-
-        // 次フレームで再設定 → CSSアニメーションが再トリガーされる
-        animationFrameRef.current = requestAnimationFrame(() => {
-          setChangedNames(changed);
-          setBannerNames(Array.from(changed));
-        });
-
-        const timer = setTimeout(() => {
-          setChangedNames(new Set());
-          setBannerNames([]);
-        }, 5000);
-        return () => {
-          clearTimeout(timer);
-          if (animationFrameRef.current) {
-            cancelAnimationFrame(animationFrameRef.current);
-          }
-        };
-      }
+      };
     }
   }, [salesData]);
   // 目標平均の計算

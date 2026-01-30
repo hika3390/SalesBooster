@@ -25,7 +25,9 @@ export default function TrendChart({ monthlyData, title = 'チーム売上推移
 
   // Y軸のスケール計算
   const yScale = (value: number) => {
-    const normalized = (value - minSales) / (maxSales - minSales);
+    const range = maxSales - minSales;
+    if (range === 0) return graphPadding + effectiveHeight / 2;
+    const normalized = (value - minSales) / range;
     return graphPadding + effectiveHeight * (1 - normalized);
   };
 

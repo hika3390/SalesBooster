@@ -37,7 +37,7 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="h-screen flex flex-col bg-gray-100">
       {/* ヘッダー */}
       <Header
         subtitle="管理画面"
@@ -52,9 +52,9 @@ export default function SettingsPage() {
       />
 
       {/* メインコンテンツ */}
-      <div className="flex">
+      <div className="flex flex-1 overflow-hidden">
         <SettingsSidebar activeSection={activeSection} onSectionChange={setActiveSection} />
-        <main className="flex-1 p-8">
+        <main className="flex-1 p-8 overflow-y-auto">
           {renderContent()}
         </main>
       </div>

@@ -130,7 +130,7 @@ const menuItems: MenuItem[] = [
 
 export default function SettingsSidebar({ activeSection, onSectionChange }: SettingsSidebarProps) {
   return (
-    <nav className="w-64 bg-white border-r border-gray-200 min-h-screen">
+    <nav className="w-64 bg-white border-r border-gray-200 overflow-y-auto">
       <div className="py-4">
         {menuItems.map((item) => (
           <button

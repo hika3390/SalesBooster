@@ -3,7 +3,6 @@
 import React from 'react';
 import SalesBar from './SalesBar';
 import SalesPersonCard from './SalesPersonCard';
-import TeamFooter from './TeamFooter';
 import { COLUMN_WIDTH } from '../constants/chart';
 import { SalesPerson } from '@/types';
 
@@ -21,10 +20,6 @@ export default function CumulativeChart({ salesData }: CumulativeChartProps) {
 
   // 各カラムの固定幅
   const columnWidth = COLUMN_WIDTH;
-
-  // チーム合計の計算
-  const totalSales = salesData.reduce((sum, person) => sum + person.sales, 0);
-  const achievementRate = 51; // 固定値（実際には計算する）
 
   return (
     <div className="bg-white mx-6 my-4 shadow-sm overflow-x-auto">
@@ -76,9 +71,6 @@ export default function CumulativeChart({ salesData }: CumulativeChartProps) {
             ))}
           </div>
         </div>
-
-        {/* フッター */}
-        <TeamFooter totalSales={totalSales} achievementRate={achievementRate} />
       </div>
     </div>
   );

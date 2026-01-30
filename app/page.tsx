@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Header from '@/components/Header';
 import FilterBar from '@/components/FilterBar';
 import SalesPerformance from '@/components/SalesPerformance';
@@ -8,6 +8,7 @@ import CumulativeChart from '@/components/CumulativeChart';
 import TrendChart from '@/components/TrendChart';
 import SalesInputModal from '@/components/SalesInputModal';
 import { SalesPerson, ViewType } from '@/types';
+import { useSalesSSE } from '@/hooks/useSalesSSE';
 
 interface TrendData {
   month: string;
@@ -28,7 +29,10 @@ export default function Home() {
   const year = now.getFullYear();
   const month = now.getMonth() + 1;
 
-  const fetchData = useCallback(async () => {
+  const fetchTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const fetchingRef = useRef(false);
+
+  const fetchDataImmediate = useCallback(async () => {
     try {
       const filterParams = new URLSearchParams();
       if (filter.memberId) filterParams.set('memberId', filter.memberId);
@@ -51,9 +55,27 @@ export default function Home() {
     }
   }, [year, month, filter]);
 
+  // デバウンス付きfetchData: 短時間の連続呼び出しを1回にまとめる
+  const fetchData = useCallback(() => {
+    if (fetchingRef.current) return;
+    if (fetchTimerRef.current) clearTimeout(fetchTimerRef.current);
+
+    fetchTimerRef.current = setTimeout(async () => {
+      fetchingRef.current = true;
+      try {
+        await fetchDataImmediate();
+      } finally {
+        fetchingRef.current = false;
+      }
+    }, 100);
+  }, [fetchDataImmediate]);
+
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  // SSEによるリアルタイム更新
+  useSalesSSE({ onUpdate: fetchData });
 
   const handleViewChange = (view: ViewType) => {
     setCurrentView(view);
@@ -68,7 +90,7 @@ export default function Home() {
   };
 
   const handleSalesSubmit = async () => {
-    // 売上登録後にダッシュボードデータを再取得
+    // SSEでも通知されるが、送信元は即時反映のためフォールバックとしても実行
     fetchData();
   };
 

@@ -150,9 +150,9 @@ export default function SalesPerformance({ salesData, recordCount }: SalesPerfor
           <div className={`${stickyLabelClass} bg-gray-50`} style={{ width: `${labelWidth}px` }}>
             <div className="text-sm font-bold text-gray-600">順位</div>
           </div>
-          <div className="flex px-1 gap-1">
+          <div className="flex-1 flex px-1 gap-1">
             {salesData.map((person) => (
-              <div key={person.name} className="text-center py-2" style={{ minWidth: `${columnWidth}px`, flex: 1 }}>
+              <div key={person.name} className="flex-1 text-center py-2" style={{ minWidth: `${columnWidth}px` }}>
                 <div className="text-lg font-bold text-gray-800">{person.rank}位</div>
               </div>
             ))}
@@ -164,13 +164,13 @@ export default function SalesPerformance({ salesData, recordCount }: SalesPerfor
           <div className={stickyLabelClass} style={{ width: `${labelWidth}px` }}>
             <div className="text-sm font-bold text-gray-600">メンバー</div>
           </div>
-          <div className="flex px-1 gap-1">
+          <div className="flex-1 flex px-1 gap-1">
             {salesData.map((person, index) => {
               const isChanged = changedNames.has(person.name);
               const bgColor = index < top20Index ? 'bg-red-50' : index < low20Index ? 'bg-blue-50' : 'bg-blue-100';
               return (
-                <div key={person.name} className={`flex flex-col items-center py-2 ${bgColor}`}
-                  style={{ minWidth: `${columnWidth}px`, flex: 1 }}
+                <div key={person.name} className={`flex-1 flex flex-col items-center py-2 ${bgColor}`}
+                  style={{ minWidth: `${columnWidth}px` }}
                 >
                   <div className="relative mb-1.5">
                     <div className={`w-20 h-20 rounded-full bg-gray-300 overflow-hidden border border-white shadow-sm${isChanged ? ' animate-ring-glow' : ''}`}>
@@ -206,11 +206,11 @@ export default function SalesPerformance({ salesData, recordCount }: SalesPerfor
               <div className="text-xs text-gray-400">達成率</div>
             </div>
           </div>
-          <div className="flex px-1 gap-1">
+          <div className="flex-1 flex px-1 gap-1">
             {salesData.map((person) => {
               const isChanged = changedNames.has(person.name);
               return (
-                <div key={person.name} className={`text-center py-2${isChanged ? ' animate-card-flash' : ''}`} style={{ minWidth: `${columnWidth}px`, flex: 1 }}>
+                <div key={person.name} className={`flex-1 text-center py-2${isChanged ? ' animate-card-flash' : ''}`} style={{ minWidth: `${columnWidth}px` }}>
                   <div className={`text-base font-bold text-gray-800${isChanged ? ' animate-amount-flash' : ''}`}>
                     {formatNumber(person.sales)}万円
                   </div>
@@ -228,9 +228,9 @@ export default function SalesPerformance({ salesData, recordCount }: SalesPerfor
           <div className={stickyLabelClass} style={{ width: `${labelWidth}px` }}>
             <div className="text-sm font-bold text-gray-600">目標</div>
           </div>
-          <div className="flex px-1 gap-1">
+          <div className="flex-1 flex px-1 gap-1">
             {salesData.map((person) => (
-              <div key={person.name} className="text-center py-2" style={{ minWidth: `${columnWidth}px`, flex: 1 }}>
+              <div key={person.name} className="flex-1 text-center py-2" style={{ minWidth: `${columnWidth}px` }}>
                 <div className="text-[11px] font-semibold text-gray-700">{formatNumber(person.target)}万円</div>
               </div>
             ))}

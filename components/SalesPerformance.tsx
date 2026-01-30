@@ -1,11 +1,12 @@
 'use client';
 
-import React from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import PerformanceLabels from './PerformanceLabels';
 import AverageTargetLine from './AverageTargetLine';
 import SalesBar from './SalesBar';
 import SalesPersonCard from './SalesPersonCard';
 import TeamFooter from './TeamFooter';
+import ContractBanner from './ContractBanner';
 import { COLUMN_WIDTH } from '../constants/chart';
 import { SalesPerson } from '@/types';
 
@@ -14,6 +15,33 @@ interface SalesPerformanceProps {
 }
 
 export default function SalesPerformance({ salesData }: SalesPerformanceProps) {
+  const prevDataRef = useRef<SalesPerson[]>([]);
+  const [changedNames, setChangedNames] = useState<Set<string>>(new Set());
+  const [bannerNames, setBannerNames] = useState<string[]>([]);
+
+  useEffect(() => {
+    const prev = prevDataRef.current;
+    prevDataRef.current = salesData;
+
+    if (prev.length > 0) {
+      const changed = new Set<string>();
+      for (const person of salesData) {
+        const prevPerson = prev.find((p) => p.name === person.name);
+        if (prevPerson && prevPerson.sales !== person.sales) {
+          changed.add(person.name);
+        }
+      }
+      if (changed.size > 0) {
+        setChangedNames(changed);
+        setBannerNames(Array.from(changed));
+        const timer = setTimeout(() => {
+          setChangedNames(new Set());
+          setBannerNames([]);
+        }, 5000);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [salesData]);
   // 目標平均の計算
   const averageTarget = 52;
 
@@ -32,7 +60,10 @@ export default function SalesPerformance({ salesData }: SalesPerformanceProps) {
   const achievementRate = 51; // 固定値（実際には計算する）
 
   return (
-    <div className="bg-white mx-6 my-4 shadow-sm overflow-x-auto">
+    <div className="bg-white mx-6 my-4 shadow-sm overflow-x-auto relative">
+      {/* 契約速報バナー */}
+      <ContractBanner names={bannerNames} />
+
       <div style={{ minWidth: 'fit-content' }}>
         {/* グラフエリア */}
         <div className="relative py-6" style={{ height: '500px' }}>
@@ -47,12 +78,13 @@ export default function SalesPerformance({ salesData }: SalesPerformanceProps) {
             <div className="relative h-full flex gap-1">
               {salesData.map((person, index) => (
                 <SalesBar
-                  key={index}
+                  key={person.name}
                   person={person}
                   index={index}
                   maxSales={maxSales}
                   top20Index={top20Index}
                   columnWidth={columnWidth}
+                  changed={changedNames.has(person.name)}
                 />
               ))}
             </div>
@@ -64,12 +96,13 @@ export default function SalesPerformance({ salesData }: SalesPerformanceProps) {
           <div className="flex px-1 gap-1">
             {salesData.map((person, index) => (
               <SalesPersonCard
-                key={index}
+                key={person.name}
                 person={person}
                 index={index}
                 top20Index={top20Index}
                 low20Index={low20Index}
                 columnWidth={columnWidth}
+                changed={changedNames.has(person.name)}
               />
             ))}
           </div>

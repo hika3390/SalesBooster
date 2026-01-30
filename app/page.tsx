@@ -21,7 +21,7 @@ export default function Home() {
   const [salesData, setSalesData] = useState<SalesPerson[]>([]);
   const [cumulativeSalesData, setCumulativeSalesData] = useState<SalesPerson[]>([]);
   const [trendData, setTrendData] = useState<TrendData[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [filter, setFilter] = useState<{ groupId: string; memberId: string }>({ groupId: '', memberId: '' });
 
   const now = new Date();
@@ -29,7 +29,6 @@ export default function Home() {
   const month = now.getMonth() + 1;
 
   const fetchData = useCallback(async () => {
-    setLoading(true);
     try {
       const filterParams = new URLSearchParams();
       if (filter.memberId) filterParams.set('memberId', filter.memberId);
@@ -48,7 +47,7 @@ export default function Home() {
     } catch (error) {
       console.error('Failed to fetch data:', error);
     } finally {
-      setLoading(false);
+      setInitialLoading(false);
     }
   }, [year, month, filter]);
 
@@ -91,7 +90,7 @@ export default function Home() {
       <FilterBar onViewChange={handleViewChange} onFilterChange={setFilter} />
 
       <main className="w-full">
-        {loading ? (
+        {initialLoading ? (
           <div className="mx-6 my-4 p-8 bg-white rounded shadow-sm text-center text-gray-500">
             データを読み込み中...
           </div>

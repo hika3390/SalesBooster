@@ -24,3 +24,108 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* ===== 契約速報バナー ===== */
+@keyframes banner-enter {
+  0% { transform: translateY(-100%); opacity: 0; }
+  15% { transform: translateY(0); opacity: 1; }
+  85% { transform: translateY(0); opacity: 1; }
+  100% { transform: translateY(-100%); opacity: 0; }
+}
+
+.animate-banner {
+  animation: banner-enter 4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* ===== バー演出 ===== */
+/* バー：力強く伸びて、光って2回パルスする */
+@keyframes bar-power {
+  0%   { filter: brightness(1); }
+  8%   { filter: brightness(1.6) drop-shadow(0 0 24px rgba(255, 200, 0, 0.8)); }
+  20%  { filter: brightness(1.1) drop-shadow(0 0 12px rgba(255, 200, 0, 0.5)); }
+  35%  { filter: brightness(1.4) drop-shadow(0 0 18px rgba(255, 200, 0, 0.6)); }
+  55%  { filter: brightness(1.05) drop-shadow(0 0 6px rgba(255, 200, 0, 0.3)); }
+  100% { filter: brightness(1) drop-shadow(0 0 0 transparent); }
+}
+
+.animate-bar-power {
+  animation: bar-power 3s ease-out;
+}
+
+/* バッジ：大きく弾んで注目を集める */
+@keyframes badge-burst {
+  0%   { transform: scale(1); }
+  8%   { transform: scale(1.5); }
+  20%  { transform: scale(0.9); }
+  30%  { transform: scale(1.35); }
+  45%  { transform: scale(0.95); }
+  55%  { transform: scale(1.2); }
+  70%  { transform: scale(1); }
+  100% { transform: scale(1); }
+}
+
+.animate-badge-burst {
+  animation: badge-burst 2s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ===== カード演出 ===== */
+/* プロフィール写真：ゴールドのリング */
+@keyframes ring-glow {
+  0%   { box-shadow: 0 0 0 0 rgba(251, 191, 36, 0), 0 0 0 0 rgba(251, 191, 36, 0); }
+  10%  { box-shadow: 0 0 0 4px rgba(251, 191, 36, 0.8), 0 0 20px 4px rgba(251, 191, 36, 0.4); }
+  40%  { box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.5), 0 0 12px 2px rgba(251, 191, 36, 0.2); }
+  70%  { box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.3), 0 0 6px 1px rgba(251, 191, 36, 0.1); }
+  100% { box-shadow: 0 0 0 0 rgba(251, 191, 36, 0), 0 0 0 0 rgba(251, 191, 36, 0); }
+}
+
+.animate-ring-glow {
+  animation: ring-glow 3.5s ease-out;
+}
+
+/* 金額：赤く大きくバウンド */
+@keyframes amount-flash {
+  0%   { transform: scale(1); color: inherit; }
+  5%   { transform: scale(1.4); color: #dc2626; }
+  15%  { transform: scale(1.0); }
+  25%  { transform: scale(1.3); color: #dc2626; }
+  40%  { transform: scale(1.0); }
+  55%  { transform: scale(1.15); color: #dc2626; }
+  75%  { transform: scale(1.0); color: inherit; }
+  100% { transform: scale(1); color: inherit; }
+}
+
+.animate-amount-flash {
+  animation: amount-flash 2.5s ease-out;
+}
+
+/* 達成率：遅れてバウンド */
+.animate-achievement-flash {
+  animation: amount-flash 2.5s ease-out 0.4s both;
+}
+
+/* カード背景：力強いゴールドフラッシュ */
+@keyframes card-flash {
+  0%   { background-color: transparent; }
+  5%   { background-color: rgba(255, 200, 0, 0.5); }
+  15%  { background-color: rgba(255, 200, 0, 0.15); }
+  30%  { background-color: rgba(255, 200, 0, 0.3); }
+  50%  { background-color: rgba(255, 200, 0, 0.08); }
+  100% { background-color: transparent; }
+}
+
+.animate-card-flash {
+  animation: card-flash 3.5s ease-out;
+}
+
+/* カード全体の枠線ゴールド */
+@keyframes border-gold {
+  0%   { border-color: transparent; box-shadow: none; }
+  8%   { border-color: #fbbf24; box-shadow: 0 0 12px rgba(251, 191, 36, 0.5); }
+  30%  { border-color: rgba(251, 191, 36, 0.6); box-shadow: 0 0 6px rgba(251, 191, 36, 0.3); }
+  70%  { border-color: rgba(251, 191, 36, 0.2); box-shadow: none; }
+  100% { border-color: transparent; box-shadow: none; }
+}
+
+.animate-border-gold {
+  animation: border-gold 4s ease-out;
+}

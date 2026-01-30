@@ -1,6 +1,7 @@
 'use client';
 
 import { SalesPerson } from '@/types';
+import { formatNumber } from '@/lib/currency';
 
 interface SalesPersonCardProps {
   person: SalesPerson;
@@ -8,9 +9,10 @@ interface SalesPersonCardProps {
   top20Index: number;
   low20Index: number;
   columnWidth: number;
+  changed?: boolean;
 }
 
-export default function SalesPersonCard({ person, index, top20Index, low20Index, columnWidth }: SalesPersonCardProps) {
+export default function SalesPersonCard({ person, index, top20Index, low20Index, columnWidth, changed }: SalesPersonCardProps) {
   // 背景色の取得
   const getBackgroundColor = (index: number): string => {
     if (index < top20Index) return 'bg-red-50';
@@ -34,8 +36,12 @@ export default function SalesPersonCard({ person, index, top20Index, low20Index,
 
   return (
     <div
-      className={`flex-1 border-r border-gray-200 ${getBackgroundColor(index)}`}
-      style={{ minWidth: `${columnWidth}px` }}
+      className={`flex-1 border-r border-gray-200 ${getBackgroundColor(index)}${changed ? ' animate-border-gold' : ''}`}
+      style={{
+        minWidth: `${columnWidth}px`,
+        borderWidth: changed ? '3px' : undefined,
+        transition: 'border-color 0.5s ease',
+      }}
     >
       {/* 順位 */}
       <div className="text-center py-2 border-b border-gray-200 bg-gray-50">
@@ -47,7 +53,7 @@ export default function SalesPersonCard({ person, index, top20Index, low20Index,
         <div className="text-[9px] text-gray-600 mb-1">メンバー</div>
         <div className="relative mb-1.5">
           {/* プロフィール画像 */}
-          <div className="w-20 h-20 rounded-full bg-gray-300 overflow-hidden border border-white shadow-sm">
+          <div className={`w-20 h-20 rounded-full bg-gray-300 overflow-hidden border border-white shadow-sm${changed ? ' animate-ring-glow' : ''}`}>
             {person.imageUrl ? (
               <img
                 src={person.imageUrl}
@@ -73,8 +79,10 @@ export default function SalesPersonCard({ person, index, top20Index, low20Index,
       </div>
 
       {/* 実績金額・達成率 */}
-      <div className="text-center py-2 border-b border-gray-200">
-        <div className="text-base font-bold text-gray-800">{person.sales}万円</div>
+      <div className={`text-center py-2 border-b border-gray-200${changed ? ' animate-card-flash' : ''}`}>
+        <div className={`text-base font-bold text-gray-800${changed ? ' animate-amount-flash' : ''}`}>
+          {formatNumber(person.sales)}万円
+        </div>
         <div
           className={`text-sm font-bold mt-1 ${
             person.achievement >= 100
@@ -82,7 +90,7 @@ export default function SalesPersonCard({ person, index, top20Index, low20Index,
               : person.achievement >= 80
               ? 'text-blue-600'
               : 'text-gray-600'
-          }`}
+          }${changed ? ' animate-achievement-flash' : ''}`}
         >
           {person.achievement}%
         </div>
@@ -92,7 +100,7 @@ export default function SalesPersonCard({ person, index, top20Index, low20Index,
       <div className="text-center py-2 border-b border-gray-200">
         <div className="text-[9px] text-gray-600 mb-1">目標</div>
         <div className="text-[11px] font-semibold text-gray-700">
-          {person.target}万円
+          {formatNumber(person.target)}万円
         </div>
       </div>
     </div>

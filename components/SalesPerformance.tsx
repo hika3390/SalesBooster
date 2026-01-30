@@ -4,11 +4,10 @@ import React, { useRef, useState, useEffect } from 'react';
 import PerformanceLabels from './PerformanceLabels';
 import AverageTargetLine from './AverageTargetLine';
 import SalesBar from './SalesBar';
-import SalesPersonCard from './SalesPersonCard';
-import TeamFooter from './TeamFooter';
 import ContractBanner from './ContractBanner';
 import { COLUMN_WIDTH } from '../constants/chart';
 import { SalesPerson } from '@/types';
+import { formatNumber } from '@/lib/currency';
 
 interface SalesPerformanceProps {
   salesData: SalesPerson[];
@@ -77,59 +76,166 @@ export default function SalesPerformance({ salesData }: SalesPerformanceProps) {
 
   // チーム合計の計算
   const totalSales = salesData.reduce((sum, person) => sum + person.sales, 0);
-  const achievementRate = 51; // 固定値（実際には計算する）
+
+  // 左ラベル列の幅
+  const labelWidth = 120;
+
+  // sticky左ラベルの共通スタイル
+  const stickyLabelClass = "shrink-0 sticky left-0 z-40 bg-white border-r border-gray-300 flex items-center justify-center";
 
   return (
-    <div className="bg-white mx-6 my-4 shadow-sm overflow-x-auto relative">
+    <div className="bg-white mx-6 my-4 shadow-sm relative overflow-x-auto">
       {/* 契約速報バナー */}
       <ContractBanner names={bannerNames} />
 
       <div style={{ minWidth: 'fit-content' }}>
         {/* グラフエリア */}
-        <div className="relative py-6" style={{ height: '500px' }}>
-          {/* ラベル表示 */}
-          <PerformanceLabels />
-
-          {/* 目標平均ライン */}
-          <AverageTargetLine averageTarget={averageTarget} maxSales={maxSales} />
-
-          {/* グラフバー */}
-          <div className="absolute bottom-0 left-0 right-0 h-[400px] px-1">
-            <div className="relative h-full flex gap-1">
-              {salesData.map((person, index) => (
-                <SalesBar
-                  key={person.name}
-                  person={person}
-                  index={index}
-                  maxSales={maxSales}
-                  top20Index={top20Index}
-                  columnWidth={columnWidth}
-                  changed={changedNames.has(person.name)}
-                />
-              ))}
+        <div className="flex">
+          <div className={stickyLabelClass} style={{ width: `${labelWidth}px`, height: '500px' }}>
+            <div className="flex flex-col justify-between h-full py-6 w-full">
+              <div className="px-2 text-center">
+                <div className="text-xs text-gray-500">■ 月間売上</div>
+                <div className="text-lg font-bold text-gray-800 mt-1">
+                  {formatNumber(maxSales)}
+                  <span className="text-sm font-normal text-gray-500">万円</span>
+                </div>
+                <div className="mt-3 pt-3 border-t border-gray-200">
+                  <div className="text-xs text-blue-600">■ チーム計</div>
+                  <div className="text-lg font-bold text-blue-700 mt-1">
+                    {formatNumber(totalSales)}
+                    <span className="text-sm font-normal text-blue-500">万円</span>
+                  </div>
+                </div>
+                <div className="mt-3 pt-3 border-t border-gray-200">
+                  <div className="text-xs text-gray-500">■ 契約件数</div>
+                  <div className="text-lg font-bold text-gray-800 mt-1">
+                    {salesData.filter((p) => p.sales > 0).length}
+                    <span className="text-sm font-normal text-gray-500">件</span>
+                  </div>
+                </div>
+              </div>
+              <div className="px-2 text-center">
+                <div className="text-xs text-orange-600">ノルマライン</div>
+                <div className="text-lg font-bold text-orange-600 mt-1">
+                  {averageTarget}
+                  <span className="text-sm font-normal text-orange-500">万円</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="relative py-6" style={{ height: '500px', flex: 1 }}>
+            <PerformanceLabels />
+            <AverageTargetLine averageTarget={averageTarget} maxSales={maxSales} />
+            <div className="absolute bottom-0 left-0 right-0 h-[400px] px-1">
+              <div className="relative h-full flex gap-1">
+                {salesData.map((person, index) => (
+                  <SalesBar
+                    key={person.name}
+                    person={person}
+                    index={index}
+                    maxSales={maxSales}
+                    top20Index={top20Index}
+                    columnWidth={columnWidth}
+                    changed={changedNames.has(person.name)}
+                  />
+                ))}
+              </div>
             </div>
           </div>
         </div>
 
-        {/* 営業マンリスト */}
-        <div className="border-t border-gray-200">
+        {/* 順位行 */}
+        <div className="flex border-t border-b border-gray-200 bg-gray-50">
+          <div className={`${stickyLabelClass} bg-gray-50`} style={{ width: `${labelWidth}px` }}>
+            <div className="text-sm font-bold text-gray-600">順位</div>
+          </div>
           <div className="flex px-1 gap-1">
-            {salesData.map((person, index) => (
-              <SalesPersonCard
-                key={person.name}
-                person={person}
-                index={index}
-                top20Index={top20Index}
-                low20Index={low20Index}
-                columnWidth={columnWidth}
-                changed={changedNames.has(person.name)}
-              />
+            {salesData.map((person) => (
+              <div key={person.name} className="text-center py-2" style={{ minWidth: `${columnWidth}px`, flex: 1 }}>
+                <div className="text-lg font-bold text-gray-800">{person.rank}位</div>
+              </div>
             ))}
           </div>
         </div>
 
-        {/* フッター */}
-        <TeamFooter totalSales={totalSales} achievementRate={achievementRate} />
+        {/* メンバー行 */}
+        <div className="flex border-b border-gray-200">
+          <div className={stickyLabelClass} style={{ width: `${labelWidth}px` }}>
+            <div className="text-sm font-bold text-gray-600">メンバー</div>
+          </div>
+          <div className="flex px-1 gap-1">
+            {salesData.map((person, index) => {
+              const isChanged = changedNames.has(person.name);
+              const bgColor = index < top20Index ? 'bg-red-50' : index < low20Index ? 'bg-blue-50' : 'bg-blue-100';
+              return (
+                <div key={person.name} className={`flex flex-col items-center py-2 ${bgColor}${isChanged ? ' animate-border-gold' : ''}`}
+                  style={{ minWidth: `${columnWidth}px`, flex: 1, borderWidth: isChanged ? '3px' : undefined, transition: 'border-color 0.5s ease' }}
+                >
+                  <div className="relative mb-1.5">
+                    <div className={`w-20 h-20 rounded-full bg-gray-300 overflow-hidden border border-white shadow-sm${isChanged ? ' animate-ring-glow' : ''}`}>
+                      {person.imageUrl ? (
+                        <img src={person.imageUrl} alt={person.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-400 to-blue-600">
+                          <span className="text-white text-xs font-bold">{person.name.charAt(0)}</span>
+                        </div>
+                      )}
+                    </div>
+                    {index < top20Index && person.achievement >= 100 && (
+                      <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center shadow-sm">
+                        <svg className="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                          <path d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.79l.05.025A4 4 0 008.943 18h5.416a2 2 0 001.962-1.608l1.2-6A2 2 0 0015.56 8H12V4a2 2 0 00-2-2 1 1 0 00-1 1v.667a4 4 0 01-.8 2.4L6.8 7.933a4 4 0 00-.8 2.4z" />
+                        </svg>
+                      </div>
+                    )}
+                  </div>
+                  <div className="text-[9px] text-center font-medium text-gray-800 leading-tight px-1">{person.name}</div>
+                  {person.department && <div className="text-[8px] text-gray-500 mt-0.5">{person.department}</div>}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* 実績・達成率行 */}
+        <div className="flex border-b border-gray-200">
+          <div className={stickyLabelClass} style={{ width: `${labelWidth}px` }}>
+            <div className="text-center">
+              <div className="text-sm font-bold text-gray-600">実績</div>
+              <div className="text-xs text-gray-400">達成率</div>
+            </div>
+          </div>
+          <div className="flex px-1 gap-1">
+            {salesData.map((person) => {
+              const isChanged = changedNames.has(person.name);
+              return (
+                <div key={person.name} className={`text-center py-2${isChanged ? ' animate-card-flash' : ''}`} style={{ minWidth: `${columnWidth}px`, flex: 1 }}>
+                  <div className={`text-base font-bold text-gray-800${isChanged ? ' animate-amount-flash' : ''}`}>
+                    {formatNumber(person.sales)}万円
+                  </div>
+                  <div className={`text-sm font-bold mt-1 ${person.achievement >= 100 ? 'text-red-600' : person.achievement >= 80 ? 'text-blue-600' : 'text-gray-600'}${isChanged ? ' animate-achievement-flash' : ''}`}>
+                    {person.achievement}%
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* 目標行 */}
+        <div className="flex border-b border-gray-200">
+          <div className={stickyLabelClass} style={{ width: `${labelWidth}px` }}>
+            <div className="text-sm font-bold text-gray-600">目標</div>
+          </div>
+          <div className="flex px-1 gap-1">
+            {salesData.map((person) => (
+              <div key={person.name} className="text-center py-2" style={{ minWidth: `${columnWidth}px`, flex: 1 }}>
+                <div className="text-[11px] font-semibold text-gray-700">{formatNumber(person.target)}万円</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
       </div>
     </div>
   );

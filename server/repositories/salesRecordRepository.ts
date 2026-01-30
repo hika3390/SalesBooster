@@ -11,6 +11,13 @@ export const salesRecordRepository = {
     });
   },
 
+  async findMinDate(): Promise<Date | null> {
+    const result = await prisma.salesRecord.aggregate({
+      _min: { recordDate: true },
+    });
+    return result._min.recordDate;
+  },
+
   create(data: { memberId: number; amount: number; description?: string; recordDate: Date }) {
     return prisma.salesRecord.create({ data });
   },

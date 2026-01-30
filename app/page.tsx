@@ -9,6 +9,7 @@ import TrendChart from '@/components/TrendChart';
 import SalesInputModal from '@/components/SalesInputModal';
 import { SalesPerson, ViewType } from '@/types';
 import { useSalesPolling } from '@/hooks/useSalesPolling';
+import { PeriodSelection } from '@/components/filter/PeriodNavigator';
 
 interface TrendData {
   month: string;
@@ -23,27 +24,28 @@ export default function Home() {
   const [recordCount, setRecordCount] = useState(0);
   const [cumulativeSalesData, setCumulativeSalesData] = useState<SalesPerson[]>([]);
   const [trendData, setTrendData] = useState<TrendData[]>([]);
-  const [initialLoading, setInitialLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<{ groupId: string; memberId: string }>({ groupId: '', memberId: '' });
-
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = now.getMonth() + 1;
+  const [period, setPeriod] = useState<PeriodSelection | null>(null);
 
   const fetchTimerRef = useRef<NodeJS.Timeout | null>(null);
   const fetchingRef = useRef(false);
 
   const fetchDataImmediate = useCallback(async () => {
+    if (!period) return;
+
     try {
       const filterParams = new URLSearchParams();
+      filterParams.set('startDate', period.startDate);
+      filterParams.set('endDate', period.endDate);
       if (filter.memberId) filterParams.set('memberId', filter.memberId);
       else if (filter.groupId) filterParams.set('groupId', filter.groupId);
-      const filterQuery = filterParams.toString() ? `&${filterParams.toString()}` : '';
+      const query = filterParams.toString();
 
       const [salesRes, cumulativeRes, trendRes] = await Promise.all([
-        fetch(`/api/sales?year=${year}&month=${month}${filterQuery}`),
-        fetch(`/api/sales/cumulative?year=${year}&startMonth=1&endMonth=${month}${filterQuery}`),
-        fetch(`/api/sales/trend?year=${year}&months=12${filterQuery}`),
+        fetch(`/api/sales?${query}`),
+        fetch(`/api/sales/cumulative?${query}`),
+        fetch(`/api/sales/trend?${query}`),
       ]);
 
       if (salesRes.ok) {
@@ -56,9 +58,9 @@ export default function Home() {
     } catch (error) {
       console.error('Failed to fetch data:', error);
     } finally {
-      setInitialLoading(false);
+      setLoading(false);
     }
-  }, [year, month, filter]);
+  }, [period, filter]);
 
   // デバウンス付きfetchData: 短時間の連続呼び出しを1回にまとめる
   const fetchData = useCallback(() => {
@@ -75,11 +77,14 @@ export default function Home() {
     }, 100);
   }, [fetchDataImmediate]);
 
+  // フィルター/期間変更時: データをクリアしてローディング表示してからfetch（アニメーション抑制のため）
   useEffect(() => {
+    setSalesData([]);
+    setLoading(true);
     fetchData();
   }, [fetchData]);
 
-  // ポーリングによるリアルタイム更新
+  // ポーリングによるリアルタイム更新（データクリアなし → アニメーション発火可能）
   useSalesPolling({ onUpdate: fetchData });
 
   const handleViewChange = (view: ViewType) => {
@@ -114,10 +119,10 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gray-100">
       <Header onAddSalesClick={handleAddSalesClick} />
-      <FilterBar onViewChange={handleViewChange} onFilterChange={setFilter} />
+      <FilterBar onViewChange={handleViewChange} onFilterChange={setFilter} onPeriodChange={setPeriod} />
 
       <main className="w-full">
-        {initialLoading ? (
+        {loading ? (
           <div className="mx-6 my-4 p-8 bg-white rounded shadow-sm text-center text-gray-500">
             データを読み込み中...
           </div>

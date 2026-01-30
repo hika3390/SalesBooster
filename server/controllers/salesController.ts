@@ -24,12 +24,17 @@ async function resolveMemberIds(searchParams: URLSearchParams): Promise<number[]
 export const salesController = {
   async getSalesByPeriod(request: NextRequest) {
     const { searchParams } = new URL(request.url);
-    const year = Number(searchParams.get('year')) || new Date().getFullYear();
-    const month = Number(searchParams.get('month')) || new Date().getMonth() + 1;
+    const startDateParam = searchParams.get('startDate');
+    const endDateParam = searchParams.get('endDate');
+
+    // startDate/endDateが指定されていない場合は当月をデフォルトにする
+    const now = new Date();
+    const startDate = startDateParam ? new Date(startDateParam) : new Date(now.getFullYear(), now.getMonth(), 1);
+    const endDate = endDateParam ? new Date(endDateParam) : new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
 
     try {
       const memberIds = await resolveMemberIds(searchParams);
-      const { salesPeople, recordCount } = await salesService.getSalesByPeriod(year, month, memberIds);
+      const { salesPeople, recordCount } = await salesService.getSalesByDateRange(startDate, endDate, memberIds);
       return NextResponse.json({ data: salesPeople, recordCount });
     } catch (error) {
       console.error('Failed to fetch sales data:', error);
@@ -60,15 +65,28 @@ export const salesController = {
     }
   },
 
+  async getDateRange() {
+    try {
+      const dateRange = await salesService.getDateRange();
+      return NextResponse.json(dateRange);
+    } catch (error) {
+      console.error('Failed to fetch date range:', error);
+      return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    }
+  },
+
   async getCumulativeSales(request: NextRequest) {
     const { searchParams } = new URL(request.url);
-    const year = Number(searchParams.get('year')) || new Date().getFullYear();
-    const startMonth = Number(searchParams.get('startMonth')) || 1;
-    const endMonth = Number(searchParams.get('endMonth')) || new Date().getMonth() + 1;
+    const startDateParam = searchParams.get('startDate');
+    const endDateParam = searchParams.get('endDate');
+
+    const now = new Date();
+    const startDate = startDateParam ? new Date(startDateParam) : new Date(now.getFullYear(), 0, 1);
+    const endDate = endDateParam ? new Date(endDateParam) : new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
 
     try {
       const memberIds = await resolveMemberIds(searchParams);
-      const data = await salesService.getCumulativeSales(year, startMonth, endMonth, memberIds);
+      const data = await salesService.getCumulativeSales(startDate, endDate, memberIds);
       return NextResponse.json(data);
     } catch (error) {
       console.error('Failed to fetch cumulative sales data:', error);
@@ -78,12 +96,16 @@ export const salesController = {
 
   async getTrendData(request: NextRequest) {
     const { searchParams } = new URL(request.url);
-    const year = Number(searchParams.get('year')) || new Date().getFullYear();
-    const months = Number(searchParams.get('months')) || 6;
+    const startDateParam = searchParams.get('startDate');
+    const endDateParam = searchParams.get('endDate');
+
+    const now = new Date();
+    const endDate = endDateParam ? new Date(endDateParam) : new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+    const startDate = startDateParam ? new Date(startDateParam) : new Date(endDate.getFullYear(), endDate.getMonth() - 11, 1);
 
     try {
       const memberIds = await resolveMemberIds(searchParams);
-      const data = await salesService.getTrendData(year, months, memberIds);
+      const data = await salesService.getTrendData(startDate, endDate, memberIds);
       return NextResponse.json(data);
     } catch (error) {
       console.error('Failed to fetch trend data:', error);

@@ -8,7 +8,7 @@ type MemberWithDepartment = Awaited<ReturnType<typeof memberRepository.findAll>>
 type SalesRecordWithMember = Awaited<ReturnType<typeof salesRecordRepository.findByPeriod>>[number];
 
 export const salesService = {
-  async getSalesByPeriod(year: number, month: number, memberIds?: number[]): Promise<SalesPerson[]> {
+  async getSalesByPeriod(year: number, month: number, memberIds?: number[]): Promise<{ salesPeople: SalesPerson[]; recordCount: number }> {
     const startDate = new Date(year, month - 1, 1);
     const endDate = new Date(year, month, 0, 23, 59, 59);
 
@@ -60,7 +60,7 @@ export const salesService = {
     salesPeople.sort((a, b) => b.sales - a.sales);
     salesPeople.forEach((p, i) => (p.rank = i + 1));
 
-    return salesPeople;
+    return { salesPeople, recordCount: records.length };
   },
 
   async getCumulativeSales(year: number, startMonth: number, endMonth: number, memberIds?: number[]): Promise<SalesPerson[]> {

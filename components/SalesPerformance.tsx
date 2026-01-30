@@ -11,9 +11,10 @@ import { formatNumber } from '@/lib/currency';
 
 interface SalesPerformanceProps {
   salesData: SalesPerson[];
+  recordCount: number;
 }
 
-export default function SalesPerformance({ salesData }: SalesPerformanceProps) {
+export default function SalesPerformance({ salesData, recordCount }: SalesPerformanceProps) {
   const prevDataRef = useRef<SalesPerson[]>([]);
   const [changedNames, setChangedNames] = useState<Set<string>>(new Set());
   const [bannerNames, setBannerNames] = useState<string[]>([]);
@@ -109,7 +110,7 @@ export default function SalesPerformance({ salesData }: SalesPerformanceProps) {
                 <div className="mt-3 pt-3 border-t border-gray-200">
                   <div className="text-xs text-gray-500">■ 契約件数</div>
                   <div className="text-lg font-bold text-gray-800 mt-1">
-                    {salesData.filter((p) => p.sales > 0).length}
+                    {recordCount}
                     <span className="text-sm font-normal text-gray-500">件</span>
                   </div>
                 </div>

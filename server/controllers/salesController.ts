@@ -29,8 +29,8 @@ export const salesController = {
 
     try {
       const memberIds = await resolveMemberIds(searchParams);
-      const data = await salesService.getSalesByPeriod(year, month, memberIds);
-      return NextResponse.json(data);
+      const { salesPeople, recordCount } = await salesService.getSalesByPeriod(year, month, memberIds);
+      return NextResponse.json({ data: salesPeople, recordCount });
     } catch (error) {
       console.error('Failed to fetch sales data:', error);
       return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });

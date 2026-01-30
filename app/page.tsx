@@ -20,6 +20,7 @@ export default function Home() {
   const [currentView, setCurrentView] = useState<ViewType>('期間グラフ');
   const [isSalesModalOpen, setIsSalesModalOpen] = useState(false);
   const [salesData, setSalesData] = useState<SalesPerson[]>([]);
+  const [recordCount, setRecordCount] = useState(0);
   const [cumulativeSalesData, setCumulativeSalesData] = useState<SalesPerson[]>([]);
   const [trendData, setTrendData] = useState<TrendData[]>([]);
   const [initialLoading, setInitialLoading] = useState(true);
@@ -45,7 +46,11 @@ export default function Home() {
         fetch(`/api/sales/trend?year=${year}&months=12${filterQuery}`),
       ]);
 
-      if (salesRes.ok) setSalesData(await salesRes.json());
+      if (salesRes.ok) {
+        const salesJson = await salesRes.json();
+        setSalesData(salesJson.data);
+        setRecordCount(salesJson.recordCount);
+      }
       if (cumulativeRes.ok) setCumulativeSalesData(await cumulativeRes.json());
       if (trendRes.ok) setTrendData(await trendRes.json());
     } catch (error) {
@@ -121,7 +126,7 @@ export default function Home() {
         ) : currentView === '累計グラフ' ? (
           <CumulativeChart salesData={cumulativeSalesData} />
         ) : currentView === '期間グラフ' ? (
-          <SalesPerformance salesData={salesData} />
+          <SalesPerformance salesData={salesData} recordCount={recordCount} />
         ) : currentView === '推移グラフ' ? (
           <TrendChart monthlyData={trendData} />
         ) : (

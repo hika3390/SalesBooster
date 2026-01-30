@@ -8,7 +8,7 @@ import CumulativeChart from '@/components/CumulativeChart';
 import TrendChart from '@/components/TrendChart';
 import SalesInputModal from '@/components/SalesInputModal';
 import { SalesPerson, ViewType } from '@/types';
-import { useSalesSSE } from '@/hooks/useSalesSSE';
+import { useSalesPolling } from '@/hooks/useSalesPolling';
 
 interface TrendData {
   month: string;
@@ -74,8 +74,8 @@ export default function Home() {
     fetchData();
   }, [fetchData]);
 
-  // SSEによるリアルタイム更新
-  useSalesSSE({ onUpdate: fetchData });
+  // ポーリングによるリアルタイム更新
+  useSalesPolling({ onUpdate: fetchData });
 
   const handleViewChange = (view: ViewType) => {
     setCurrentView(view);
@@ -90,7 +90,7 @@ export default function Home() {
   };
 
   const handleSalesSubmit = async () => {
-    // SSEでも通知されるが、送信元は即時反映のためフォールバックとしても実行
+    // 送信元は即時反映
     fetchData();
   };
 

@@ -168,8 +168,8 @@ export default function SalesPerformance({ salesData }: SalesPerformanceProps) {
               const isChanged = changedNames.has(person.name);
               const bgColor = index < top20Index ? 'bg-red-50' : index < low20Index ? 'bg-blue-50' : 'bg-blue-100';
               return (
-                <div key={person.name} className={`flex flex-col items-center py-2 ${bgColor}${isChanged ? ' animate-border-gold' : ''}`}
-                  style={{ minWidth: `${columnWidth}px`, flex: 1, borderWidth: isChanged ? '3px' : undefined, transition: 'border-color 0.5s ease' }}
+                <div key={person.name} className={`flex flex-col items-center py-2 ${bgColor}`}
+                  style={{ minWidth: `${columnWidth}px`, flex: 1 }}
                 >
                   <div className="relative mb-1.5">
                     <div className={`w-20 h-20 rounded-full bg-gray-300 overflow-hidden border border-white shadow-sm${isChanged ? ' animate-ring-glow' : ''}`}>

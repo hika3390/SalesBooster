@@ -3,7 +3,6 @@ import { memberRepository } from '../repositories/memberRepository';
 import { targetRepository } from '../repositories/targetRepository';
 import { SalesPerson } from '@/types';
 import { toManyen } from '@/lib/currency';
-import { salesEventEmitter } from '@/lib/salesEventEmitter';
 
 type MemberWithDepartment = Awaited<ReturnType<typeof memberRepository.findAll>>[number];
 type SalesRecordWithMember = Awaited<ReturnType<typeof salesRecordRepository.findByPeriod>>[number];
@@ -139,7 +138,6 @@ export const salesService = {
 
   async createSalesRecord(data: { memberId: number; amount: number; description?: string; recordDate: Date }) {
     const record = await salesRecordRepository.create(data);
-    salesEventEmitter.emit('sales-updated');
     return record;
   },
 };

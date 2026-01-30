@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Dialog } from '@/components/common/Dialog';
+import DataTable, { Column } from '@/components/common/DataTable';
 import AddMemberModal from './AddMemberModal';
 import EditMemberModal from './EditMemberModal';
 
@@ -50,6 +51,46 @@ export default function MemberSettings() {
     }
   };
 
+  const columns: Column<Member>[] = [
+    {
+      key: 'name',
+      label: '名前',
+      render: (m) => <span className="text-sm font-medium text-gray-800">{m.name}</span>,
+    },
+    {
+      key: 'email',
+      label: 'メール',
+      render: (m) => <span className="text-sm text-gray-600">{m.email}</span>,
+    },
+    {
+      key: 'role',
+      label: '役割',
+      render: (m) => <span className="text-sm text-gray-600">{roleLabel[m.role] || m.role}</span>,
+    },
+    {
+      key: 'status',
+      label: 'ステータス',
+      render: (m) => (
+        <span className={`px-2 py-1 text-xs rounded-full font-medium ${
+          m.status === 'ACTIVE' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
+        }`}>
+          {statusLabel[m.status] || m.status}
+        </span>
+      ),
+    },
+    {
+      key: 'actions',
+      label: '操作',
+      align: 'right',
+      render: (m) => (
+        <>
+          <button onClick={() => setEditingMember(m)} className="text-blue-600 hover:text-blue-800 text-sm mr-3">編集</button>
+          <button onClick={() => handleDelete(m.id)} className="text-red-600 hover:text-red-800 text-sm">削除</button>
+        </>
+      ),
+    },
+  ];
+
   if (loading) {
     return <div className="text-center py-8 text-gray-500">読み込み中...</div>;
   }
@@ -66,39 +107,18 @@ export default function MemberSettings() {
         </button>
       </div>
 
-      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-        <table className="w-full">
-          <thead>
-            <tr className="bg-gray-50 border-b border-gray-200">
-              <th className="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase">名前</th>
-              <th className="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase">メール</th>
-              <th className="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase">役割</th>
-              <th className="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase">ステータス</th>
-              <th className="text-right px-6 py-3 text-xs font-semibold text-gray-500 uppercase">操作</th>
-            </tr>
-          </thead>
-          <tbody>
-            {members.map((member) => (
-              <tr key={member.id} className="border-b border-gray-100 hover:bg-gray-50">
-                <td className="px-6 py-4 text-sm font-medium text-gray-800">{member.name}</td>
-                <td className="px-6 py-4 text-sm text-gray-600">{member.email}</td>
-                <td className="px-6 py-4 text-sm text-gray-600">{roleLabel[member.role] || member.role}</td>
-                <td className="px-6 py-4">
-                  <span className={`px-2 py-1 text-xs rounded-full font-medium ${
-                    member.status === 'ACTIVE' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
-                  }`}>
-                    {statusLabel[member.status] || member.status}
-                  </span>
-                </td>
-                <td className="px-6 py-4 text-right">
-                  <button onClick={() => setEditingMember(member)} className="text-blue-600 hover:text-blue-800 text-sm mr-3">編集</button>
-                  <button onClick={() => handleDelete(member.id)} className="text-red-600 hover:text-red-800 text-sm">削除</button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <DataTable
+        data={members}
+        columns={columns}
+        keyField="id"
+        searchPlaceholder="名前・メール・部署で検索..."
+        searchFilter={(m, q) =>
+          m.name.toLowerCase().includes(q) ||
+          m.email.toLowerCase().includes(q) ||
+          (m.department != null && m.department.toLowerCase().includes(q))
+        }
+        emptyMessage="該当するメンバーがいません"
+      />
 
       <AddMemberModal
         isOpen={isAddModalOpen}

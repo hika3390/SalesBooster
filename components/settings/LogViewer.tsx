@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import DataTable, { Column } from '@/components/common/DataTable';
 
 interface LogEntry {
   id: number;
@@ -17,6 +18,16 @@ interface LogResponse {
   pageSize: number;
   totalPages: number;
 }
+
+const formatDate = (isoDate: string) => {
+  const d = new Date(isoDate);
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  const hh = String(d.getHours()).padStart(2, '0');
+  const mi = String(d.getMinutes()).padStart(2, '0');
+  return `${yyyy}/${mm}/${dd} ${hh}:${mi}`;
+};
 
 export default function LogViewer() {
   const [data, setData] = useState<LogResponse | null>(null);
@@ -40,15 +51,28 @@ export default function LogViewer() {
     fetchLogs(currentPage);
   }, [currentPage]);
 
-  const formatDate = (isoDate: string) => {
-    const d = new Date(isoDate);
-    const yyyy = d.getFullYear();
-    const mm = String(d.getMonth() + 1).padStart(2, '0');
-    const dd = String(d.getDate()).padStart(2, '0');
-    const hh = String(d.getHours()).padStart(2, '0');
-    const mi = String(d.getMinutes()).padStart(2, '0');
-    return `${yyyy}/${mm}/${dd} ${hh}:${mi}`;
-  };
+  const columns: Column<LogEntry>[] = [
+    {
+      key: 'date',
+      label: '日時',
+      render: (log) => <span className="text-sm text-gray-600 whitespace-nowrap">{formatDate(log.date)}</span>,
+    },
+    {
+      key: 'user',
+      label: 'ユーザー',
+      render: (log) => <span className="text-sm font-medium text-gray-800">{log.user}</span>,
+    },
+    {
+      key: 'action',
+      label: '操作',
+      render: (log) => <span className="text-sm text-gray-700">{log.action}</span>,
+    },
+    {
+      key: 'detail',
+      label: '詳細',
+      render: (log) => <span className="text-sm text-gray-500">{log.detail}</span>,
+    },
+  ];
 
   if (loading && !data) {
     return <div className="text-center py-8 text-gray-500">読み込み中...</div>;
@@ -57,8 +81,6 @@ export default function LogViewer() {
   const logs = data?.logs || [];
   const total = data?.total || 0;
   const totalPages = data?.totalPages || 1;
-  const startItem = (currentPage - 1) * pageSize + 1;
-  const endItem = Math.min(currentPage * pageSize, total);
 
   return (
     <div>
@@ -74,59 +96,19 @@ export default function LogViewer() {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-        <table className="w-full">
-          <thead>
-            <tr className="bg-gray-50 border-b border-gray-200">
-              <th className="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase">日時</th>
-              <th className="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase">ユーザー</th>
-              <th className="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase">操作</th>
-              <th className="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase">詳細</th>
-            </tr>
-          </thead>
-          <tbody>
-            {logs.map((log) => (
-              <tr key={log.id} className="border-b border-gray-100 hover:bg-gray-50">
-                <td className="px-6 py-3 text-sm text-gray-600 whitespace-nowrap">{formatDate(log.date)}</td>
-                <td className="px-6 py-3 text-sm font-medium text-gray-800">{log.user}</td>
-                <td className="px-6 py-3 text-sm text-gray-700">{log.action}</td>
-                <td className="px-6 py-3 text-sm text-gray-500">{log.detail}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      <div className="flex items-center justify-between mt-4">
-        <div className="text-sm text-gray-500">全 {total} 件中 {startItem}-{endItem} 件を表示</div>
-        <div className="flex space-x-1">
-          <button
-            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-            disabled={currentPage === 1}
-            className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50"
-          >
-            前へ
-          </button>
-          {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => i + 1).map((page) => (
-            <button
-              key={page}
-              onClick={() => setCurrentPage(page)}
-              className={`px-3 py-1 text-sm rounded ${
-                currentPage === page ? 'bg-blue-600 text-white' : 'border border-gray-300 hover:bg-gray-50'
-              }`}
-            >
-              {page}
-            </button>
-          ))}
-          <button
-            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-            disabled={currentPage === totalPages}
-            className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50"
-          >
-            次へ
-          </button>
-        </div>
-      </div>
+      <DataTable
+        data={logs}
+        columns={columns}
+        keyField="id"
+        emptyMessage="操作ログがありません"
+        serverPagination={{
+          currentPage,
+          totalPages,
+          total,
+          pageSize,
+          onPageChange: setCurrentPage,
+        }}
+      />
     </div>
   );
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 
 interface MonthlyData {
   month: string;
@@ -14,12 +14,28 @@ interface TrendChartProps {
 }
 
 export default function TrendChart({ monthlyData, title = 'チーム売上推移' }: TrendChartProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [containerHeight, setContainerHeight] = useState(400);
+
+  useEffect(() => {
+    const updateHeight = () => {
+      if (containerRef.current) {
+        // タイトル(約40px) + 凡例(約50px) + パディング(48px) を差し引き
+        const available = containerRef.current.clientHeight - 138;
+        setContainerHeight(Math.max(200, available));
+      }
+    };
+    updateHeight();
+    window.addEventListener('resize', updateHeight);
+    return () => window.removeEventListener('resize', updateHeight);
+  }, []);
+
   // 最大値と最小値を取得
   const maxSales = Math.max(...monthlyData.map(d => d.sales));
   const minSales = Math.min(...monthlyData.map(d => d.sales));
 
   // グラフの高さ範囲（パディング含む）
-  const graphHeight = 400;
+  const graphHeight = containerHeight;
   const graphPadding = 40;
   const effectiveHeight = graphHeight - graphPadding * 2;
 
@@ -48,14 +64,14 @@ export default function TrendChart({ monthlyData, title = 'チーム売上推移
   const svgWidth = Math.max(800, monthlyData.length * 100 + 120);
 
   return (
-    <div className="bg-white mx-6 my-4 shadow-sm overflow-x-auto">
-      <div className="p-6">
+    <div ref={containerRef} className="bg-white mx-6 my-4 shadow-sm overflow-x-auto h-[calc(100%-2rem)] flex flex-col">
+      <div className="p-6 flex-1 min-h-0 flex flex-col">
         {/* タイトル */}
-        <h2 className="text-lg font-bold text-gray-800 mb-4">{title}</h2>
+        <h2 className="text-lg font-bold text-gray-800 mb-4 shrink-0">{title}</h2>
 
         {/* グラフエリア */}
-        <div className="relative" style={{ minWidth: `${svgWidth}px` }}>
-          <svg width={svgWidth} height={graphHeight + 100} className="overflow-visible">
+        <div className="relative flex-1 min-h-0" style={{ minWidth: `${svgWidth}px` }}>
+          <svg width={svgWidth} height={graphHeight + 60} className="overflow-visible">
             {/* グリッドライン */}
             {[0, 0.25, 0.5, 0.75, 1].map((ratio) => {
               const value = minSales + (maxSales - minSales) * ratio;
@@ -150,7 +166,7 @@ export default function TrendChart({ monthlyData, title = 'チーム売上推移
         </div>
 
         {/* 凡例 */}
-        <div className="mt-6 flex items-center justify-center space-x-6 text-sm">
+        <div className="mt-4 flex items-center justify-center space-x-6 text-sm shrink-0">
           <div className="flex items-center space-x-2">
             <div className="w-8 h-0.5 bg-blue-900"></div>
             <span className="text-gray-600">月間 （日次）</span>

@@ -86,14 +86,14 @@ export default function SalesPerformance({ salesData, recordCount }: SalesPerfor
   const stickyLabelClass = "shrink-0 sticky left-0 z-40 bg-white border-r border-gray-300 flex items-center justify-center";
 
   return (
-    <div className="bg-white mx-6 my-4 shadow-sm relative overflow-x-auto">
+    <div className="bg-white mx-6 my-4 shadow-sm relative overflow-x-auto h-[calc(100%-2rem)] flex flex-col">
       {/* 契約速報バナー */}
       <ContractBanner names={bannerNames} />
 
-      <div style={{ minWidth: 'fit-content' }}>
+      <div className="flex-1 min-h-0 flex flex-col" style={{ minWidth: 'fit-content' }}>
         {/* グラフエリア */}
-        <div className="flex">
-          <div className={stickyLabelClass} style={{ width: `${labelWidth}px`, height: '500px' }}>
+        <div className="flex flex-1 min-h-0">
+          <div className={stickyLabelClass} style={{ width: `${labelWidth}px` }}>
             <div className="flex flex-col justify-between h-full py-6 w-full">
               <div className="px-2 text-center">
                 <div className="text-xs text-gray-500">■ 月間売上</div>
@@ -125,10 +125,10 @@ export default function SalesPerformance({ salesData, recordCount }: SalesPerfor
               </div>
             </div>
           </div>
-          <div className="relative py-6" style={{ height: '500px', flex: 1 }}>
+          <div className="relative py-6 flex-1 min-h-0">
             <PerformanceLabels />
             <AverageTargetLine averageTarget={averageTarget} maxSales={maxSales} />
-            <div className="absolute bottom-0 left-0 right-0 h-[400px] px-1">
+            <div className="absolute bottom-0 left-0 right-0 top-20 px-1">
               <div className="relative h-full flex gap-1">
                 {salesData.map((person, index) => (
                   <SalesBar
@@ -147,7 +147,7 @@ export default function SalesPerformance({ salesData, recordCount }: SalesPerfor
         </div>
 
         {/* 順位行 */}
-        <div className="flex border-t border-b border-gray-200 bg-gray-50">
+        <div className="flex border-t border-b border-gray-200 bg-gray-50 shrink-0">
           <div className={`${stickyLabelClass} bg-gray-50`} style={{ width: `${labelWidth}px` }}>
             <div className="text-sm font-bold text-gray-600">順位</div>
           </div>
@@ -161,7 +161,7 @@ export default function SalesPerformance({ salesData, recordCount }: SalesPerfor
         </div>
 
         {/* メンバー行 */}
-        <div className="flex border-b border-gray-200">
+        <div className="flex border-b border-gray-200 shrink-0">
           <div className={stickyLabelClass} style={{ width: `${labelWidth}px` }}>
             <div className="text-sm font-bold text-gray-600">メンバー</div>
           </div>
@@ -200,7 +200,7 @@ export default function SalesPerformance({ salesData, recordCount }: SalesPerfor
         </div>
 
         {/* 実績・達成率行 */}
-        <div className="flex border-b border-gray-200">
+        <div className="flex border-b border-gray-200 shrink-0">
           <div className={stickyLabelClass} style={{ width: `${labelWidth}px` }}>
             <div className="text-center">
               <div className="text-sm font-bold text-gray-600">実績</div>
@@ -225,7 +225,7 @@ export default function SalesPerformance({ salesData, recordCount }: SalesPerfor
         </div>
 
         {/* 目標行 */}
-        <div className="flex border-b border-gray-200">
+        <div className="flex border-b border-gray-200 shrink-0">
           <div className={stickyLabelClass} style={{ width: `${labelWidth}px` }}>
             <div className="text-sm font-bold text-gray-600">目標</div>
           </div>

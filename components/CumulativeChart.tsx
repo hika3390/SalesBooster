@@ -22,10 +22,10 @@ export default function CumulativeChart({ salesData }: CumulativeChartProps) {
   const columnWidth = COLUMN_WIDTH;
 
   return (
-    <div className="bg-white mx-6 my-4 shadow-sm overflow-x-auto">
-      <div style={{ minWidth: 'fit-content' }}>
+    <div className="bg-white mx-6 my-4 shadow-sm overflow-x-auto h-[calc(100%-2rem)] flex flex-col">
+      <div className="flex-1 min-h-0 flex flex-col" style={{ minWidth: 'fit-content' }}>
         {/* グラフエリア */}
-        <div className="relative py-6" style={{ height: '500px' }}>
+        <div className="relative py-6 flex-1 min-h-0">
           {/* ラベル表示 */}
           <div className="absolute top-4 left-0 right-0 flex justify-between px-12">
             <div className="text-xs text-blue-600 bg-blue-50 border border-blue-400 px-3 py-1">
@@ -40,7 +40,7 @@ export default function CumulativeChart({ salesData }: CumulativeChartProps) {
           </div>
 
           {/* グラフバー */}
-          <div className="absolute bottom-0 left-0 right-0 h-[400px] px-1">
+          <div className="absolute bottom-0 left-0 right-0 top-20 px-1">
             <div className="relative h-full flex gap-1">
               {salesData.map((person, index) => (
                 <SalesBar
@@ -57,7 +57,7 @@ export default function CumulativeChart({ salesData }: CumulativeChartProps) {
         </div>
 
         {/* 営業マンリスト */}
-        <div className="border-t border-gray-200">
+        <div className="border-t border-gray-200 shrink-0">
           <div className="flex px-1 gap-1">
             {salesData.map((person, index) => (
               <SalesPersonCard

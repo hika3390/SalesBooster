@@ -94,6 +94,25 @@ export const salesController = {
     }
   },
 
+  async getReportData(request: NextRequest) {
+    const { searchParams } = new URL(request.url);
+    const startDateParam = searchParams.get('startDate');
+    const endDateParam = searchParams.get('endDate');
+
+    const now = new Date();
+    const endDate = endDateParam ? new Date(endDateParam) : new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+    const startDate = startDateParam ? new Date(startDateParam) : new Date(endDate.getFullYear(), endDate.getMonth() - 11, 1);
+
+    try {
+      const memberIds = await resolveMemberIds(searchParams);
+      const data = await salesService.getReportData(startDate, endDate, memberIds);
+      return NextResponse.json(data);
+    } catch (error) {
+      console.error('Failed to fetch report data:', error);
+      return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    }
+  },
+
   async getTrendData(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const startDateParam = searchParams.get('startDate');
@@ -109,6 +128,24 @@ export const salesController = {
       return NextResponse.json(data);
     } catch (error) {
       console.error('Failed to fetch trend data:', error);
+      return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    }
+  },
+
+  async getRankingBoardData(request: NextRequest) {
+    const { searchParams } = new URL(request.url);
+
+    // 直近3ヶ月固定（期間パラメータは無視）
+    const now = new Date();
+    const endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+    const startDate = new Date(now.getFullYear(), now.getMonth() - 2, 1);
+
+    try {
+      const memberIds = await resolveMemberIds(searchParams);
+      const data = await salesService.getRankingBoardData(startDate, endDate, memberIds);
+      return NextResponse.json(data);
+    } catch (error) {
+      console.error('Failed to fetch ranking board data:', error);
       return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
     }
   },

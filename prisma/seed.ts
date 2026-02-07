@@ -117,7 +117,82 @@ async function main() {
     }
   }
 
-  console.log('Sales records created');
+  console.log('Sales records created (January)');
+
+  // --- 売上レコード（2026年2月分のサンプル） ---
+  const salesDataFeb: { amount: number; day: number }[][] = [
+    // 田中太郎
+    [{ amount: 800000, day: 3 }, { amount: 650000, day: 5 }, { amount: 420000, day: 7 }],
+    // 佐藤花子
+    [{ amount: 500000, day: 2 }, { amount: 700000, day: 4 }, { amount: 350000, day: 6 }],
+    // 鈴木一郎
+    [{ amount: 600000, day: 1 }, { amount: 400000, day: 3 }, { amount: 300000, day: 6 }],
+    // 高橋美咲
+    [{ amount: 450000, day: 2 }, { amount: 550000, day: 5 }],
+    // 渡辺健太
+    [{ amount: 380000, day: 1 }, { amount: 420000, day: 4 }, { amount: 300000, day: 7 }],
+    // 伊藤達也
+    [{ amount: 500000, day: 3 }, { amount: 350000, day: 6 }],
+    // 山本大輔
+    [{ amount: 400000, day: 2 }, { amount: 300000, day: 5 }],
+    // 中村悠介
+    [{ amount: 350000, day: 1 }, { amount: 250000, day: 4 }, { amount: 200000, day: 7 }],
+    // 小林誠
+    [{ amount: 300000, day: 3 }, { amount: 400000, day: 6 }],
+    // 加藤結衣
+    [{ amount: 280000, day: 2 }, { amount: 350000, day: 5 }],
+    // 吉田雄介
+    [{ amount: 250000, day: 1 }, { amount: 300000, day: 4 }],
+    // 山田麻衣
+    [{ amount: 200000, day: 3 }, { amount: 350000, day: 6 }],
+    // 佐々木翔
+    [{ amount: 180000, day: 2 }, { amount: 280000, day: 5 }],
+    // 松本美穂
+    [{ amount: 150000, day: 4 }, { amount: 200000, day: 7 }],
+    // 井上拓海
+    [{ amount: 120000, day: 1 }],
+    // 木村陽子
+    [{ amount: 100000, day: 3 }],
+    // 林智也
+    [],
+    // 清水咲良
+    [],
+    // 山口健
+    [],
+    // 森田愛
+    [],
+  ];
+
+  for (let i = 0; i < members.length && i < salesDataFeb.length; i++) {
+    for (const record of salesDataFeb[i]) {
+      await prisma.salesRecord.create({
+        data: {
+          memberId: members[i].id,
+          amount: record.amount,
+          description: '2月サンプル売上データ',
+          recordDate: new Date(2026, 1, record.day),
+        },
+      });
+    }
+  }
+
+  // 2月の目標
+  for (const member of members) {
+    await prisma.target.upsert({
+      where: { memberId_year_month: { memberId: member.id, year: 2026, month: 2 } },
+      update: {},
+      create: {
+        memberId: member.id,
+        monthly: 1000000,
+        quarterly: 3000000,
+        annual: 12000000,
+        year: 2026,
+        month: 2,
+      },
+    });
+  }
+
+  console.log('Sales records & targets created (February)');
 
   // --- 外部連携 ---
   const integrationsData = [

@@ -7,7 +7,9 @@ import SalesPerformance from '@/components/SalesPerformance';
 import CumulativeChart from '@/components/CumulativeChart';
 import TrendChart from '@/components/TrendChart';
 import SalesInputModal from '@/components/SalesInputModal';
-import { SalesPerson, ViewType } from '@/types';
+import { SalesPerson, ViewType, ReportData, RankingBoardData } from '@/types';
+import ReportView from '@/components/report/ReportView';
+import RankingBoard from '@/components/record/RankingBoard';
 import { useSalesPolling } from '@/hooks/useSalesPolling';
 import { PeriodSelection } from '@/components/filter/PeriodNavigator';
 
@@ -24,12 +26,27 @@ export default function Home() {
   const [recordCount, setRecordCount] = useState(0);
   const [cumulativeSalesData, setCumulativeSalesData] = useState<SalesPerson[]>([]);
   const [trendData, setTrendData] = useState<TrendData[]>([]);
+  const [reportData, setReportData] = useState<ReportData | null>(null);
+  const [rankingData, setRankingData] = useState<RankingBoardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<{ groupId: string; memberId: string }>({ groupId: '', memberId: '' });
   const [period, setPeriod] = useState<PeriodSelection | null>(null);
 
   const fetchTimerRef = useRef<NodeJS.Timeout | null>(null);
   const fetchingRef = useRef(false);
+
+  // ランキングデータ取得（期間に依存しない、グループ/メンバーのみ）
+  const fetchRankingData = useCallback(async () => {
+    try {
+      const rankingParams = new URLSearchParams();
+      if (filter.memberId) rankingParams.set('memberId', filter.memberId);
+      else if (filter.groupId) rankingParams.set('groupId', filter.groupId);
+      const rankingRes = await fetch(`/api/sales/ranking?${rankingParams.toString()}`);
+      if (rankingRes.ok) setRankingData(await rankingRes.json());
+    } catch (error) {
+      console.error('Failed to fetch ranking data:', error);
+    }
+  }, [filter]);
 
   const fetchDataImmediate = useCallback(async () => {
     if (!period) return;
@@ -42,10 +59,12 @@ export default function Home() {
       else if (filter.groupId) filterParams.set('groupId', filter.groupId);
       const query = filterParams.toString();
 
-      const [salesRes, cumulativeRes, trendRes] = await Promise.all([
+      const [salesRes, cumulativeRes, trendRes, reportRes] = await Promise.all([
         fetch(`/api/sales?${query}`),
         fetch(`/api/sales/cumulative?${query}`),
         fetch(`/api/sales/trend?${query}`),
+        fetch(`/api/sales/report?${query}`),
+        fetchRankingData(),
       ]);
 
       if (salesRes.ok) {
@@ -55,12 +74,13 @@ export default function Home() {
       }
       if (cumulativeRes.ok) setCumulativeSalesData(await cumulativeRes.json());
       if (trendRes.ok) setTrendData(await trendRes.json());
+      if (reportRes.ok) setReportData(await reportRes.json());
     } catch (error) {
       console.error('Failed to fetch data:', error);
     } finally {
       setLoading(false);
     }
-  }, [period, filter]);
+  }, [period, filter, fetchRankingData]);
 
   // デバウンス付きfetchData: 短時間の連続呼び出しを1回にまとめる
   const fetchData = useCallback(() => {
@@ -135,6 +155,10 @@ export default function Home() {
           <SalesPerformance salesData={salesData} recordCount={recordCount} />
         ) : currentView === '推移グラフ' ? (
           <TrendChart monthlyData={trendData} />
+        ) : currentView === 'レポート' && reportData ? (
+          <ReportView reportData={reportData} />
+        ) : currentView === 'レコード' && rankingData ? (
+          <RankingBoard data={rankingData} />
         ) : (
           <div className="mx-6 my-4 p-8 bg-white rounded shadow-sm text-center text-gray-500">
             {currentView}の表示は準備中です

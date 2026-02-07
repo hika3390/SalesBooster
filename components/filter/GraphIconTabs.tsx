@@ -23,19 +23,6 @@ export default function GraphIconTabs() {
           <path d="M3 3h18v18H3V3zm2 2v4h6V5H5zm8 0v4h6V5h-6zM5 11v4h6v-4H5zm8 0v4h6v-4h-6zM5 17v2h6v-2H5zm8 0v2h6v-2h-6z"/>
         </svg>
       </button>
-      {/* 複合グラフアイコン */}
-      <button className="p-2 hover:bg-gray-200 rounded border border-gray-300 bg-white">
-        <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M4 20h4v-6H4v6zm6 0h4V8h-4v12zm6 0h4v-4h-4v4z"/>
-          <path fill="none" stroke="currentColor" strokeWidth={2} d="M2 16l5-5 4 4 6-6 5 5"/>
-        </svg>
-      </button>
-      {/* ダッシュボードアイコン */}
-      <button className="p-2 hover:bg-gray-200 rounded border border-gray-300 bg-white">
-        <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M3 3h8v10H3V3zm10 0h8v6h-8V3zM3 15h8v6H3v-6zm10-4h8v10h-8V11z"/>
-        </svg>
-      </button>
     </div>
   );
 }

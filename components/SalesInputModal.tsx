@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Modal from './common/Modal';
 import Button from './common/Button';
+import { Dialog } from './common/Dialog';
 
 interface SalesInputModalProps {
   isOpen: boolean;
@@ -75,9 +76,12 @@ export default function SalesInputModal({ isOpen, onClose, onSubmit }: SalesInpu
         setContracts('1');
         setMemo('');
         onClose();
+      } else {
+        const data = await res.json().catch(() => null);
+        await Dialog.error(data?.error || '売上の登録に失敗しました。');
       }
-    } catch (error) {
-      console.error('Failed to create sales record:', error);
+    } catch {
+      await Dialog.error('売上の登録に失敗しました。ネットワーク接続を確認してください。');
     } finally {
       setSubmitting(false);
     }

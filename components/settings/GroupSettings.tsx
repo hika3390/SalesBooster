@@ -18,16 +18,19 @@ interface Group {
 export default function GroupSettings() {
   const [groups, setGroups] = useState<Group[]>([]);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingGroup, setEditingGroup] = useState<Group | null>(null);
   const [membersGroup, setMembersGroup] = useState<Group | null>(null);
 
   const fetchGroups = async () => {
     try {
+      setFetchError(null);
       const res = await fetch('/api/groups');
       if (res.ok) setGroups(await res.json());
-    } catch (error) {
-      console.error('Failed to fetch groups:', error);
+      else setFetchError('グループ情報の取得に失敗しました。');
+    } catch {
+      setFetchError('グループ情報の取得に失敗しました。ネットワーク接続を確認してください。');
     } finally {
       setLoading(false);
     }
@@ -42,14 +45,28 @@ export default function GroupSettings() {
     if (!confirmed) return;
     try {
       const res = await fetch(`/api/groups/${id}`, { method: 'DELETE' });
-      if (res.ok) fetchGroups();
-    } catch (error) {
-      console.error('Failed to delete group:', error);
+      if (res.ok) {
+        fetchGroups();
+      } else {
+        const data = await res.json().catch(() => null);
+        await Dialog.error(data?.error || 'グループの削除に失敗しました。');
+      }
+    } catch {
+      await Dialog.error('グループの削除に失敗しました。ネットワーク接続を確認してください。');
     }
   };
 
   if (loading) {
     return <div className="text-center py-8 text-gray-500">読み込み中...</div>;
+  }
+
+  if (fetchError) {
+    return (
+      <div className="text-center py-8">
+        <div className="text-red-500 mb-3">{fetchError}</div>
+        <button onClick={fetchGroups} className="px-4 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700">再読み込み</button>
+      </div>
+    );
   }
 
   return (

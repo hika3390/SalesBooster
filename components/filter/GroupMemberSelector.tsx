@@ -25,14 +25,14 @@ export default function GroupMemberSelector({ onFilterChange }: GroupMemberSelec
 
   useEffect(() => {
     fetch('/api/groups')
-      .then((res) => res.json())
+      .then((res) => { if (!res.ok) throw new Error(); return res.json(); })
       .then((data) => setGroups(data))
-      .catch(console.error);
+      .catch(() => setGroups([]));
 
     fetch('/api/members')
-      .then((res) => res.json())
+      .then((res) => { if (!res.ok) throw new Error(); return res.json(); })
       .then((data) => setAllMembers(data))
-      .catch(console.error);
+      .catch(() => setAllMembers([]));
   }, []);
 
   const selectedGroup = groups.find((g) => g.id === Number(selectedGroupId));

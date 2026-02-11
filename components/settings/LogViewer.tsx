@@ -34,15 +34,18 @@ export default function LogViewer() {
   const [data, setData] = useState<LogResponse | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const pageSize = 8;
 
   const fetchLogs = async (page: number) => {
     setLoading(true);
     try {
+      setFetchError(null);
       const res = await fetch(`/api/audit-logs?page=${page}&pageSize=${pageSize}`);
       if (res.ok) setData(await res.json());
-    } catch (error) {
-      console.error('Failed to fetch logs:', error);
+      else setFetchError('操作ログの取得に失敗しました。');
+    } catch {
+      setFetchError('操作ログの取得に失敗しました。ネットワーク接続を確認してください。');
     } finally {
       setLoading(false);
     }
@@ -77,6 +80,15 @@ export default function LogViewer() {
 
   if (loading && !data) {
     return <div className="text-center py-8 text-gray-500">読み込み中...</div>;
+  }
+
+  if (fetchError && !data) {
+    return (
+      <div className="text-center py-8">
+        <div className="text-red-500 mb-3">{fetchError}</div>
+        <button onClick={() => fetchLogs(currentPage)} className="px-4 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700">再読み込み</button>
+      </div>
+    );
   }
 
   const logs = data?.logs || [];

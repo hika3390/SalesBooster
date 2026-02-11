@@ -23,15 +23,18 @@ const statusLabel: Record<string, string> = { ACTIVE: '有効', INACTIVE: '無�
 export default function MemberSettings() {
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingMember, setEditingMember] = useState<Member | null>(null);
 
   const fetchMembers = async () => {
     try {
+      setFetchError(null);
       const res = await fetch('/api/members');
       if (res.ok) setMembers(await res.json());
-    } catch (error) {
-      console.error('Failed to fetch members:', error);
+      else setFetchError('メンバー情報の取得に失敗しました。');
+    } catch {
+      setFetchError('メンバー情報の取得に失敗しました。ネットワーク接続を確認してください。');
     } finally {
       setLoading(false);
     }
@@ -46,9 +49,14 @@ export default function MemberSettings() {
     if (!confirmed) return;
     try {
       const res = await fetch(`/api/members/${id}`, { method: 'DELETE' });
-      if (res.ok) fetchMembers();
-    } catch (error) {
-      console.error('Failed to delete member:', error);
+      if (res.ok) {
+        fetchMembers();
+      } else {
+        const data = await res.json().catch(() => null);
+        await Dialog.error(data?.error || 'メンバーの削除に失敗しました。');
+      }
+    } catch {
+      await Dialog.error('メンバーの削除に失敗しました。ネットワーク接続を確認してください。');
     }
   };
 
@@ -94,6 +102,15 @@ export default function MemberSettings() {
 
   if (loading) {
     return <div className="text-center py-8 text-gray-500">読み込み中...</div>;
+  }
+
+  if (fetchError) {
+    return (
+      <div className="text-center py-8">
+        <div className="text-red-500 mb-3">{fetchError}</div>
+        <button onClick={fetchMembers} className="px-4 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700">再読み込み</button>
+      </div>
+    );
   }
 
   return (

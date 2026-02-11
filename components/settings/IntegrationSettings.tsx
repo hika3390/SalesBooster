@@ -15,13 +15,16 @@ const statusLabel: Record<string, string> = { CONNECTED: '接続済み', DISCONN
 export default function IntegrationSettings() {
   const [integrations, setIntegrations] = useState<Integration[]>([]);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
   const fetchIntegrations = async () => {
     try {
+      setFetchError(null);
       const res = await fetch('/api/integrations');
       if (res.ok) setIntegrations(await res.json());
-    } catch (error) {
-      console.error('Failed to fetch integrations:', error);
+      else setFetchError('連携情報の取得に失敗しました。');
+    } catch {
+      setFetchError('連携情報の取得に失敗しました。ネットワーク接続を確認してください。');
     } finally {
       setLoading(false);
     }
@@ -39,14 +42,28 @@ export default function IntegrationSettings() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus }),
       });
-      if (res.ok) fetchIntegrations();
-    } catch (error) {
-      console.error('Failed to update integration:', error);
+      if (res.ok) {
+        fetchIntegrations();
+      } else {
+        const data = await res.json().catch(() => null);
+        setFetchError(data?.error || '連携設定の更新に失敗しました。');
+      }
+    } catch {
+      setFetchError('連携設定の更新に失敗しました。ネットワーク接続を確認してください。');
     }
   };
 
   if (loading) {
     return <div className="text-center py-8 text-gray-500">読み込み中...</div>;
+  }
+
+  if (fetchError) {
+    return (
+      <div className="text-center py-8">
+        <div className="text-red-500 mb-3">{fetchError}</div>
+        <button onClick={fetchIntegrations} className="px-4 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700">再読み込み</button>
+      </div>
+    );
   }
 
   return (

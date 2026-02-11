@@ -23,6 +23,7 @@ export default function Home() {
   const [reportData, setReportData] = useState<ReportData | null>(null);
   const [rankingData, setRankingData] = useState<RankingBoardData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const [filter, setFilter] = useState<{ groupId: string; memberId: string }>({ groupId: '', memberId: '' });
   const [period, setPeriod] = useState<PeriodSelection | null>(null);
 
@@ -46,6 +47,7 @@ export default function Home() {
     if (!period) return;
 
     try {
+      setFetchError(null);
       const filterParams = new URLSearchParams();
       filterParams.set('startDate', period.startDate);
       filterParams.set('endDate', period.endDate);
@@ -70,8 +72,8 @@ export default function Home() {
       if (cumulativeRes.ok) setCumulativeSalesData(await cumulativeRes.json());
       if (trendRes.ok) setTrendData(await trendRes.json());
       if (reportRes.ok) setReportData(await reportRes.json());
-    } catch (error) {
-      console.error('Failed to fetch data:', error);
+    } catch {
+      setFetchError('データの取得に失敗しました。ネットワーク接続を確認してください。');
     } finally {
       setLoading(false);
     }
@@ -137,7 +139,17 @@ export default function Home() {
       <FilterBar onViewChange={handleViewChange} onFilterChange={setFilter} onPeriodChange={setPeriod} />
 
       <main className="w-full flex-1 min-h-0 overflow-auto">
-        {loading ? (
+        {fetchError ? (
+          <div className="mx-6 my-4 p-12 bg-white rounded shadow-sm text-center">
+            <div className="text-red-500 text-lg mb-2">{fetchError}</div>
+            <button
+              onClick={fetchData}
+              className="mt-2 px-4 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+            >
+              再読み込み
+            </button>
+          </div>
+        ) : loading ? (
           <div className="mx-6 my-4 p-12 bg-white rounded shadow-sm flex flex-col items-center justify-center h-[calc(100%-2rem)]">
             <div className="w-8 h-8 border-4 border-gray-200 border-t-blue-600 rounded-full animate-spin"></div>
             <div className="mt-3 text-sm text-gray-500">データを読み込み中...</div>

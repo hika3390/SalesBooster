@@ -63,7 +63,7 @@ function DisplayContent({
   onExit: () => void;
 }) {
   const { currentView, currentViewIndex, enabledViews, progress, goToNext, goToPrev } = useDisplayMode(config);
-  const { salesData, recordCount, cumulativeSalesData, trendData, reportData, rankingData, loading } = useDisplayData(config);
+  const { salesData, recordCount, cumulativeSalesData, trendData, reportData, rankingData, loading, error } = useDisplayData(config);
 
   useAutoHideCursor(true, 3000);
 
@@ -131,6 +131,14 @@ function DisplayContent({
       />
 
       <main className="flex-1 min-h-0 overflow-hidden">
+        {error ? (
+          <div className="flex items-center justify-center h-full">
+            <div className="text-center" style={{ color: 'var(--display-text, #6b7280)' }}>
+              <div className="text-lg mb-2">{error}</div>
+              <div className="text-sm opacity-60">自動的に再取得を試みます</div>
+            </div>
+          </div>
+        ) : (
         <div className={`view-transition-container ${getTransitionClass(config.transition, transitionPhase)}`}>
           <DisplayViewRenderer
             view={displayedView}
@@ -144,6 +152,7 @@ function DisplayContent({
             rankingData={rankingData}
           />
         </div>
+        )}
       </main>
 
       <CompanyOverlay companyLogoUrl={config.companyLogoUrl} teamName={config.teamName} />

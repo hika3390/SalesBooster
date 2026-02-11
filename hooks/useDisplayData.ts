@@ -13,6 +13,7 @@ interface UseDisplayDataReturn {
   reportData: ReportData | null;
   rankingData: RankingBoardData | null;
   loading: boolean;
+  error: string | null;
 }
 
 function getCurrentMonthPeriod() {
@@ -30,10 +31,12 @@ export function useDisplayData(config: DisplayConfig): UseDisplayDataReturn {
   const [reportData, setReportData] = useState<ReportData | null>(null);
   const [rankingData, setRankingData] = useState<RankingBoardData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const periodRef = useRef(getCurrentMonthPeriod());
 
   const fetchAllData = useCallback(async () => {
     try {
+      setError(null);
       const period = getCurrentMonthPeriod();
       periodRef.current = period;
 
@@ -65,8 +68,8 @@ export function useDisplayData(config: DisplayConfig): UseDisplayDataReturn {
       if (trendRes.ok) setTrendData(await trendRes.json());
       if (reportRes.ok) setReportData(await reportRes.json());
       if (rankingRes.ok) setRankingData(await rankingRes.json());
-    } catch (error) {
-      console.error('Failed to fetch display data:', error);
+    } catch {
+      setError('データの取得に失敗しました。ネットワーク接続を確認してください。');
     } finally {
       setLoading(false);
     }
@@ -88,5 +91,6 @@ export function useDisplayData(config: DisplayConfig): UseDisplayDataReturn {
     reportData,
     rankingData,
     loading,
+    error,
   };
 }

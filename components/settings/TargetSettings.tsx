@@ -19,14 +19,17 @@ interface Target {
 export default function TargetSettings() {
   const [targets, setTargets] = useState<Target[]>([]);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const [editingTarget, setEditingTarget] = useState<Target | null>(null);
 
   const fetchTargets = async () => {
     try {
+      setFetchError(null);
       const res = await fetch('/api/targets');
       if (res.ok) setTargets(await res.json());
-    } catch (error) {
-      console.error('Failed to fetch targets:', error);
+      else setFetchError('目標情報の取得に失敗しました。');
+    } catch {
+      setFetchError('目標情報の取得に失敗しました。ネットワーク接続を確認してください。');
     } finally {
       setLoading(false);
     }
@@ -72,6 +75,15 @@ export default function TargetSettings() {
 
   if (loading) {
     return <div className="text-center py-8 text-gray-500">読み込み中...</div>;
+  }
+
+  if (fetchError) {
+    return (
+      <div className="text-center py-8">
+        <div className="text-red-500 mb-3">{fetchError}</div>
+        <button onClick={fetchTargets} className="px-4 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700">再読み込み</button>
+      </div>
+    );
   }
 
   return (

@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Header from '@/components/Header';
+import Header from '@/components/header/Header';
 import SettingsSidebar, { SettingsSection } from '@/components/settings/SettingsSidebar';
 import MemberSettings from '@/components/settings/MemberSettings';
 import GroupSettings from '@/components/settings/GroupSettings';

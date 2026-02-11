@@ -14,6 +14,12 @@ export const targetRepository = {
     });
   },
 
+  findByMembersAndPeriod(memberIds: number[], year: number, month: number) {
+    return prisma.target.findMany({
+      where: { memberId: { in: memberIds }, year, month },
+    });
+  },
+
   upsert(data: { memberId: number; monthly: number; quarterly: number; annual: number; year: number; month: number }) {
     return prisma.target.upsert({
       where: { memberId_year_month: { memberId: data.memberId, year: data.year, month: data.month } },

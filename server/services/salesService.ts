@@ -25,19 +25,19 @@ export const salesService = {
       salesByMember.set(record.memberId, current + record.amount);
     }
 
-    // 目標を取得（期間内の月数分を合算）
+    // 目標を取得（期間内の各月の実際の目標値を合算）
     const startYear = startDate.getFullYear();
     const startMonth = startDate.getMonth() + 1;
     const endYear = endDate.getFullYear();
     const endMonth = endDate.getMonth() + 1;
-    const monthCount = (endYear - startYear) * 12 + (endMonth - startMonth) + 1;
 
-    const targets = await targetRepository.findByMembersAndPeriod(
-      members.map((m: MemberWithDepartment) => m.id), startYear, startMonth
+    const targets = await targetRepository.findByMembersAndPeriodRange(
+      members.map((m: MemberWithDepartment) => m.id), startYear, startMonth, endYear, endMonth
     );
     const targetByMember = new Map<number, number>();
     for (const t of targets) {
-      targetByMember.set(t.memberId, (t.monthly || 0) * monthCount);
+      const current = targetByMember.get(t.memberId) || 0;
+      targetByMember.set(t.memberId, current + (t.monthly || 0));
     }
 
     // SalesPerson形式に変換してランキング（万円単位）
@@ -82,19 +82,19 @@ export const salesService = {
       salesByMember.set(record.memberId, current + record.amount);
     }
 
-    // 累計目標を計算（月数 × 月間目標）
+    // 累計目標を計算（期間内の各月の実際の目標値を合算）
     const startYear = startDate.getFullYear();
     const startMonth = startDate.getMonth() + 1;
     const endYear = endDate.getFullYear();
     const endMonth = endDate.getMonth() + 1;
-    const monthCount = (endYear - startYear) * 12 + (endMonth - startMonth) + 1;
 
-    const targets = await targetRepository.findByMembersAndPeriod(
-      members.map((m: MemberWithDepartment) => m.id), startYear, startMonth
+    const targets = await targetRepository.findByMembersAndPeriodRange(
+      members.map((m: MemberWithDepartment) => m.id), startYear, startMonth, endYear, endMonth
     );
     const targetByMember = new Map<number, number>();
     for (const t of targets) {
-      targetByMember.set(t.memberId, (t.monthly || 0) * monthCount);
+      const current = targetByMember.get(t.memberId) || 0;
+      targetByMember.set(t.memberId, current + (t.monthly || 0));
     }
 
     const salesPeople: SalesPerson[] = members.map((member: MemberWithDepartment) => {

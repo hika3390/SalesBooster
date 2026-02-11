@@ -20,6 +20,23 @@ export const targetRepository = {
     });
   },
 
+  findByMembersAndPeriodRange(memberIds: number[], startYear: number, startMonth: number, endYear: number, endMonth: number) {
+    const conditions: { year: number; month: number }[] = [];
+    let y = startYear;
+    let m = startMonth;
+    while (y < endYear || (y === endYear && m <= endMonth)) {
+      conditions.push({ year: y, month: m });
+      m++;
+      if (m > 12) { m = 1; y++; }
+    }
+    return prisma.target.findMany({
+      where: {
+        memberId: { in: memberIds },
+        OR: conditions,
+      },
+    });
+  },
+
   upsert(data: { memberId: number; monthly: number; quarterly: number; annual: number; year: number; month: number }) {
     return prisma.target.upsert({
       where: { memberId_year_month: { memberId: data.memberId, year: data.year, month: data.month } },

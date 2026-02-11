@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useRef, useState, useEffect } from 'react';
+import Image from 'next/image';
 import PerformanceLabels from './PerformanceLabels';
 import AverageTargetLine from './AverageTargetLine';
 import SalesBar from './SalesBar';
@@ -176,9 +177,9 @@ export default function SalesPerformance({ salesData, recordCount, darkMode = fa
                   style={{ minWidth: `${columnWidth}px` }}
                 >
                   <div className="relative mb-1.5">
-                    <div className={`w-20 h-20 rounded-full bg-gray-300 overflow-hidden border border-white shadow-sm${isChanged ? ' animate-ring-glow' : ''}`}>
+                    <div className={`relative w-20 h-20 rounded-full bg-gray-300 overflow-hidden border border-white shadow-sm${isChanged ? ' animate-ring-glow' : ''}`}>
                       {person.imageUrl ? (
-                        <img src={person.imageUrl} alt={person.name} className="w-full h-full object-cover" />
+                        <Image src={person.imageUrl} alt={person.name} fill className="object-cover" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-400 to-blue-600">
                           <span className="text-white text-xs font-bold">{person.name.charAt(0)}</span>

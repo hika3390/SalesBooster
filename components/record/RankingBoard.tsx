@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { RankingBoardData, RankingColumn, RankingMember } from '@/types';
 
 interface RankingBoardProps {
@@ -14,9 +15,9 @@ function formatAmount(amount: number): string {
 function MemberCard({ member, darkMode = false }: { member: RankingMember; darkMode?: boolean }) {
   return (
     <div className="flex flex-col items-center py-3 px-2">
-      <div className={`w-16 h-16 rounded-sm overflow-hidden border shadow-sm mb-1.5 ${darkMode ? 'bg-gray-600 border-gray-500' : 'bg-gray-300 border-gray-200'}`}>
+      <div className={`relative w-16 h-16 rounded-sm overflow-hidden border shadow-sm mb-1.5 ${darkMode ? 'bg-gray-600 border-gray-500' : 'bg-gray-300 border-gray-200'}`}>
         {member.imageUrl ? (
-          <img src={member.imageUrl} alt={member.name} className="w-full h-full object-cover" />
+          <Image src={member.imageUrl} alt={member.name} fill className="object-cover" />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-400 to-blue-600">
             <span className="text-white text-lg font-bold">{member.name.charAt(0)}</span>

@@ -25,8 +25,8 @@ export default function ReportView({ reportData, darkMode = false }: ReportViewP
   }));
 
   return (
-    <div className="mx-6 my-4">
-      <div className="grid grid-cols-3 gap-4">
+    <div className="mx-6 my-4 h-[calc(100%-2rem)]">
+      <div className="grid grid-cols-3 grid-rows-2 gap-4 h-full">
         {/* 上段 */}
         <TrendBarChart data={reportData.monthlyTrend} darkMode={darkMode} />
         <CumulativeTrendChart data={reportData.cumulativeTrend} darkMode={darkMode} />

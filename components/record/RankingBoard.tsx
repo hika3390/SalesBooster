@@ -46,30 +46,34 @@ export default function RankingBoard({ data, darkMode = false }: RankingBoardPro
   }
 
   return (
-    <div className={`mx-6 my-4 shadow-sm rounded overflow-x-auto ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
-      <div className="p-4">
-        <h2 className={`text-lg font-bold mb-3 ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>RANKING BOARD</h2>
+    <div className={`mx-6 my-4 shadow-sm rounded overflow-auto h-[calc(100%-2rem)] ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
+      <div className={`sticky top-0 z-20 ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
+        <div className="p-4">
+          <h2 className={`text-lg font-bold mb-3 ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>RANKING BOARD</h2>
+        </div>
+
+        <div style={{ minWidth: 'fit-content' }}>
+          {/* ヘッダー行 */}
+          <div className={`flex border-b-2 ${darkMode ? 'border-gray-600' : 'border-gray-300'}`}>
+            {/* 順位列ヘッダー */}
+            <div className={`w-14 shrink-0 sticky left-0 z-10 ${darkMode ? 'bg-gray-800' : 'bg-white'}`} />
+            {/* 各カラムヘッダー */}
+            {data.columns.map((col, i) => (
+              <div
+                key={i}
+                className={`flex-1 min-w-[150px] text-center py-2 px-1 border-l ${darkMode ? 'border-gray-600' : 'border-gray-200'} ${
+                  col.isTotal ? 'bg-red-600 text-white' : i % 2 === 1 ? (darkMode ? 'bg-gray-700' : 'bg-gray-50') : (darkMode ? 'bg-gray-800' : 'bg-white')
+                }`}
+              >
+                <div className={`text-sm font-bold ${!col.isTotal && darkMode ? 'text-gray-100' : ''}`}>{col.label}</div>
+                {col.subLabel && <div className="text-[10px] opacity-80">{col.subLabel}</div>}
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
 
       <div style={{ minWidth: 'fit-content' }}>
-        {/* ヘッダー行 */}
-        <div className={`flex border-b-2 ${darkMode ? 'border-gray-600' : 'border-gray-300'}`}>
-          {/* 順位列ヘッダー */}
-          <div className={`w-14 shrink-0 sticky left-0 z-10 ${darkMode ? 'bg-gray-800' : 'bg-white'}`} />
-          {/* 各カラムヘッダー */}
-          {data.columns.map((col, i) => (
-            <div
-              key={i}
-              className={`flex-1 min-w-[150px] text-center py-2 px-1 border-l ${darkMode ? 'border-gray-600' : 'border-gray-200'} ${
-                col.isTotal ? 'bg-red-600 text-white' : i % 2 === 1 ? (darkMode ? 'bg-gray-700' : 'bg-gray-50') : (darkMode ? 'bg-gray-800' : 'bg-white')
-              }`}
-            >
-              <div className={`text-sm font-bold ${!col.isTotal && darkMode ? 'text-gray-100' : ''}`}>{col.label}</div>
-              {col.subLabel && <div className="text-[10px] opacity-80">{col.subLabel}</div>}
-            </div>
-          ))}
-        </div>
-
         {/* ランキング行 */}
         {rankLabels.map((label, rankIdx) => (
           <div key={rankIdx} className={`flex border-b ${darkMode ? 'border-gray-600' : 'border-gray-200'}`}>

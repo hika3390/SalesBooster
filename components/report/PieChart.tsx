@@ -14,9 +14,9 @@ export default function PieChart({ data, title, darkMode = false }: PieChartProp
   const filteredData = data.filter((d) => d.value > 0);
 
   return (
-    <div className={`border rounded p-4 h-full ${darkMode ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-200'}`}>
-      <h3 className={`text-sm font-bold text-center mb-2 ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>{title}</h3>
-      <ResponsiveContainer width="100%" height={280}>
+    <div className={`border rounded p-4 h-full flex flex-col ${darkMode ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-200'}`}>
+      <h3 className={`text-sm font-bold text-center mb-2 shrink-0 ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>{title}</h3>
+      <ResponsiveContainer width="100%" height="100%">
         <RechartsPieChart>
           <Pie
             data={filteredData}

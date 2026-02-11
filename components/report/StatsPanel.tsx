@@ -20,9 +20,9 @@ export default function StatsPanel({ stats, darkMode = false }: StatsPanelProps)
   const unitClass = darkMode ? 'text-gray-400' : 'text-gray-500';
 
   return (
-    <div className={`border rounded p-4 h-full ${cardClass}`}>
-      <h3 className={`text-sm font-bold text-center mb-4 ${titleClass}`}>その他情報</h3>
-      <div className="space-y-4">
+    <div className={`border rounded p-4 h-full flex flex-col ${cardClass}`}>
+      <h3 className={`text-sm font-bold text-center mb-4 shrink-0 ${titleClass}`}>その他情報</h3>
+      <div className="flex-1 flex flex-col justify-evenly">
         <div className="text-center">
           <div className={`text-xs ${labelClass}`}>月平均（直近3ヶ月）</div>
           <div className={`text-2xl font-bold ${valueClass}`}>

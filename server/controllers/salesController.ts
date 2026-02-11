@@ -61,8 +61,7 @@ export const salesController = {
 
       return ApiResponse.created(record);
     } catch (error) {
-      console.error('Failed to create sales record:', error);
-      return ApiResponse.serverError();
+      return ApiResponse.fromError(error, 'Failed to create sales record');
     }
   },
 

@@ -29,8 +29,7 @@ export const displayController = {
       await displayService.updateConfig(body);
       return ApiResponse.success({ success: true });
     } catch (error) {
-      console.error('Failed to update display config:', error);
-      return ApiResponse.serverError();
+      return ApiResponse.fromError(error, 'Failed to update display config');
     }
   },
 };

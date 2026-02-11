@@ -23,8 +23,7 @@ export const settingsController = {
 
       return ApiResponse.success({ success: true });
     } catch (error) {
-      console.error('Failed to update settings:', error);
-      return ApiResponse.serverError();
+      return ApiResponse.fromError(error, 'Failed to update settings');
     }
   },
 
@@ -50,8 +49,7 @@ export const settingsController = {
       const integration = await settingsService.updateIntegrationStatus(id, status);
       return ApiResponse.success(integration);
     } catch (error) {
-      console.error('Failed to update integration:', error);
-      return ApiResponse.serverError();
+      return ApiResponse.fromError(error, 'Failed to update integration');
     }
   },
 };

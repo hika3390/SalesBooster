@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { Prisma } from '@prisma/client';
 
 /**
  * APIレスポンスを統一的に生成するユーティリティクラス。
@@ -25,8 +26,47 @@ export class ApiResponse {
     return NextResponse.json({ error: message }, { status: 400 });
   }
 
+  /** リソース未検出レスポンス (404) */
+  static notFound(message: string = 'Resource not found'): NextResponse {
+    return NextResponse.json({ error: message }, { status: 404 });
+  }
+
+  /** 競合エラーレスポンス (409) */
+  static conflict(message: string = 'Resource already exists'): NextResponse {
+    return NextResponse.json({ error: message }, { status: 409 });
+  }
+
+  /** 認可エラーレスポンス (403) */
+  static forbidden(message: string = 'Forbidden'): NextResponse {
+    return NextResponse.json({ error: message }, { status: 403 });
+  }
+
   /** サーバーエラーレスポンス (500) */
   static serverError(message: string = 'Internal Server Error'): NextResponse {
     return NextResponse.json({ error: message }, { status: 500 });
+  }
+
+  /** Prismaエラーを適切なHTTPレスポンスに変換する */
+  static fromError(error: unknown, context: string): NextResponse {
+    console.error(`${context}:`, error);
+
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      switch (error.code) {
+        case 'P2025':
+          return ApiResponse.notFound('対象のレコードが見つかりません');
+        case 'P2002': {
+          const fields = (error.meta?.target as string[])?.join(', ') || '';
+          return ApiResponse.conflict(fields ? `${fields} は既に使用されています` : '重複するレコードが存在します');
+        }
+        case 'P2003':
+          return ApiResponse.badRequest('関連するレコードが存在するため、操作を完了できません');
+      }
+    }
+
+    if (error instanceof SyntaxError) {
+      return ApiResponse.badRequest('リクエストボディが不正です');
+    }
+
+    return ApiResponse.serverError();
   }
 }

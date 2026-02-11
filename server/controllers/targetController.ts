@@ -33,8 +33,7 @@ export const targetController = {
 
       return ApiResponse.success(target);
     } catch (error) {
-      console.error('Failed to upsert target:', error);
-      return ApiResponse.serverError();
+      return ApiResponse.fromError(error, 'Failed to upsert target');
     }
   },
 };

@@ -25,8 +25,7 @@ export const memberController = {
       const member = await memberService.create({ name, email, role, imageUrl, departmentId });
       return ApiResponse.created(member);
     } catch (error) {
-      console.error('Failed to create member:', error);
-      return ApiResponse.serverError();
+      return ApiResponse.fromError(error, 'Failed to create member');
     }
   },
 
@@ -36,8 +35,7 @@ export const memberController = {
       const member = await memberService.update(id, body);
       return ApiResponse.success(member);
     } catch (error) {
-      console.error('Failed to update member:', error);
-      return ApiResponse.serverError();
+      return ApiResponse.fromError(error, 'Failed to update member');
     }
   },
 
@@ -46,8 +44,7 @@ export const memberController = {
       await memberService.delete(id);
       return ApiResponse.success({ success: true });
     } catch (error) {
-      console.error('Failed to delete member:', error);
-      return ApiResponse.serverError();
+      return ApiResponse.fromError(error, 'Failed to delete member');
     }
   },
 };

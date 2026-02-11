@@ -25,8 +25,7 @@ export const groupController = {
       const group = await groupService.create({ name, managerId });
       return ApiResponse.created(group);
     } catch (error) {
-      console.error('Failed to create group:', error);
-      return ApiResponse.serverError();
+      return ApiResponse.fromError(error, 'Failed to create group');
     }
   },
 
@@ -36,8 +35,7 @@ export const groupController = {
       const group = await groupService.update(id, body);
       return ApiResponse.success(group);
     } catch (error) {
-      console.error('Failed to update group:', error);
-      return ApiResponse.serverError();
+      return ApiResponse.fromError(error, 'Failed to update group');
     }
   },
 
@@ -46,8 +44,7 @@ export const groupController = {
       await groupService.delete(id);
       return ApiResponse.success({ success: true });
     } catch (error) {
-      console.error('Failed to delete group:', error);
-      return ApiResponse.serverError();
+      return ApiResponse.fromError(error, 'Failed to delete group');
     }
   },
 
@@ -63,8 +60,7 @@ export const groupController = {
       await groupService.syncMembers(groupId, memberIds);
       return ApiResponse.success({ success: true });
     } catch (error) {
-      console.error('Failed to sync group members:', error);
-      return ApiResponse.serverError();
+      return ApiResponse.fromError(error, 'Failed to sync group members');
     }
   },
 };

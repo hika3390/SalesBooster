@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Dialog } from '@/components/common/Dialog';
 import Modal from '@/components/common/Modal';
+import Button from '@/components/common/Button';
 
 interface MemberOption {
   id: number;
@@ -108,19 +109,8 @@ export default function GroupMembersModal({ isOpen, onClose, onUpdated, group }:
   const footer = (
     <>
       <span className="text-sm text-gray-500 mr-auto">{selectedIds.size}名 選択中</span>
-      <button
-        onClick={onClose}
-        className="px-6 py-2.5 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
-      >
-        キャンセル
-      </button>
-      <button
-        onClick={handleSubmit}
-        disabled={submitting}
-        className="px-6 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors"
-      >
-        {submitting ? '保存中...' : '保存'}
-      </button>
+      <Button label="キャンセル" variant="outline" color="gray" onClick={onClose} />
+      <Button label={submitting ? '保存中...' : '保存'} onClick={handleSubmit} disabled={submitting} />
     </>
   );
 

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Dialog } from '@/components/common/Dialog';
+import Button from '@/components/common/Button';
 import AddGroupModal from './AddGroupModal';
 import EditGroupModal from './EditGroupModal';
 import GroupMembersModal from './GroupMembersModal';
@@ -55,12 +56,7 @@ export default function GroupSettings() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-bold text-gray-800">グループ設定</h2>
-        <button
-          onClick={() => setIsAddModalOpen(true)}
-          className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
-        >
-          グループを追加
-        </button>
+        <Button label="グループを追加" onClick={() => setIsAddModalOpen(true)} />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -76,9 +72,9 @@ export default function GroupSettings() {
               </div>
             </div>
             <div className="mt-4 flex space-x-2">
-              <button onClick={() => setMembersGroup(group)} className="flex-1 px-3 py-1.5 text-sm border border-blue-300 text-blue-600 rounded-lg hover:bg-blue-50 transition-colors">メンバー</button>
-              <button onClick={() => setEditingGroup(group)} className="flex-1 px-3 py-1.5 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">編集</button>
-              <button onClick={() => handleDelete(group.id)} className="flex-1 px-3 py-1.5 text-sm border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition-colors">削除</button>
+              <Button label="メンバー" variant="outline" color="blue" onClick={() => setMembersGroup(group)} className="flex-1 justify-center" />
+              <Button label="編集" variant="outline" color="gray" onClick={() => setEditingGroup(group)} className="flex-1 justify-center" />
+              <Button label="削除" variant="outline" color="red" onClick={() => handleDelete(group.id)} className="flex-1 justify-center" />
             </div>
           </div>
         ))}

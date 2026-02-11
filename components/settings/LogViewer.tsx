@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import DataTable, { Column } from '@/components/common/DataTable';
+import Button from '@/components/common/Button';
 
 interface LogEntry {
   id: number;
@@ -90,9 +91,7 @@ export default function LogViewer() {
           <input type="date" className="border border-gray-300 rounded-lg px-3 py-2 text-sm" />
           <span className="text-gray-500">&mdash;</span>
           <input type="date" className="border border-gray-300 rounded-lg px-3 py-2 text-sm" />
-          <button className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors">
-            検索
-          </button>
+          <Button label="検索" />
         </div>
       </div>
 

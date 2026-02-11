@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import DataTable, { Column } from '@/components/common/DataTable';
+import Button from '@/components/common/Button';
 import EditTargetModal from './EditTargetModal';
 
 interface Target {
@@ -82,9 +83,7 @@ export default function TargetSettings() {
             <option>2025年度</option>
             <option>2026年度</option>
           </select>
-          <button className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors">
-            一括設定
-          </button>
+          <Button label="一括設定" />
         </div>
       </div>
 

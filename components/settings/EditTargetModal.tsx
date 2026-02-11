@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Dialog } from '@/components/common/Dialog';
 import Modal from '@/components/common/Modal';
+import Button from '@/components/common/Button';
 
 interface TargetData {
   id: number;
@@ -71,19 +72,8 @@ export default function EditTargetModal({ isOpen, onClose, onUpdated, target }: 
 
   const footer = (
     <>
-      <button
-        onClick={onClose}
-        className="px-6 py-2.5 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
-      >
-        キャンセル
-      </button>
-      <button
-        onClick={handleSubmit}
-        disabled={submitting || !monthly || !quarterly || !annual}
-        className="px-6 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors"
-      >
-        {submitting ? '更新中...' : '更新'}
-      </button>
+      <Button label="キャンセル" variant="outline" color="gray" onClick={onClose} />
+      <Button label={submitting ? '更新中...' : '更新'} onClick={handleSubmit} disabled={submitting || !monthly || !quarterly || !annual} />
     </>
   );
 

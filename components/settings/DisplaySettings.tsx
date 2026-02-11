@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { DisplayConfig, DisplayViewConfig, DEFAULT_DISPLAY_CONFIG, TransitionType } from '@/types/display';
 import { VIEW_TYPE_LABELS } from '@/types';
+import Button from '@/components/common/Button';
 
 interface GroupOption {
   id: number;
@@ -327,13 +328,11 @@ export default function DisplaySettings() {
               {message.text}
             </span>
           )}
-          <button
+          <Button
+            label={saving ? '保存中...' : '設定を保存'}
             onClick={handleSave}
             disabled={saving}
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-blue-300 text-sm font-medium"
-          >
-            {saving ? '保存中...' : '設定を保存'}
-          </button>
+          />
         </div>
       </div>
     </div>

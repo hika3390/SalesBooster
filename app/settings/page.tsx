@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Header from '@/components/header/Header';
+import Button from '@/components/common/Button';
 import SettingsSidebar, { SettingsSection } from '@/components/settings/SettingsSidebar';
 import MemberSettings from '@/components/settings/MemberSettings';
 import GroupSettings from '@/components/settings/GroupSettings';
@@ -42,12 +43,7 @@ export default function SettingsPage() {
       <Header
         subtitle="管理画面"
         rightContent={
-          <button
-            onClick={() => router.push('/')}
-            className="px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-          >
-            ダッシュボードに戻る
-          </button>
+          <Button label="ダッシュボードに戻る" variant="outline" color="gray" onClick={() => router.push('/')} />
         }
       />
 

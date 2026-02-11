@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Modal from './common/Modal';
+import Button from './common/Button';
 
 interface SalesInputModalProps {
   isOpen: boolean;
@@ -88,19 +89,8 @@ export default function SalesInputModal({ isOpen, onClose, onSubmit }: SalesInpu
 
   const footer = (
     <>
-      <button
-        onClick={handleCancel}
-        className="px-6 py-2.5 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
-      >
-        キャンセル
-      </button>
-      <button
-        onClick={handleSubmit}
-        disabled={submitting || !memberId || !amount}
-        className="px-6 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors"
-      >
-        {submitting ? '送信中...' : '追　加'}
-      </button>
+      <Button label="キャンセル" variant="outline" color="gray" onClick={handleCancel} />
+      <Button label={submitting ? '送信中...' : '追　加'} onClick={handleSubmit} disabled={submitting || !memberId || !amount} />
     </>
   );
 

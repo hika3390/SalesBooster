@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Dialog } from '@/components/common/Dialog';
 import DataTable, { Column } from '@/components/common/DataTable';
+import Button from '@/components/common/Button';
 import AddMemberModal from './AddMemberModal';
 import EditMemberModal from './EditMemberModal';
 
@@ -99,12 +100,7 @@ export default function MemberSettings() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-bold text-gray-800">メンバー設定</h2>
-        <button
-          onClick={() => setIsAddModalOpen(true)}
-          className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
-        >
-          メンバーを追加
-        </button>
+        <Button label="メンバーを追加" onClick={() => setIsAddModalOpen(true)} />
       </div>
 
       <DataTable

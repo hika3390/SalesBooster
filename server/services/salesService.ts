@@ -7,141 +7,118 @@ import { toManyen } from '@/lib/currency';
 type MemberWithDepartment = Awaited<ReturnType<typeof memberRepository.findAll>>[number];
 type SalesRecordWithMember = Awaited<ReturnType<typeof salesRecordRepository.findByPeriod>>[number];
 
+/** memberIds指定時はDB側で絞り込み、未指定時は全件取得 */
+async function fetchMembers(memberIds?: number[]): Promise<MemberWithDepartment[]> {
+  if (memberIds && memberIds.length > 0) {
+    return memberRepository.findByIds(memberIds);
+  }
+  return memberRepository.findAll();
+}
+
+/** レコード配列からメンバーごとの売上合計Mapを構築 */
+function buildSalesMap(records: SalesRecordWithMember[]): Map<number, number> {
+  const map = new Map<number, number>();
+  for (const record of records) {
+    map.set(record.memberId, (map.get(record.memberId) || 0) + record.amount);
+  }
+  return map;
+}
+
+/** 期間内の各月の実際の目標値を合算したMapを構築 */
+async function buildTargetMap(memberIds: number[], startDate: Date, endDate: Date): Promise<Map<number, number>> {
+  const targets = await targetRepository.findByMembersAndPeriodRange(
+    memberIds,
+    startDate.getFullYear(), startDate.getMonth() + 1,
+    endDate.getFullYear(), endDate.getMonth() + 1,
+  );
+  const map = new Map<number, number>();
+  for (const t of targets) {
+    map.set(t.memberId, (map.get(t.memberId) || 0) + (t.monthly || 0));
+  }
+  return map;
+}
+
+/** メンバー・売上Map・目標MapからランキングつきSalesPerson配列を構築 */
+function buildSalesPeople(
+  members: MemberWithDepartment[],
+  salesMap: Map<number, number>,
+  targetMap: Map<number, number>,
+): SalesPerson[] {
+  const salesPeople: SalesPerson[] = members.map((member) => {
+    const salesYen = salesMap.get(member.id) || 0;
+    const targetYen = targetMap.get(member.id) || 0;
+    const sales = toManyen(salesYen);
+    const target = toManyen(targetYen);
+    const achievement = targetYen > 0 ? Math.round((salesYen / targetYen) * 100) : 0;
+
+    return {
+      rank: 0,
+      name: member.name,
+      sales,
+      target,
+      achievement,
+      imageUrl: member.imageUrl || undefined,
+      department: member.department?.name || undefined,
+    };
+  });
+
+  salesPeople.sort((a, b) => b.sales - a.sales);
+  salesPeople.forEach((p, i) => (p.rank = i + 1));
+  return salesPeople;
+}
+
+/** 期間内の月別売上Mapを構築（0初期化つき） */
+function buildMonthlyMap(startDate: Date, endDate: Date, records: SalesRecordWithMember[]): Map<string, number> {
+  const map = new Map<string, number>();
+  const cursor = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
+  const end = new Date(endDate.getFullYear(), endDate.getMonth(), 1);
+  while (cursor <= end) {
+    const key = `${cursor.getFullYear()}-${String(cursor.getMonth() + 1).padStart(2, '0')}`;
+    map.set(key, 0);
+    cursor.setMonth(cursor.getMonth() + 1);
+  }
+  for (const r of records) {
+    const d = new Date(r.recordDate);
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    map.set(key, (map.get(key) || 0) + r.amount);
+  }
+  return map;
+}
+
 export const salesService = {
   async getSalesByDateRange(startDate: Date, endDate: Date, memberIds?: number[]): Promise<{ salesPeople: SalesPerson[]; recordCount: number }> {
-    const [records, allMembers] = await Promise.all([
+    const [records, members] = await Promise.all([
       salesRecordRepository.findByPeriod(startDate, endDate, memberIds),
-      memberRepository.findAll(),
+      fetchMembers(memberIds),
     ]);
 
-    const members = memberIds
-      ? allMembers.filter((m: MemberWithDepartment) => memberIds.includes(m.id))
-      : allMembers;
-
-    // メンバーごとの売上合計を計算
-    const salesByMember = new Map<number, number>();
-    for (const record of records) {
-      const current = salesByMember.get(record.memberId) || 0;
-      salesByMember.set(record.memberId, current + record.amount);
-    }
-
-    // 目標を取得（期間内の各月の実際の目標値を合算）
-    const startYear = startDate.getFullYear();
-    const startMonth = startDate.getMonth() + 1;
-    const endYear = endDate.getFullYear();
-    const endMonth = endDate.getMonth() + 1;
-
-    const targets = await targetRepository.findByMembersAndPeriodRange(
-      members.map((m: MemberWithDepartment) => m.id), startYear, startMonth, endYear, endMonth
-    );
-    const targetByMember = new Map<number, number>();
-    for (const t of targets) {
-      const current = targetByMember.get(t.memberId) || 0;
-      targetByMember.set(t.memberId, current + (t.monthly || 0));
-    }
-
-    // SalesPerson形式に変換してランキング（万円単位）
-    const salesPeople: SalesPerson[] = members.map((member: MemberWithDepartment) => {
-      const salesYen = salesByMember.get(member.id) || 0;
-      const targetYen = targetByMember.get(member.id) || 0;
-      const sales = toManyen(salesYen);
-      const target = toManyen(targetYen);
-      const achievement = targetYen > 0 ? Math.round((salesYen / targetYen) * 100) : 0;
-
-      return {
-        rank: 0,
-        name: member.name,
-        sales,
-        target,
-        achievement,
-        imageUrl: member.imageUrl || undefined,
-        department: member.department?.name || undefined,
-      };
-    });
-
-    // 売上順にソートしてランクを付与
-    salesPeople.sort((a, b) => b.sales - a.sales);
-    salesPeople.forEach((p, i) => (p.rank = i + 1));
+    const salesMap = buildSalesMap(records);
+    const ids = members.map((m) => m.id);
+    const targetMap = await buildTargetMap(ids, startDate, endDate);
+    const salesPeople = buildSalesPeople(members, salesMap, targetMap);
 
     return { salesPeople, recordCount: records.length };
   },
 
   async getCumulativeSales(startDate: Date, endDate: Date, memberIds?: number[]): Promise<SalesPerson[]> {
-    const [records, allMembers] = await Promise.all([
+    const [records, members] = await Promise.all([
       salesRecordRepository.findByPeriod(startDate, endDate, memberIds),
-      memberRepository.findAll(),
+      fetchMembers(memberIds),
     ]);
 
-    const members = memberIds
-      ? allMembers.filter((m: MemberWithDepartment) => memberIds.includes(m.id))
-      : allMembers;
+    const salesMap = buildSalesMap(records);
+    const ids = members.map((m) => m.id);
+    const targetMap = await buildTargetMap(ids, startDate, endDate);
 
-    const salesByMember = new Map<number, number>();
-    for (const record of records) {
-      const current = salesByMember.get(record.memberId) || 0;
-      salesByMember.set(record.memberId, current + record.amount);
-    }
-
-    // 累計目標を計算（期間内の各月の実際の目標値を合算）
-    const startYear = startDate.getFullYear();
-    const startMonth = startDate.getMonth() + 1;
-    const endYear = endDate.getFullYear();
-    const endMonth = endDate.getMonth() + 1;
-
-    const targets = await targetRepository.findByMembersAndPeriodRange(
-      members.map((m: MemberWithDepartment) => m.id), startYear, startMonth, endYear, endMonth
-    );
-    const targetByMember = new Map<number, number>();
-    for (const t of targets) {
-      const current = targetByMember.get(t.memberId) || 0;
-      targetByMember.set(t.memberId, current + (t.monthly || 0));
-    }
-
-    const salesPeople: SalesPerson[] = members.map((member: MemberWithDepartment) => {
-      const salesYen = salesByMember.get(member.id) || 0;
-      const targetYen = targetByMember.get(member.id) || 0;
-      const sales = toManyen(salesYen);
-      const target = toManyen(targetYen);
-      const achievement = targetYen > 0 ? Math.round((salesYen / targetYen) * 100) : 0;
-
-      return {
-        rank: 0,
-        name: member.name,
-        sales,
-        target,
-        achievement,
-        imageUrl: member.imageUrl || undefined,
-        department: member.department?.name || undefined,
-      };
-    });
-
-    salesPeople.sort((a, b) => b.sales - a.sales);
-    salesPeople.forEach((p, i) => (p.rank = i + 1));
-
-    return salesPeople;
+    return buildSalesPeople(members, salesMap, targetMap);
   },
 
   async getTrendData(startDate: Date, endDate: Date, memberIds?: number[]) {
-    // 全期間を1回のクエリで取得
     const periodStart = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
     const periodEnd = new Date(endDate.getFullYear(), endDate.getMonth() + 1, 0, 23, 59, 59);
     const records = await salesRecordRepository.findByPeriod(periodStart, periodEnd, memberIds);
 
-    // JS側で月別に集計
-    const monthlyMap = new Map<string, number>();
-    const cursor = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
-    const end = new Date(endDate.getFullYear(), endDate.getMonth(), 1);
-    while (cursor <= end) {
-      const key = `${cursor.getFullYear()}-${String(cursor.getMonth() + 1).padStart(2, '0')}`;
-      monthlyMap.set(key, 0);
-      cursor.setMonth(cursor.getMonth() + 1);
-    }
-
-    for (const r of records) {
-      const d = new Date(r.recordDate);
-      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-      monthlyMap.set(key, (monthlyMap.get(key) || 0) + r.amount);
-    }
+    const monthlyMap = buildMonthlyMap(startDate, endDate, records);
 
     return Array.from(monthlyMap.entries())
       .sort((a, b) => a[0].localeCompare(b[0]))
@@ -164,20 +141,7 @@ export const salesService = {
   async getReportData(startDate: Date, endDate: Date, memberIds?: number[]): Promise<ReportData> {
     const records = await salesRecordRepository.findByPeriod(startDate, endDate, memberIds);
 
-    // --- 月別集計 ---
-    const monthlyMap = new Map<string, number>();
-    const cursor = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
-    const end = new Date(endDate.getFullYear(), endDate.getMonth(), 1);
-    while (cursor <= end) {
-      const key = `${cursor.getFullYear()}-${String(cursor.getMonth() + 1).padStart(2, '0')}`;
-      monthlyMap.set(key, 0);
-      cursor.setMonth(cursor.getMonth() + 1);
-    }
-    for (const r of records) {
-      const d = new Date(r.recordDate);
-      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-      monthlyMap.set(key, (monthlyMap.get(key) || 0) + r.amount);
-    }
+    const monthlyMap = buildMonthlyMap(startDate, endDate, records);
 
     const sortedMonths = Array.from(monthlyMap.entries()).sort((a, b) => a[0].localeCompare(b[0]));
     const salesValues = sortedMonths.map(([, v]) => toManyen(v));
@@ -250,10 +214,9 @@ export const salesService = {
     const dailyAvg = totalDays > 0 ? Math.round((totalRecentSales / totalDays) * 10) / 10 : 0;
 
     // 目標取得（直近月の目標）
-    const allMembers = await memberRepository.findAll();
-    const targetMembers = memberIds ? allMembers.filter((m: MemberWithDepartment) => memberIds.includes(m.id)) : allMembers;
+    const members = await fetchMembers(memberIds);
     const targets = await targetRepository.findByMembersAndPeriod(
-      targetMembers.map((m: MemberWithDepartment) => m.id), now.getFullYear(), now.getMonth() + 1
+      members.map((m) => m.id), now.getFullYear(), now.getMonth() + 1
     );
     const monthlyTarget = toManyen(targets.reduce((sum, t) => sum + (t.monthly || 0), 0));
 
@@ -278,13 +241,10 @@ export const salesService = {
   },
 
   async getRankingBoardData(startDate: Date, endDate: Date, memberIds?: number[]): Promise<RankingBoardData> {
-    const allMembers = await memberRepository.findAll();
-    const members = memberIds
-      ? allMembers.filter((m: MemberWithDepartment) => memberIds.includes(m.id))
-      : allMembers;
-
-    // 全期間のレコードを取得
-    const allRecords = await salesRecordRepository.findByPeriod(startDate, endDate, memberIds);
+    const [members, allRecords] = await Promise.all([
+      fetchMembers(memberIds),
+      salesRecordRepository.findByPeriod(startDate, endDate, memberIds),
+    ]);
 
     // --- 月ごとのカラムを生成（新しい月から並べる）---
     const monthKeys: string[] = [];

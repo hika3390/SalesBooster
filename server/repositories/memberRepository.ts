@@ -9,6 +9,14 @@ export const memberRepository = {
     });
   },
 
+  findByIds(ids: number[]) {
+    return prisma.member.findMany({
+      where: { id: { in: ids } },
+      include: { department: true },
+      orderBy: { id: 'asc' },
+    });
+  },
+
   findById(id: number) {
     return prisma.member.findUnique({
       where: { id },

@@ -2,14 +2,8 @@
 
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { DisplayConfig } from '@/types/display';
-import { SalesPerson, ReportData, RankingBoardData } from '@/types';
+import { SalesPerson, ReportData, RankingBoardData, TrendData } from '@/types';
 import { useSalesPolling } from './useSalesPolling';
-
-interface TrendData {
-  month: string;
-  sales: number;
-  displayMonth: string;
-}
 
 interface UseDisplayDataReturn {
   salesData: SalesPerson[];

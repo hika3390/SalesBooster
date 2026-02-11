@@ -1,18 +1,11 @@
 'use client';
 
-import { ViewType } from '@/types';
-import { SalesPerson, ReportData, RankingBoardData } from '@/types';
+import { ViewType, SalesPerson, ReportData, RankingBoardData, TrendData } from '@/types';
 import SalesPerformance from '@/components/SalesPerformance';
 import CumulativeChart from '@/components/CumulativeChart';
 import TrendChart from '@/components/TrendChart';
 import ReportView from '@/components/report/ReportView';
 import RankingBoard from '@/components/record/RankingBoard';
-
-interface TrendData {
-  month: string;
-  sales: number;
-  displayMonth: string;
-}
 
 interface DisplayViewRendererProps {
   view: ViewType;

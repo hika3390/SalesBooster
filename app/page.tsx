@@ -7,17 +7,11 @@ import SalesPerformance from '@/components/SalesPerformance';
 import CumulativeChart from '@/components/CumulativeChart';
 import TrendChart from '@/components/TrendChart';
 import SalesInputModal from '@/components/SalesInputModal';
-import { SalesPerson, ViewType, ReportData, RankingBoardData, VIEW_TYPE_LABELS } from '@/types';
+import { SalesPerson, ViewType, ReportData, RankingBoardData, VIEW_TYPE_LABELS, TrendData } from '@/types';
 import ReportView from '@/components/report/ReportView';
 import RankingBoard from '@/components/record/RankingBoard';
 import { useSalesPolling } from '@/hooks/useSalesPolling';
 import { PeriodSelection } from '@/components/filter/PeriodNavigator';
-
-interface TrendData {
-  month: string;
-  sales: number;
-  displayMonth: string;
-}
 
 export default function Home() {
   const [currentView, setCurrentView] = useState<ViewType>('PERIOD_GRAPH');

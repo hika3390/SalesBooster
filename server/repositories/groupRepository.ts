@@ -32,10 +32,11 @@ export const groupRepository = {
   },
 
   async syncMembers(groupId: number, memberIds: number[]) {
+    const uniqueIds = [...new Set(memberIds)];
     await prisma.$transaction([
       prisma.groupMember.deleteMany({ where: { groupId } }),
       prisma.groupMember.createMany({
-        data: memberIds.map((memberId) => ({ groupId, memberId })),
+        data: uniqueIds.map((memberId) => ({ groupId, memberId })),
       }),
     ]);
   },

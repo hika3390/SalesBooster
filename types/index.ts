@@ -39,6 +39,12 @@ export interface RankingBoardData {
   columns: RankingColumn[];
 }
 
+export interface TrendData {
+  month: string;
+  sales: number;
+  displayMonth: string;
+}
+
 export interface ReportData {
   monthlyTrend: { month: string; displayMonth: string; sales: number; movingAvg: number | null }[];
   cumulativeTrend: { month: string; displayMonth: string; cumulative: number }[];

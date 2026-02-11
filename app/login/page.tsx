@@ -14,18 +14,22 @@ export default function LoginPage() {
     setError('');
     setIsLoading(true);
 
-    const result = await signIn('credentials', {
-      email,
-      password,
-      redirect: false,
-    });
+    try {
+      const result = await signIn('credentials', {
+        email,
+        password,
+        redirect: false,
+      });
 
-    setIsLoading(false);
-
-    if (result?.error) {
-      setError('メールアドレスまたはパスワードが正しくありません');
-    } else {
-      window.location.href = '/';
+      if (result?.error) {
+        setError('メールアドレスまたはパスワードが正しくありません');
+      } else {
+        window.location.href = '/';
+      }
+    } catch {
+      setError('ログイン処理中にエラーが発生しました。しばらくしてからお試しください。');
+    } finally {
+      setIsLoading(false);
     }
   };
 

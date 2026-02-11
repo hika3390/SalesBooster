@@ -8,9 +8,10 @@ import StatsPanel from './StatsPanel';
 
 interface ReportViewProps {
   reportData: ReportData;
+  darkMode?: boolean;
 }
 
-export default function ReportView({ reportData }: ReportViewProps) {
+export default function ReportView({ reportData, darkMode = false }: ReportViewProps) {
   const dayOfWeekPieData = reportData.dayOfWeekRatio.map((d) => ({
     name: d.day,
     value: d.amount,
@@ -27,12 +28,12 @@ export default function ReportView({ reportData }: ReportViewProps) {
     <div className="mx-6 my-4">
       <div className="grid grid-cols-3 gap-4">
         {/* 上段 */}
-        <TrendBarChart data={reportData.monthlyTrend} />
-        <CumulativeTrendChart data={reportData.cumulativeTrend} />
-        <StatsPanel stats={reportData.stats} />
+        <TrendBarChart data={reportData.monthlyTrend} darkMode={darkMode} />
+        <CumulativeTrendChart data={reportData.cumulativeTrend} darkMode={darkMode} />
+        <StatsPanel stats={reportData.stats} darkMode={darkMode} />
         {/* 下段 */}
-        <PieChart data={dayOfWeekPieData} title="曜日 比率" />
-        <PieChart data={periodPieData} title="前中後 比率" />
+        <PieChart data={dayOfWeekPieData} title="曜日 比率" darkMode={darkMode} />
+        <PieChart data={periodPieData} title="前中後 比率" darkMode={darkMode} />
       </div>
     </div>
   );

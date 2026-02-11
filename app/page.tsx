@@ -7,7 +7,7 @@ import SalesPerformance from '@/components/SalesPerformance';
 import CumulativeChart from '@/components/CumulativeChart';
 import TrendChart from '@/components/TrendChart';
 import SalesInputModal from '@/components/SalesInputModal';
-import { SalesPerson, ViewType, ReportData, RankingBoardData } from '@/types';
+import { SalesPerson, ViewType, ReportData, RankingBoardData, VIEW_TYPE_LABELS } from '@/types';
 import ReportView from '@/components/report/ReportView';
 import RankingBoard from '@/components/record/RankingBoard';
 import { useSalesPolling } from '@/hooks/useSalesPolling';
@@ -20,7 +20,7 @@ interface TrendData {
 }
 
 export default function Home() {
-  const [currentView, setCurrentView] = useState<ViewType>('期間グラフ');
+  const [currentView, setCurrentView] = useState<ViewType>('PERIOD_GRAPH');
   const [isSalesModalOpen, setIsSalesModalOpen] = useState(false);
   const [salesData, setSalesData] = useState<SalesPerson[]>([]);
   const [recordCount, setRecordCount] = useState(0);
@@ -125,9 +125,9 @@ export default function Home() {
   };
 
   const isDataEmpty =
-    (currentView === '期間グラフ' && salesData.length === 0) ||
-    (currentView === '累計グラフ' && cumulativeSalesData.length === 0) ||
-    (currentView === '推移グラフ' && trendData.every((d) => d.sales === 0));
+    (currentView === 'PERIOD_GRAPH' && salesData.length === 0) ||
+    (currentView === 'CUMULATIVE_GRAPH' && cumulativeSalesData.length === 0) ||
+    (currentView === 'TREND_GRAPH' && trendData.every((d) => d.sales === 0));
 
   const emptyMessage = (
     <div className="mx-6 my-4 p-12 bg-white rounded shadow-sm text-center">
@@ -149,19 +149,19 @@ export default function Home() {
           </div>
         ) : isDataEmpty ? (
           emptyMessage
-        ) : currentView === '累計グラフ' ? (
+        ) : currentView === 'CUMULATIVE_GRAPH' ? (
           <CumulativeChart salesData={cumulativeSalesData} />
-        ) : currentView === '期間グラフ' ? (
+        ) : currentView === 'PERIOD_GRAPH' ? (
           <SalesPerformance salesData={salesData} recordCount={recordCount} />
-        ) : currentView === '推移グラフ' ? (
+        ) : currentView === 'TREND_GRAPH' ? (
           <TrendChart monthlyData={trendData} />
-        ) : currentView === 'レポート' && reportData ? (
+        ) : currentView === 'REPORT' && reportData ? (
           <ReportView reportData={reportData} />
-        ) : currentView === 'レコード' && rankingData ? (
+        ) : currentView === 'RECORD' && rankingData ? (
           <RankingBoard data={rankingData} />
         ) : (
           <div className="mx-6 my-4 p-8 bg-white rounded shadow-sm text-center text-gray-500">
-            {currentView}の表示は準備中です
+            {VIEW_TYPE_LABELS[currentView]}の表示は準備中です
           </div>
         )}
       </main>

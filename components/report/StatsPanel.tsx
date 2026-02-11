@@ -9,45 +9,52 @@ interface StatsPanelProps {
     landingPrediction: number;
     landingMonth: string;
   };
+  darkMode?: boolean;
 }
 
-export default function StatsPanel({ stats }: StatsPanelProps) {
+export default function StatsPanel({ stats, darkMode = false }: StatsPanelProps) {
+  const cardClass = darkMode ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-200';
+  const titleClass = darkMode ? 'text-blue-400' : 'text-blue-600';
+  const labelClass = darkMode ? 'text-gray-400' : 'text-gray-500';
+  const valueClass = darkMode ? 'text-gray-100' : 'text-gray-800';
+  const unitClass = darkMode ? 'text-gray-400' : 'text-gray-500';
+
   return (
-    <div className="bg-white border border-gray-200 rounded p-4 h-full">
-      <h3 className="text-sm font-bold text-blue-600 text-center mb-4">その他情報</h3>
+    <div className={`border rounded p-4 h-full ${cardClass}`}>
+      <h3 className={`text-sm font-bold text-center mb-4 ${titleClass}`}>その他情報</h3>
       <div className="space-y-4">
         <div className="text-center">
-          <div className="text-xs text-gray-500">月平均（直近3ヶ月）</div>
-          <div className="text-2xl font-bold text-gray-800">
+          <div className={`text-xs ${labelClass}`}>月平均（直近3ヶ月）</div>
+          <div className={`text-2xl font-bold ${valueClass}`}>
             {stats.monthlyAvg.toLocaleString()}
-            <span className="text-sm font-normal text-gray-500">万円</span>
+            <span className={`text-sm font-normal ${unitClass}`}>万円</span>
           </div>
         </div>
 
         <div className="text-center">
-          <div className="text-xs text-gray-500">一日平均（直近3ヶ月）</div>
-          <div className="text-2xl font-bold text-gray-800">
+          <div className={`text-xs ${labelClass}`}>一日平均（直近3ヶ月）</div>
+          <div className={`text-2xl font-bold ${valueClass}`}>
             {stats.dailyAvg}
-            <span className="text-sm font-normal text-gray-500">万円</span>
+            <span className={`text-sm font-normal ${unitClass}`}>万円</span>
           </div>
         </div>
 
         <div className="text-center">
-          <div className="text-xs text-gray-500">目標達成必要日数/月数（直近3ヶ月）</div>
-          <div className="text-2xl font-bold text-gray-800">
+          <div className={`text-xs ${labelClass}`}>目標達成必要日数/月数（直近3ヶ月）</div>
+          <div className={`text-2xl font-bold ${valueClass}`}>
             {stats.targetDays}
-            <span className="text-sm font-normal text-gray-500">日</span>
+            <span className={`text-sm font-normal ${unitClass}`}>日</span>
             {' / '}
             {stats.targetMonths}
-            <span className="text-sm font-normal text-gray-500">ヶ月</span>
+            <span className={`text-sm font-normal ${unitClass}`}>ヶ月</span>
           </div>
         </div>
 
         <div className="text-center">
-          <div className="text-xs text-gray-500">今月 着地予測（{stats.landingMonth}）</div>
-          <div className="text-2xl font-bold text-gray-800">
+          <div className={`text-xs ${labelClass}`}>今月 着地予測（{stats.landingMonth}）</div>
+          <div className={`text-2xl font-bold ${valueClass}`}>
             {stats.landingPrediction.toLocaleString()}
-            <span className="text-sm font-normal text-gray-500">万円</span>
+            <span className={`text-sm font-normal ${unitClass}`}>万円</span>
           </div>
         </div>
       </div>

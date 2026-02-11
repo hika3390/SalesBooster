@@ -25,6 +25,21 @@ enum IntegrationStatus {
   CONNECTED
 }
 
+enum DisplayTransition {
+  NONE
+  FADE
+  SLIDE_LEFT
+  SLIDE_RIGHT
+}
+
+enum DisplayViewType {
+  PERIOD_GRAPH
+  CUMULATIVE_GRAPH
+  TREND_GRAPH
+  REPORT
+  RECORD
+}
+
 // ─── Auth Model ───
 
 model User {
@@ -137,4 +152,31 @@ model AuditLog {
   action    String
   detail    String?
   createdAt DateTime @default(now())
+}
+
+// ─── Display Mode ───
+
+model DisplayConfig {
+  id                  Int                  @id @default(autoincrement())
+  loop                Boolean              @default(true)
+  dataRefreshInterval Int                  @default(60000) // ミリ秒
+  filterGroupId       String               @default("")
+  filterMemberId      String               @default("")
+  transition          DisplayTransition    @default(NONE)
+  companyLogoUrl      String               @default("")
+  teamName            String               @default("")
+  darkMode            Boolean              @default(false)
+  views               DisplayConfigView[]
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+}
+
+model DisplayConfigView {
+  id              Int           @id @default(autoincrement())
+  displayConfigId Int
+  viewType        DisplayViewType
+  enabled         Boolean       @default(true)
+  duration        Int           @default(30) // 秒
+  order           Int           @default(0)
+  displayConfig   DisplayConfig @relation(fields: [displayConfigId], references: [id], onDelete: Cascade)
 }

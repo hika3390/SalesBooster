@@ -8,9 +8,10 @@ import { SalesPerson } from '@/types';
 
 interface CumulativeChartProps {
   salesData: SalesPerson[];
+  darkMode?: boolean;
 }
 
-export default function CumulativeChart({ salesData }: CumulativeChartProps) {
+export default function CumulativeChart({ salesData, darkMode = false }: CumulativeChartProps) {
   // 最大売上の取得（グラフの高さ調整用）
   const maxSales = Math.max(...salesData.map(person => person.sales));
 
@@ -22,7 +23,7 @@ export default function CumulativeChart({ salesData }: CumulativeChartProps) {
   const columnWidth = COLUMN_WIDTH;
 
   return (
-    <div className="bg-white mx-6 my-4 shadow-sm overflow-x-auto h-[calc(100%-2rem)] flex flex-col">
+    <div className={`mx-6 my-4 shadow-sm overflow-x-auto h-[calc(100%-2rem)] flex flex-col ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
       <div className="flex-1 min-h-0 flex flex-col" style={{ minWidth: 'fit-content' }}>
         {/* グラフエリア */}
         <div className="relative py-6 flex-1 min-h-0">
@@ -57,7 +58,7 @@ export default function CumulativeChart({ salesData }: CumulativeChartProps) {
         </div>
 
         {/* 営業マンリスト */}
-        <div className="border-t border-gray-200 shrink-0">
+        <div className={`border-t shrink-0 ${darkMode ? 'border-gray-600' : 'border-gray-200'}`}>
           <div className="flex px-1 gap-1">
             {salesData.map((person, index) => (
               <SalesPersonCard

@@ -8,7 +8,17 @@ export interface SalesPerson {
   department?: string;
 }
 
-export type ViewType = '期間グラフ' | '累計グラフ' | '推移グラフ' | 'レポート' | 'レコード';
+export const VALID_VIEW_TYPES = ['PERIOD_GRAPH', 'CUMULATIVE_GRAPH', 'TREND_GRAPH', 'REPORT', 'RECORD'] as const;
+export type ViewType = (typeof VALID_VIEW_TYPES)[number];
+
+export const VIEW_TYPE_LABELS: Record<ViewType, string> = {
+  PERIOD_GRAPH: '期間グラフ',
+  CUMULATIVE_GRAPH: '累計グラフ',
+  TREND_GRAPH: '推移グラフ',
+  REPORT: 'レポート',
+  RECORD: 'レコード',
+};
+
 export type PeriodUnit = '月' | '週' | '日';
 
 export interface RankingMember {

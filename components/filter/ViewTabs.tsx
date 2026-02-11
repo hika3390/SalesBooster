@@ -1,19 +1,17 @@
 'use client';
 
 import React from 'react';
-import { ViewType } from '@/types';
+import { ViewType, VALID_VIEW_TYPES, VIEW_TYPE_LABELS } from '@/types';
 
 interface ViewTabsProps {
   selectedView: ViewType;
   onViewChange: (view: ViewType) => void;
 }
 
-const viewTabs: ViewType[] = ['期間グラフ', '累計グラフ', '推移グラフ', 'レポート', 'レコード'];
-
 export default function ViewTabs({ selectedView, onViewChange }: ViewTabsProps) {
   return (
     <div className="flex items-center border border-gray-300 rounded bg-white">
-      {viewTabs.map((view, index) => (
+      {VALID_VIEW_TYPES.map((view, index) => (
         <button
           key={view}
           className={`px-4 py-1 text-sm ${index > 0 ? 'border-l border-gray-300' : ''} ${
@@ -21,7 +19,7 @@ export default function ViewTabs({ selectedView, onViewChange }: ViewTabsProps) 
           }`}
           onClick={() => onViewChange(view)}
         >
-          {view}
+          {VIEW_TYPE_LABELS[view]}
         </button>
       ))}
     </div>

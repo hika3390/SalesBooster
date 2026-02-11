@@ -20,7 +20,7 @@ export interface DateRange {
 }
 
 export default function FilterBar({ onViewChange, onFilterChange, onPeriodChange }: FilterBarProps = {}) {
-  const [selectedView, setSelectedView] = useState<ViewType>('期間グラフ');
+  const [selectedView, setSelectedView] = useState<ViewType>('PERIOD_GRAPH');
   const [periodUnit, setPeriodUnit] = useState<PeriodUnit>('月');
   const [dateRange, setDateRange] = useState<DateRange | null>(null);
 
@@ -38,8 +38,8 @@ export default function FilterBar({ onViewChange, onFilterChange, onPeriodChange
     }
   };
 
-  const showPeriodSelection = selectedView === '累計グラフ' || selectedView === '推移グラフ';
-  const hidePeriodControls = selectedView === 'レコード';
+  const showPeriodSelection = selectedView === 'CUMULATIVE_GRAPH' || selectedView === 'TREND_GRAPH';
+  const hidePeriodControls = selectedView === 'RECORD';
 
   return (
     <div className="bg-gray-50 border-b border-gray-200">

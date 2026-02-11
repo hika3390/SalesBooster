@@ -129,3 +129,79 @@ body {
 .animate-border-gold {
   animation: border-gold 4s ease-out;
 }
+
+/* ===== ディスプレイモード: カーソル自動非表示 ===== */
+.cursor-hidden,
+.cursor-hidden * {
+  cursor: none !important;
+}
+
+/* ===== ディスプレイモード: ビュートランジション ===== */
+.view-transition-container {
+  height: 100%;
+  width: 100%;
+}
+
+/* フェード */
+.view-fade-exit {
+  opacity: 0;
+  transition: opacity 300ms ease-in-out;
+}
+.view-fade-enter {
+  opacity: 0;
+}
+.view-fade-active {
+  opacity: 1;
+  transition: opacity 500ms ease-in-out;
+}
+
+/* スライド左 */
+.view-slide-left-exit {
+  transform: translateX(-100%);
+  opacity: 0;
+  transition: transform 300ms ease-in-out, opacity 300ms ease-in-out;
+}
+.view-slide-left-enter {
+  transform: translateX(100%);
+  opacity: 0;
+}
+.view-slide-left-active {
+  transform: translateX(0);
+  opacity: 1;
+  transition: transform 500ms ease-in-out, opacity 300ms ease-in-out;
+}
+
+/* スライド右 */
+.view-slide-right-exit {
+  transform: translateX(100%);
+  opacity: 0;
+  transition: transform 300ms ease-in-out, opacity 300ms ease-in-out;
+}
+.view-slide-right-enter {
+  transform: translateX(-100%);
+  opacity: 0;
+}
+.view-slide-right-active {
+  transform: translateX(0);
+  opacity: 1;
+  transition: transform 500ms ease-in-out, opacity 300ms ease-in-out;
+}
+
+/* ===== ディスプレイモード: ダークモード ===== */
+.display-dark {
+  --display-bg: #111827;
+  --display-bg-card: #1f2937;
+  --display-text: #f3f4f6;
+  --display-text-secondary: #9ca3af;
+  --display-border: #374151;
+  --display-header-bg: rgba(17, 24, 39, 0.9);
+}
+
+.display-light {
+  --display-bg: #f3f4f6;
+  --display-bg-card: #ffffff;
+  --display-text: #1f2937;
+  --display-text-secondary: #6b7280;
+  --display-border: #e5e7eb;
+  --display-header-bg: rgba(255, 255, 255, 0.9);
+}

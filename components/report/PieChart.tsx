@@ -7,14 +7,15 @@ const COLORS = ['#EF4444', '#F97316', '#EAB308', '#22C55E', '#3B82F6', '#8B5CF6'
 interface PieChartProps {
   data: { name: string; value: number; ratio: number }[];
   title: string;
+  darkMode?: boolean;
 }
 
-export default function PieChart({ data, title }: PieChartProps) {
+export default function PieChart({ data, title, darkMode = false }: PieChartProps) {
   const filteredData = data.filter((d) => d.value > 0);
 
   return (
-    <div className="bg-white border border-gray-200 rounded p-4 h-full">
-      <h3 className="text-sm font-bold text-blue-600 text-center mb-2">{title}</h3>
+    <div className={`border rounded p-4 h-full ${darkMode ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-200'}`}>
+      <h3 className={`text-sm font-bold text-center mb-2 ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>{title}</h3>
       <ResponsiveContainer width="100%" height={280}>
         <RechartsPieChart>
           <Pie
@@ -25,6 +26,7 @@ export default function PieChart({ data, title }: PieChartProps) {
             cy="50%"
             outerRadius={90}
             label={({ name, payload }) => `${name} ${payload?.ratio ?? 0}%`}
+            fill={darkMode ? '#f3f4f6' : '#374151'}
             labelLine={{ strokeWidth: 1 }}
             fontSize={11}
             isAnimationActive={false}

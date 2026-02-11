@@ -12,9 +12,10 @@ import { formatNumber } from '@/lib/currency';
 interface SalesPerformanceProps {
   salesData: SalesPerson[];
   recordCount: number;
+  darkMode?: boolean;
 }
 
-export default function SalesPerformance({ salesData, recordCount }: SalesPerformanceProps) {
+export default function SalesPerformance({ salesData, recordCount, darkMode = false }: SalesPerformanceProps) {
   const prevDataRef = useRef<SalesPerson[]>([]);
   const [changedNames, setChangedNames] = useState<Set<string>>(new Set());
   const [bannerNames, setBannerNames] = useState<string[]>([]);
@@ -83,10 +84,10 @@ export default function SalesPerformance({ salesData, recordCount }: SalesPerfor
   const labelWidth = 120;
 
   // sticky左ラベルの共通スタイル
-  const stickyLabelClass = "shrink-0 sticky left-0 z-40 bg-white border-r border-gray-300 flex items-center justify-center";
+  const stickyLabelClass = `shrink-0 sticky left-0 z-40 border-r flex items-center justify-center ${darkMode ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-300'}`;
 
   return (
-    <div className="bg-white mx-6 my-4 shadow-sm relative overflow-x-auto h-[calc(100%-2rem)] flex flex-col">
+    <div className={`mx-6 my-4 shadow-sm relative overflow-x-auto h-[calc(100%-2rem)] flex flex-col ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
       {/* 契約速報バナー */}
       <ContractBanner names={bannerNames} />
 
@@ -96,23 +97,23 @@ export default function SalesPerformance({ salesData, recordCount }: SalesPerfor
           <div className={stickyLabelClass} style={{ width: `${labelWidth}px` }}>
             <div className="flex flex-col justify-between h-full py-6 w-full">
               <div className="px-2 text-center">
-                <div className="text-xs text-gray-500">■ 月間売上</div>
-                <div className="text-lg font-bold text-gray-800 mt-1">
+                <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>■ 月間売上</div>
+                <div className={`text-lg font-bold mt-1 ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>
                   {formatNumber(maxSales)}
-                  <span className="text-sm font-normal text-gray-500">万円</span>
+                  <span className={`text-sm font-normal ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>万円</span>
                 </div>
-                <div className="mt-3 pt-3 border-t border-gray-200">
+                <div className={`mt-3 pt-3 border-t ${darkMode ? 'border-gray-600' : 'border-gray-200'}`}>
                   <div className="text-xs text-blue-600">■ チーム計</div>
                   <div className="text-lg font-bold text-blue-700 mt-1">
                     {formatNumber(totalSales)}
                     <span className="text-sm font-normal text-blue-500">万円</span>
                   </div>
                 </div>
-                <div className="mt-3 pt-3 border-t border-gray-200">
-                  <div className="text-xs text-gray-500">■ 契約件数</div>
-                  <div className="text-lg font-bold text-gray-800 mt-1">
+                <div className={`mt-3 pt-3 border-t ${darkMode ? 'border-gray-600' : 'border-gray-200'}`}>
+                  <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>■ 契約件数</div>
+                  <div className={`text-lg font-bold mt-1 ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>
                     {recordCount}
-                    <span className="text-sm font-normal text-gray-500">件</span>
+                    <span className={`text-sm font-normal ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>件</span>
                   </div>
                 </div>
               </div>
@@ -147,23 +148,23 @@ export default function SalesPerformance({ salesData, recordCount }: SalesPerfor
         </div>
 
         {/* 順位行 */}
-        <div className="flex border-t border-b border-gray-200 bg-gray-50 shrink-0">
-          <div className={`${stickyLabelClass} bg-gray-50`} style={{ width: `${labelWidth}px` }}>
-            <div className="text-sm font-bold text-gray-600">順位</div>
+        <div className={`flex border-t border-b shrink-0 ${darkMode ? 'border-gray-600 bg-gray-700' : 'border-gray-200 bg-gray-50'}`}>
+          <div className={`${stickyLabelClass} ${darkMode ? 'bg-gray-700!' : 'bg-gray-50!'}`} style={{ width: `${labelWidth}px` }}>
+            <div className={`text-sm font-bold ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>順位</div>
           </div>
           <div className="flex-1 flex px-1 gap-1">
             {salesData.map((person) => (
               <div key={person.name} className="flex-1 text-center py-2" style={{ minWidth: `${columnWidth}px` }}>
-                <div className="text-lg font-bold text-gray-800">{person.rank}位</div>
+                <div className={`text-lg font-bold ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>{person.rank}位</div>
               </div>
             ))}
           </div>
         </div>
 
         {/* メンバー行 */}
-        <div className="flex border-b border-gray-200 shrink-0">
+        <div className={`flex border-b shrink-0 ${darkMode ? 'border-gray-600' : 'border-gray-200'}`}>
           <div className={stickyLabelClass} style={{ width: `${labelWidth}px` }}>
-            <div className="text-sm font-bold text-gray-600">メンバー</div>
+            <div className={`text-sm font-bold ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>メンバー</div>
           </div>
           <div className="flex-1 flex px-1 gap-1">
             {salesData.map((person, index) => {
@@ -191,8 +192,8 @@ export default function SalesPerformance({ salesData, recordCount }: SalesPerfor
                       </div>
                     )}
                   </div>
-                  <div className="text-[9px] text-center font-medium text-gray-800 leading-tight px-1">{person.name}</div>
-                  {person.department && <div className="text-[8px] text-gray-500 mt-0.5">{person.department}</div>}
+                  <div className={`text-[9px] text-center font-medium leading-tight px-1 ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>{person.name}</div>
+                  {person.department && <div className={`text-[8px] mt-0.5 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>{person.department}</div>}
                 </div>
               );
             })}
@@ -200,11 +201,11 @@ export default function SalesPerformance({ salesData, recordCount }: SalesPerfor
         </div>
 
         {/* 実績・達成率行 */}
-        <div className="flex border-b border-gray-200 shrink-0">
+        <div className={`flex border-b shrink-0 ${darkMode ? 'border-gray-600' : 'border-gray-200'}`}>
           <div className={stickyLabelClass} style={{ width: `${labelWidth}px` }}>
             <div className="text-center">
-              <div className="text-sm font-bold text-gray-600">実績</div>
-              <div className="text-xs text-gray-400">達成率</div>
+              <div className={`text-sm font-bold ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>実績</div>
+              <div className={`text-xs ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>達成率</div>
             </div>
           </div>
           <div className="flex-1 flex px-1 gap-1">
@@ -212,7 +213,7 @@ export default function SalesPerformance({ salesData, recordCount }: SalesPerfor
               const isChanged = changedNames.has(person.name);
               return (
                 <div key={person.name} className={`flex-1 text-center py-2${isChanged ? ' animate-card-flash' : ''}`} style={{ minWidth: `${columnWidth}px` }}>
-                  <div className={`text-base font-bold text-gray-800${isChanged ? ' animate-amount-flash' : ''}`}>
+                  <div className={`text-base font-bold ${darkMode ? 'text-gray-100' : 'text-gray-800'}${isChanged ? ' animate-amount-flash' : ''}`}>
                     {formatNumber(person.sales)}万円
                   </div>
                   <div className={`text-sm font-bold mt-1 ${person.achievement >= 100 ? 'text-red-600' : person.achievement >= 80 ? 'text-blue-600' : 'text-gray-600'}${isChanged ? ' animate-achievement-flash' : ''}`}>
@@ -225,14 +226,14 @@ export default function SalesPerformance({ salesData, recordCount }: SalesPerfor
         </div>
 
         {/* 目標行 */}
-        <div className="flex border-b border-gray-200 shrink-0">
+        <div className={`flex border-b shrink-0 ${darkMode ? 'border-gray-600' : 'border-gray-200'}`}>
           <div className={stickyLabelClass} style={{ width: `${labelWidth}px` }}>
-            <div className="text-sm font-bold text-gray-600">目標</div>
+            <div className={`text-sm font-bold ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>目標</div>
           </div>
           <div className="flex-1 flex px-1 gap-1">
             {salesData.map((person) => (
               <div key={person.name} className="flex-1 text-center py-2" style={{ minWidth: `${columnWidth}px` }}>
-                <div className="text-[11px] font-semibold text-gray-700">{formatNumber(person.target)}万円</div>
+                <div className={`text-[11px] font-semibold ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>{formatNumber(person.target)}万円</div>
               </div>
             ))}
           </div>

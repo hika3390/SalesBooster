@@ -16,9 +16,9 @@ export default function GraphSettings() {
                 <div className="text-xs text-gray-500">初期表示時のグラフタイプ</div>
               </div>
               <select className="border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white">
-                <option>期間グラフ</option>
-                <option>累計グラフ</option>
-                <option>推移グラフ</option>
+                <option value="PERIOD_GRAPH">期間グラフ</option>
+                <option value="CUMULATIVE_GRAPH">累計グラフ</option>
+                <option value="TREND_GRAPH">推移グラフ</option>
               </select>
             </div>
             <div className="flex items-center justify-between">

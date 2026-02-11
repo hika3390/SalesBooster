@@ -4,17 +4,18 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 
 interface CumulativeTrendChartProps {
   data: { month: string; displayMonth: string; cumulative: number }[];
+  darkMode?: boolean;
 }
 
-export default function CumulativeTrendChart({ data }: CumulativeTrendChartProps) {
+export default function CumulativeTrendChart({ data, darkMode = false }: CumulativeTrendChartProps) {
   return (
-    <div className="bg-white border border-gray-200 rounded p-4 h-full">
-      <h3 className="text-sm font-bold text-blue-600 text-center mb-2">積上げ推移</h3>
+    <div className={`border rounded p-4 h-full ${darkMode ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-200'}`}>
+      <h3 className={`text-sm font-bold text-center mb-2 ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>積上げ推移</h3>
       <ResponsiveContainer width="100%" height={280}>
         <LineChart data={data} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-          <XAxis dataKey="displayMonth" tick={{ fontSize: 11 }} />
-          <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `${v.toLocaleString()}`} />
+          <CartesianGrid strokeDasharray="3 3" stroke={darkMode ? '#374151' : '#e5e7eb'} />
+          <XAxis dataKey="displayMonth" tick={{ fontSize: 11, fill: darkMode ? '#9ca3af' : '#374151' }} />
+          <YAxis tick={{ fontSize: 11, fill: darkMode ? '#9ca3af' : '#374151' }} tickFormatter={(v) => `${v.toLocaleString()}`} />
           <Tooltip
             formatter={(value) => [`${Number(value).toLocaleString()}万円`, '累計売上']}
             labelFormatter={(label) => label}
@@ -27,9 +28,9 @@ export default function CumulativeTrendChart({ data }: CumulativeTrendChartProps
           <Line
             dataKey="cumulative"
             type="monotone"
-            stroke="#1E40AF"
+            stroke={darkMode ? '#60a5fa' : '#1E40AF'}
             strokeWidth={2}
-            dot={{ r: 3, fill: '#1E40AF' }}
+            dot={{ r: 3, fill: darkMode ? '#60a5fa' : '#1E40AF' }}
           />
         </LineChart>
       </ResponsiveContainer>

@@ -11,9 +11,10 @@ interface MonthlyData {
 interface TrendChartProps {
   monthlyData: MonthlyData[];
   title?: string;
+  darkMode?: boolean;
 }
 
-export default function TrendChart({ monthlyData, title = 'チーム売上推移' }: TrendChartProps) {
+export default function TrendChart({ monthlyData, title = 'チーム売上推移', darkMode = false }: TrendChartProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerHeight, setContainerHeight] = useState(400);
 
@@ -64,10 +65,10 @@ export default function TrendChart({ monthlyData, title = 'チーム売上推移
   const svgWidth = Math.max(800, monthlyData.length * 100 + 120);
 
   return (
-    <div ref={containerRef} className="bg-white mx-6 my-4 shadow-sm overflow-x-auto h-[calc(100%-2rem)] flex flex-col">
+    <div ref={containerRef} className={`mx-6 my-4 shadow-sm overflow-x-auto h-[calc(100%-2rem)] flex flex-col ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
       <div className="p-6 flex-1 min-h-0 flex flex-col">
         {/* タイトル */}
-        <h2 className="text-lg font-bold text-gray-800 mb-4 shrink-0">{title}</h2>
+        <h2 className={`text-lg font-bold mb-4 shrink-0 ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>{title}</h2>
 
         {/* グラフエリア */}
         <div className="relative flex-1 min-h-0" style={{ minWidth: `${svgWidth}px` }}>
@@ -83,14 +84,14 @@ export default function TrendChart({ monthlyData, title = 'チーム売上推移
                     y1={y}
                     x2={svgWidth - 40}
                     y2={y}
-                    stroke="#e5e7eb"
+                    stroke={darkMode ? '#374151' : '#e5e7eb'}
                     strokeWidth={1}
                   />
                   <text
                     x={30}
                     y={y + 4}
                     fontSize={11}
-                    fill="#6b7280"
+                    fill={darkMode ? '#9ca3af' : '#6b7280'}
                     textAnchor="end"
                   >
                     {Math.round(value).toLocaleString()}万円
@@ -103,7 +104,7 @@ export default function TrendChart({ monthlyData, title = 'チーム売上推移
             <path
               d={linePath}
               fill="none"
-              stroke="#1E40AF"
+              stroke={darkMode ? '#60a5fa' : '#1E40AF'}
               strokeWidth={3}
               strokeLinejoin="round"
               strokeLinecap="round"
@@ -121,8 +122,8 @@ export default function TrendChart({ monthlyData, title = 'チーム売上推移
                     cx={x}
                     cy={y}
                     r={5}
-                    fill="#1E40AF"
-                    stroke="white"
+                    fill={darkMode ? '#60a5fa' : '#1E40AF'}
+                    stroke={darkMode ? '#1f2937' : 'white'}
                     strokeWidth={2}
                   />
 
@@ -131,7 +132,7 @@ export default function TrendChart({ monthlyData, title = 'チーム売上推移
                     x={x}
                     y={y - 12}
                     fontSize={11}
-                    fill="#1E40AF"
+                    fill={darkMode ? '#93c5fd' : '#1E40AF'}
                     textAnchor="middle"
                     fontWeight="600"
                   >
@@ -143,7 +144,7 @@ export default function TrendChart({ monthlyData, title = 'チーム売上推移
                     x={x}
                     y={graphHeight + 20}
                     fontSize={11}
-                    fill="#6b7280"
+                    fill={darkMode ? '#9ca3af' : '#6b7280'}
                     textAnchor="middle"
                   >
                     {data.displayMonth}
@@ -154,7 +155,7 @@ export default function TrendChart({ monthlyData, title = 'チーム売上推移
                     x={x}
                     y={graphHeight + 35}
                     fontSize={10}
-                    fill="#9ca3af"
+                    fill={darkMode ? '#6b7280' : '#9ca3af'}
                     textAnchor="middle"
                   >
                     {data.month}
@@ -168,13 +169,13 @@ export default function TrendChart({ monthlyData, title = 'チーム売上推移
         {/* 凡例 */}
         <div className="mt-4 flex items-center justify-center space-x-6 text-sm shrink-0">
           <div className="flex items-center space-x-2">
-            <div className="w-8 h-0.5 bg-blue-900"></div>
-            <span className="text-gray-600">月間 （日次）</span>
+            <div className={`w-8 h-0.5 ${darkMode ? 'bg-blue-400' : 'bg-blue-900'}`}></div>
+            <span className={darkMode ? 'text-gray-400' : 'text-gray-600'}>月間 （日次）</span>
           </div>
           <div className="flex items-center space-x-2">
-            <div className="w-8 h-0.5 bg-gray-400"></div>
-            <span className="text-gray-600">月間 （累計）</span>
-            <span className="text-xs text-gray-400">(0万円)</span>
+            <div className={`w-8 h-0.5 ${darkMode ? 'bg-gray-500' : 'bg-gray-400'}`}></div>
+            <span className={darkMode ? 'text-gray-400' : 'text-gray-600'}>月間 （累計）</span>
+            <span className={`text-xs ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>(0万円)</span>
           </div>
         </div>
       </div>

@@ -8,16 +8,16 @@ interface SalesBarProps {
   index: number;
   maxSales: number;
   top20Index: number;
+  low20Index: number;
   columnWidth: number;
   changed?: boolean;
 }
 
-export default function SalesBar({ person, index, maxSales, top20Index, columnWidth, changed }: SalesBarProps) {
+export default function SalesBar({ person, index, maxSales, top20Index, low20Index, columnWidth, changed }: SalesBarProps) {
   const barHeight = maxSales > 0 ? (person.sales / maxSales) * 100 : 0;
 
   // 色分け関数 - エネルギッシュで勝利感のあるデザイン
   const getBarColors = (index: number) => {
-    const low20Index = Math.floor(20 * 0.8);
     if (index < top20Index) {
       // TOP 20% - ゴールド × オレンジ（勝者の輝き）
       return {

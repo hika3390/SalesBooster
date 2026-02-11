@@ -68,7 +68,7 @@ export default function SalesPerformance({ salesData, recordCount, darkMode = fa
   const averageTarget = 52;
 
   // 最大売上の取得（グラフの高さ調整用）
-  const maxSales = Math.max(...salesData.map(person => person.sales));
+  const maxSales = salesData.length > 0 ? Math.max(...salesData.map(person => person.sales)) : 0;
 
   // TOP 20%, CENTER, LOW 20%の境界を計算
   const top20Index = Math.ceil(salesData.length * 0.2);
@@ -138,6 +138,7 @@ export default function SalesPerformance({ salesData, recordCount, darkMode = fa
                     index={index}
                     maxSales={maxSales}
                     top20Index={top20Index}
+                    low20Index={low20Index}
                     columnWidth={columnWidth}
                     changed={changedNames.has(person.name)}
                   />

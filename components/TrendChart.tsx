@@ -32,8 +32,8 @@ export default function TrendChart({ monthlyData, title = 'チーム売上推移
   }, []);
 
   // 最大値と最小値を取得
-  const maxSales = Math.max(...monthlyData.map(d => d.sales));
-  const minSales = Math.min(...monthlyData.map(d => d.sales));
+  const maxSales = monthlyData.length > 0 ? Math.max(...monthlyData.map(d => d.sales)) : 0;
+  const minSales = monthlyData.length > 0 ? Math.min(...monthlyData.map(d => d.sales)) : 0;
 
   // グラフの高さ範囲（パディング含む）
   const graphHeight = containerHeight;

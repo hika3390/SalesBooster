@@ -22,29 +22,31 @@ export const displayConfigRepository = {
     const existing = await prisma.displayConfig.findFirst();
 
     if (existing) {
-      // 既存レコードを更新：ビューを全削除してから再作成
-      await prisma.displayConfigView.deleteMany({ where: { displayConfigId: existing.id } });
-      return prisma.displayConfig.update({
-        where: { id: existing.id },
-        data: {
-          loop: data.loop,
-          dataRefreshInterval: data.dataRefreshInterval,
-          filterGroupId: data.filterGroupId,
-          filterMemberId: data.filterMemberId,
-          transition: data.transition,
-          companyLogoUrl: data.companyLogoUrl,
-          teamName: data.teamName,
-          darkMode: data.darkMode,
-          views: {
-            create: data.views.map((v) => ({
-              viewType: v.viewType,
-              enabled: v.enabled,
-              duration: v.duration,
-              order: v.order,
-            })),
+      // 既存レコードを更新：ビューを全削除してから再作成（トランザクションで一貫性を保証）
+      return prisma.$transaction(async (tx) => {
+        await tx.displayConfigView.deleteMany({ where: { displayConfigId: existing.id } });
+        return tx.displayConfig.update({
+          where: { id: existing.id },
+          data: {
+            loop: data.loop,
+            dataRefreshInterval: data.dataRefreshInterval,
+            filterGroupId: data.filterGroupId,
+            filterMemberId: data.filterMemberId,
+            transition: data.transition,
+            companyLogoUrl: data.companyLogoUrl,
+            teamName: data.teamName,
+            darkMode: data.darkMode,
+            views: {
+              create: data.views.map((v) => ({
+                viewType: v.viewType,
+                enabled: v.enabled,
+                duration: v.duration,
+                order: v.order,
+              })),
+            },
           },
-        },
-        include: { views: { orderBy: { order: 'asc' } } },
+          include: { views: { orderBy: { order: 'asc' } } },
+        });
       });
     }
 

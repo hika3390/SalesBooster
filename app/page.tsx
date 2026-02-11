@@ -53,12 +53,13 @@ export default function Home() {
       else if (filter.groupId) filterParams.set('groupId', filter.groupId);
       const query = filterParams.toString();
 
+      fetchRankingData();
+
       const [salesRes, cumulativeRes, trendRes, reportRes] = await Promise.all([
         fetch(`/api/sales?${query}`),
         fetch(`/api/sales/cumulative?${query}`),
         fetch(`/api/sales/trend?${query}`),
         fetch(`/api/sales/report?${query}`),
-        fetchRankingData(),
       ]);
 
       if (salesRes.ok) {

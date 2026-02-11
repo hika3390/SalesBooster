@@ -1,14 +1,15 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { targetService } from '../services/targetService';
+import { ApiResponse } from '../lib/apiResponse';
 
 export const targetController = {
   async getAll() {
     try {
       const data = await targetService.getAll();
-      return NextResponse.json(data);
+      return ApiResponse.success(data);
     } catch (error) {
       console.error('Failed to fetch targets:', error);
-      return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+      return ApiResponse.serverError();
     }
   },
 
@@ -18,7 +19,7 @@ export const targetController = {
       const { memberId, monthly, quarterly, annual, year, month } = body;
 
       if (!memberId || monthly === undefined || !year || !month) {
-        return NextResponse.json({ error: 'memberId, monthly, year, month are required' }, { status: 400 });
+        return ApiResponse.badRequest('memberId, monthly, year, month are required');
       }
 
       const target = await targetService.upsert({
@@ -30,10 +31,10 @@ export const targetController = {
         month: Number(month),
       });
 
-      return NextResponse.json(target);
+      return ApiResponse.success(target);
     } catch (error) {
       console.error('Failed to upsert target:', error);
-      return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+      return ApiResponse.serverError();
     }
   },
 };

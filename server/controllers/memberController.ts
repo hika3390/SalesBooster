@@ -1,14 +1,15 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { memberService } from '../services/memberService';
+import { ApiResponse } from '../lib/apiResponse';
 
 export const memberController = {
   async getAll() {
     try {
       const data = await memberService.getAll();
-      return NextResponse.json(data);
+      return ApiResponse.success(data);
     } catch (error) {
       console.error('Failed to fetch members:', error);
-      return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+      return ApiResponse.serverError();
     }
   },
 
@@ -18,14 +19,14 @@ export const memberController = {
       const { name, email, role, imageUrl, departmentId } = body;
 
       if (!name || !email) {
-        return NextResponse.json({ error: 'name and email are required' }, { status: 400 });
+        return ApiResponse.badRequest('name and email are required');
       }
 
       const member = await memberService.create({ name, email, role, imageUrl, departmentId });
-      return NextResponse.json(member, { status: 201 });
+      return ApiResponse.created(member);
     } catch (error) {
       console.error('Failed to create member:', error);
-      return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+      return ApiResponse.serverError();
     }
   },
 
@@ -33,20 +34,20 @@ export const memberController = {
     try {
       const body = await request.json();
       const member = await memberService.update(id, body);
-      return NextResponse.json(member);
+      return ApiResponse.success(member);
     } catch (error) {
       console.error('Failed to update member:', error);
-      return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+      return ApiResponse.serverError();
     }
   },
 
   async delete(id: number) {
     try {
       await memberService.delete(id);
-      return NextResponse.json({ success: true });
+      return ApiResponse.success({ success: true });
     } catch (error) {
       console.error('Failed to delete member:', error);
-      return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+      return ApiResponse.serverError();
     }
   },
 };

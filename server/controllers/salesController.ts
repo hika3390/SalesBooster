@@ -1,6 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { salesService } from '../services/salesService';
 import { groupService } from '../services/groupService';
+import { ApiResponse } from '../lib/apiResponse';
 
 async function resolveMemberIds(searchParams: URLSearchParams): Promise<number[] | undefined> {
   const memberId = searchParams.get('memberId');
@@ -35,10 +36,10 @@ export const salesController = {
     try {
       const memberIds = await resolveMemberIds(searchParams);
       const { salesPeople, recordCount } = await salesService.getSalesByDateRange(startDate, endDate, memberIds);
-      return NextResponse.json({ data: salesPeople, recordCount });
+      return ApiResponse.success({ data: salesPeople, recordCount });
     } catch (error) {
       console.error('Failed to fetch sales data:', error);
-      return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+      return ApiResponse.serverError();
     }
   },
 
@@ -48,7 +49,7 @@ export const salesController = {
       const { memberId, amount, description, recordDate } = body;
 
       if (!memberId || !amount || !recordDate) {
-        return NextResponse.json({ error: 'memberId, amount, recordDate are required' }, { status: 400 });
+        return ApiResponse.badRequest('memberId, amount, recordDate are required');
       }
 
       const record = await salesService.createSalesRecord({
@@ -58,20 +59,20 @@ export const salesController = {
         recordDate: new Date(recordDate),
       });
 
-      return NextResponse.json(record, { status: 201 });
+      return ApiResponse.created(record);
     } catch (error) {
       console.error('Failed to create sales record:', error);
-      return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+      return ApiResponse.serverError();
     }
   },
 
   async getDateRange() {
     try {
       const dateRange = await salesService.getDateRange();
-      return NextResponse.json(dateRange);
+      return ApiResponse.success(dateRange);
     } catch (error) {
       console.error('Failed to fetch date range:', error);
-      return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+      return ApiResponse.serverError();
     }
   },
 
@@ -87,10 +88,10 @@ export const salesController = {
     try {
       const memberIds = await resolveMemberIds(searchParams);
       const data = await salesService.getCumulativeSales(startDate, endDate, memberIds);
-      return NextResponse.json(data);
+      return ApiResponse.success(data);
     } catch (error) {
       console.error('Failed to fetch cumulative sales data:', error);
-      return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+      return ApiResponse.serverError();
     }
   },
 
@@ -106,10 +107,10 @@ export const salesController = {
     try {
       const memberIds = await resolveMemberIds(searchParams);
       const data = await salesService.getReportData(startDate, endDate, memberIds);
-      return NextResponse.json(data);
+      return ApiResponse.success(data);
     } catch (error) {
       console.error('Failed to fetch report data:', error);
-      return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+      return ApiResponse.serverError();
     }
   },
 
@@ -125,10 +126,10 @@ export const salesController = {
     try {
       const memberIds = await resolveMemberIds(searchParams);
       const data = await salesService.getTrendData(startDate, endDate, memberIds);
-      return NextResponse.json(data);
+      return ApiResponse.success(data);
     } catch (error) {
       console.error('Failed to fetch trend data:', error);
-      return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+      return ApiResponse.serverError();
     }
   },
 
@@ -143,10 +144,10 @@ export const salesController = {
     try {
       const memberIds = await resolveMemberIds(searchParams);
       const data = await salesService.getRankingBoardData(startDate, endDate, memberIds);
-      return NextResponse.json(data);
+      return ApiResponse.success(data);
     } catch (error) {
       console.error('Failed to fetch ranking board data:', error);
-      return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+      return ApiResponse.serverError();
     }
   },
 };

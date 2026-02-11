@@ -1,5 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { auditLogService } from '../services/auditLogService';
+import { ApiResponse } from '../lib/apiResponse';
 
 export const auditLogController = {
   async getAll(request: NextRequest) {
@@ -9,10 +10,10 @@ export const auditLogController = {
 
     try {
       const data = await auditLogService.getAll(page, pageSize);
-      return NextResponse.json(data);
+      return ApiResponse.success(data);
     } catch (error) {
       console.error('Failed to fetch audit logs:', error);
-      return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+      return ApiResponse.serverError();
     }
   },
 };

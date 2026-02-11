@@ -1,14 +1,15 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { groupService } from '../services/groupService';
+import { ApiResponse } from '../lib/apiResponse';
 
 export const groupController = {
   async getAll() {
     try {
       const data = await groupService.getAll();
-      return NextResponse.json(data);
+      return ApiResponse.success(data);
     } catch (error) {
       console.error('Failed to fetch groups:', error);
-      return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+      return ApiResponse.serverError();
     }
   },
 
@@ -18,14 +19,14 @@ export const groupController = {
       const { name, managerId } = body;
 
       if (!name) {
-        return NextResponse.json({ error: 'name is required' }, { status: 400 });
+        return ApiResponse.badRequest('name is required');
       }
 
       const group = await groupService.create({ name, managerId });
-      return NextResponse.json(group, { status: 201 });
+      return ApiResponse.created(group);
     } catch (error) {
       console.error('Failed to create group:', error);
-      return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+      return ApiResponse.serverError();
     }
   },
 
@@ -33,20 +34,20 @@ export const groupController = {
     try {
       const body = await request.json();
       const group = await groupService.update(id, body);
-      return NextResponse.json(group);
+      return ApiResponse.success(group);
     } catch (error) {
       console.error('Failed to update group:', error);
-      return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+      return ApiResponse.serverError();
     }
   },
 
   async delete(id: number) {
     try {
       await groupService.delete(id);
-      return NextResponse.json({ success: true });
+      return ApiResponse.success({ success: true });
     } catch (error) {
       console.error('Failed to delete group:', error);
-      return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+      return ApiResponse.serverError();
     }
   },
 
@@ -56,14 +57,14 @@ export const groupController = {
       const { memberIds } = body;
 
       if (!Array.isArray(memberIds)) {
-        return NextResponse.json({ error: 'memberIds must be an array' }, { status: 400 });
+        return ApiResponse.badRequest('memberIds must be an array');
       }
 
       await groupService.syncMembers(groupId, memberIds);
-      return NextResponse.json({ success: true });
+      return ApiResponse.success({ success: true });
     } catch (error) {
       console.error('Failed to sync group members:', error);
-      return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+      return ApiResponse.serverError();
     }
   },
 };

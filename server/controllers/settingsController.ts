@@ -1,14 +1,15 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { settingsService } from '../services/settingsService';
+import { ApiResponse } from '../lib/apiResponse';
 
 export const settingsController = {
   async getSettings() {
     try {
       const data = await settingsService.getAllSettings();
-      return NextResponse.json(data);
+      return ApiResponse.success(data);
     } catch (error) {
       console.error('Failed to fetch settings:', error);
-      return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+      return ApiResponse.serverError();
     }
   },
 
@@ -20,20 +21,20 @@ export const settingsController = {
         await settingsService.updateSetting(key, String(value));
       }
 
-      return NextResponse.json({ success: true });
+      return ApiResponse.success({ success: true });
     } catch (error) {
       console.error('Failed to update settings:', error);
-      return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+      return ApiResponse.serverError();
     }
   },
 
   async getIntegrations() {
     try {
       const data = await settingsService.getAllIntegrations();
-      return NextResponse.json(data);
+      return ApiResponse.success(data);
     } catch (error) {
       console.error('Failed to fetch integrations:', error);
-      return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+      return ApiResponse.serverError();
     }
   },
 
@@ -43,14 +44,14 @@ export const settingsController = {
       const { status } = body;
 
       if (!status) {
-        return NextResponse.json({ error: 'status is required' }, { status: 400 });
+        return ApiResponse.badRequest('status is required');
       }
 
       const integration = await settingsService.updateIntegrationStatus(id, status);
-      return NextResponse.json(integration);
+      return ApiResponse.success(integration);
     } catch (error) {
       console.error('Failed to update integration:', error);
-      return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+      return ApiResponse.serverError();
     }
   },
 };

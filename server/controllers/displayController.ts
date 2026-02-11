@@ -1,15 +1,16 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { displayService } from '../services/displayService';
 import { VALID_TRANSITIONS } from '@/types/display';
+import { ApiResponse } from '../lib/apiResponse';
 
 export const displayController = {
   async getConfig() {
     try {
       const config = await displayService.getConfig();
-      return NextResponse.json(config);
+      return ApiResponse.success(config);
     } catch (error) {
       console.error('Failed to fetch display config:', error);
-      return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+      return ApiResponse.serverError();
     }
   },
 
@@ -18,18 +19,18 @@ export const displayController = {
       const body = await request.json();
 
       if (!body.views || !Array.isArray(body.views)) {
-        return NextResponse.json({ error: 'views is required' }, { status: 400 });
+        return ApiResponse.badRequest('views is required');
       }
 
       if (body.transition && !VALID_TRANSITIONS.includes(body.transition)) {
-        return NextResponse.json({ error: 'Invalid transition type' }, { status: 400 });
+        return ApiResponse.badRequest('Invalid transition type');
       }
 
       await displayService.updateConfig(body);
-      return NextResponse.json({ success: true });
+      return ApiResponse.success({ success: true });
     } catch (error) {
       console.error('Failed to update display config:', error);
-      return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+      return ApiResponse.serverError();
     }
   },
 };

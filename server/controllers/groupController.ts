@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
 import { groupService } from '../services/groupService';
+import { auditLogService } from '../services/auditLogService';
 import { ApiResponse } from '../lib/apiResponse';
 
 export const groupController = {
@@ -23,6 +24,13 @@ export const groupController = {
       }
 
       const group = await groupService.create({ name, managerId });
+
+      auditLogService.create({
+        request,
+        action: 'GROUP_CREATE',
+        detail: `グループ「${name}」を作成`,
+      }).catch((err) => console.error('Audit log failed:', err));
+
       return ApiResponse.created(group);
     } catch (error) {
       return ApiResponse.fromError(error, 'Failed to create group');
@@ -33,15 +41,29 @@ export const groupController = {
     try {
       const body = await request.json();
       const group = await groupService.update(id, body);
+
+      auditLogService.create({
+        request,
+        action: 'GROUP_UPDATE',
+        detail: `グループID:${id}の情報を更新`,
+      }).catch((err) => console.error('Audit log failed:', err));
+
       return ApiResponse.success(group);
     } catch (error) {
       return ApiResponse.fromError(error, 'Failed to update group');
     }
   },
 
-  async delete(id: number) {
+  async delete(request: NextRequest, id: number) {
     try {
       await groupService.delete(id);
+
+      auditLogService.create({
+        request,
+        action: 'GROUP_DELETE',
+        detail: `グループID:${id}を削除`,
+      }).catch((err) => console.error('Audit log failed:', err));
+
       return ApiResponse.success({ success: true });
     } catch (error) {
       return ApiResponse.fromError(error, 'Failed to delete group');
@@ -58,6 +80,13 @@ export const groupController = {
       }
 
       await groupService.syncMembers(groupId, memberIds);
+
+      auditLogService.create({
+        request,
+        action: 'GROUP_SYNC_MEMBERS',
+        detail: `グループID:${groupId}のメンバーを同期（${memberIds.length}名）`,
+      }).catch((err) => console.error('Audit log failed:', err));
+
       return ApiResponse.success({ success: true });
     } catch (error) {
       return ApiResponse.fromError(error, 'Failed to sync group members');

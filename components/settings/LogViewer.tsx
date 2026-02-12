@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import DataTable, { Column } from '@/components/common/DataTable';
 import Button from '@/components/common/Button';
+import { AUDIT_ACTION_LABELS } from '@/types';
 
 interface LogEntry {
   id: number;
@@ -35,13 +36,18 @@ export default function LogViewer() {
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
   const pageSize = 8;
 
   const fetchLogs = async (page: number) => {
     setLoading(true);
     try {
       setFetchError(null);
-      const res = await fetch(`/api/audit-logs?page=${page}&pageSize=${pageSize}`);
+      const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
+      if (startDate) params.set('startDate', startDate);
+      if (endDate) params.set('endDate', endDate);
+      const res = await fetch(`/api/audit-logs?${params}`);
       if (res.ok) setData(await res.json());
       else setFetchError('操作ログの取得に失敗しました。');
     } catch {
@@ -54,6 +60,11 @@ export default function LogViewer() {
   useEffect(() => {
     fetchLogs(currentPage);
   }, [currentPage]);
+
+  const handleSearch = () => {
+    setCurrentPage(1);
+    fetchLogs(1);
+  };
 
   const columns: Column<LogEntry>[] = [
     {
@@ -69,7 +80,7 @@ export default function LogViewer() {
     {
       key: 'action',
       label: '操作',
-      render: (log) => <span className="text-sm text-gray-700">{log.action}</span>,
+      render: (log) => <span className="text-sm text-gray-700">{AUDIT_ACTION_LABELS[log.action] || log.action}</span>,
     },
     {
       key: 'detail',
@@ -100,10 +111,10 @@ export default function LogViewer() {
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-bold text-gray-800">操作ログ閲覧</h2>
         <div className="flex items-center space-x-2">
-          <input type="date" className="border border-gray-300 rounded-lg px-3 py-2 text-sm" />
+          <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="border border-gray-300 rounded-lg px-3 py-2 text-sm" />
           <span className="text-gray-500">&mdash;</span>
-          <input type="date" className="border border-gray-300 rounded-lg px-3 py-2 text-sm" />
-          <Button label="検索" />
+          <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="border border-gray-300 rounded-lg px-3 py-2 text-sm" />
+          <Button label="検索" onClick={handleSearch} />
         </div>
       </div>
 

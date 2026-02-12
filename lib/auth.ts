@@ -2,6 +2,7 @@ import { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { compare } from 'bcryptjs';
 import { prisma } from './prisma';
+import { auditLogRepository } from '@/server/repositories/auditLogRepository';
 
 export const authOptions: NextAuthOptions = {
   session: {
@@ -53,6 +54,24 @@ export const authOptions: NextAuthOptions = {
         session.user.id = token.id as string;
       }
       return session;
+    },
+  },
+  events: {
+    async signIn({ user }) {
+      if (user?.id) {
+        auditLogRepository.create({
+          userId: user.id,
+          action: 'USER_LOGIN',
+        }).catch((err) => console.error('Audit log failed:', err));
+      }
+    },
+    async signOut({ token }) {
+      if (token?.id) {
+        auditLogRepository.create({
+          userId: token.id as string,
+          action: 'USER_LOGOUT',
+        }).catch((err) => console.error('Audit log failed:', err));
+      }
     },
   },
   pages: {

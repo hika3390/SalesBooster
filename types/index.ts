@@ -45,6 +45,23 @@ export interface TrendData {
   displayMonth: string;
 }
 
+export const AUDIT_ACTION_LABELS: Record<string, string> = {
+  USER_LOGIN: 'ログイン',
+  USER_LOGOUT: 'ログアウト',
+  MEMBER_CREATE: 'メンバー追加',
+  MEMBER_UPDATE: 'メンバー更新',
+  MEMBER_DELETE: 'メンバー削除',
+  GROUP_CREATE: 'グループ作成',
+  GROUP_UPDATE: 'グループ更新',
+  GROUP_DELETE: 'グループ削除',
+  GROUP_SYNC_MEMBERS: 'グループメンバー同期',
+  SALES_RECORD_CREATE: '売上データ入力',
+  TARGET_UPSERT: '目標設定',
+  SETTINGS_UPDATE: 'システム設定変更',
+  INTEGRATION_STATUS_UPDATE: '連携ステータス変更',
+  DISPLAY_CONFIG_UPDATE: 'ディスプレイ設定変更',
+};
+
 export interface ReportData {
   monthlyTrend: { month: string; displayMonth: string; sales: number; movingAvg: number | null }[];
   cumulativeTrend: { month: string; displayMonth: string; cumulative: number }[];

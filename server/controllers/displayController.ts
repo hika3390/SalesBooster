@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
 import { displayService } from '../services/displayService';
+import { auditLogService } from '../services/auditLogService';
 import { VALID_TRANSITIONS } from '@/types/display';
 import { ApiResponse } from '../lib/apiResponse';
 
@@ -27,6 +28,13 @@ export const displayController = {
       }
 
       await displayService.updateConfig(body);
+
+      auditLogService.create({
+        request,
+        action: 'DISPLAY_CONFIG_UPDATE',
+        detail: `ディスプレイ設定を更新`,
+      }).catch((err) => console.error('Audit log failed:', err));
+
       return ApiResponse.success({ success: true });
     } catch (error) {
       return ApiResponse.fromError(error, 'Failed to update display config');

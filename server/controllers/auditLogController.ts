@@ -7,9 +7,13 @@ export const auditLogController = {
     const { searchParams } = new URL(request.url);
     const page = Number(searchParams.get('page')) || 1;
     const pageSize = Number(searchParams.get('pageSize')) || 10;
+    const startDateParam = searchParams.get('startDate');
+    const endDateParam = searchParams.get('endDate');
+    const startDate = startDateParam ? new Date(startDateParam) : undefined;
+    const endDate = endDateParam ? new Date(`${endDateParam}T23:59:59`) : undefined;
 
     try {
-      const data = await auditLogService.getAll(page, pageSize);
+      const data = await auditLogService.getAll(page, pageSize, startDate, endDate);
       return ApiResponse.success(data);
     } catch (error) {
       console.error('Failed to fetch audit logs:', error);

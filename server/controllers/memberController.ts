@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
 import { memberService } from '../services/memberService';
+import { auditLogService } from '../services/auditLogService';
 import { ApiResponse } from '../lib/apiResponse';
 
 export const memberController = {
@@ -23,6 +24,13 @@ export const memberController = {
       }
 
       const member = await memberService.create({ name, email, role, imageUrl, departmentId });
+
+      auditLogService.create({
+        request,
+        action: 'MEMBER_CREATE',
+        detail: `メンバー「${name}」(${email})を作成`,
+      }).catch((err) => console.error('Audit log failed:', err));
+
       return ApiResponse.created(member);
     } catch (error) {
       return ApiResponse.fromError(error, 'Failed to create member');
@@ -33,15 +41,29 @@ export const memberController = {
     try {
       const body = await request.json();
       const member = await memberService.update(id, body);
+
+      auditLogService.create({
+        request,
+        action: 'MEMBER_UPDATE',
+        detail: `メンバーID:${id}の情報を更新`,
+      }).catch((err) => console.error('Audit log failed:', err));
+
       return ApiResponse.success(member);
     } catch (error) {
       return ApiResponse.fromError(error, 'Failed to update member');
     }
   },
 
-  async delete(id: number) {
+  async delete(request: NextRequest, id: number) {
     try {
       await memberService.delete(id);
+
+      auditLogService.create({
+        request,
+        action: 'MEMBER_DELETE',
+        detail: `メンバーID:${id}を削除`,
+      }).catch((err) => console.error('Audit log failed:', err));
+
       return ApiResponse.success({ success: true });
     } catch (error) {
       return ApiResponse.fromError(error, 'Failed to delete member');

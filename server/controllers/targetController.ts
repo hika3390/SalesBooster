@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
 import { targetService } from '../services/targetService';
+import { auditLogService } from '../services/auditLogService';
 import { ApiResponse } from '../lib/apiResponse';
 
 export const targetController = {
@@ -22,14 +23,24 @@ export const targetController = {
         return ApiResponse.badRequest('memberId, monthly, year, month are required');
       }
 
+      const numMemberId = Number(memberId);
+      const numYear = Number(year);
+      const numMonth = Number(month);
+
       const target = await targetService.upsert({
-        memberId: Number(memberId),
+        memberId: numMemberId,
         monthly: Number(monthly),
         quarterly: Number(quarterly || 0),
         annual: Number(annual || 0),
-        year: Number(year),
-        month: Number(month),
+        year: numYear,
+        month: numMonth,
       });
+
+      auditLogService.create({
+        request,
+        action: 'TARGET_UPSERT',
+        detail: `メンバーID:${numMemberId}の${numYear}/${numMonth}月目標を設定`,
+      }).catch((err) => console.error('Audit log failed:', err));
 
       return ApiResponse.success(target);
     } catch (error) {

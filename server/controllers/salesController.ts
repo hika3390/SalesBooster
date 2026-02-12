@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { salesService } from '../services/salesService';
 import { groupService } from '../services/groupService';
+import { auditLogService } from '../services/auditLogService';
 import { ApiResponse } from '../lib/apiResponse';
 
 async function resolveMemberIds(searchParams: URLSearchParams): Promise<number[] | undefined> {
@@ -52,12 +53,21 @@ export const salesController = {
         return ApiResponse.badRequest('memberId, amount, recordDate are required');
       }
 
+      const numAmount = Number(amount);
+      const numMemberId = Number(memberId);
+
       const record = await salesService.createSalesRecord({
-        memberId: Number(memberId),
-        amount: Number(amount),
+        memberId: numMemberId,
+        amount: numAmount,
         description,
         recordDate: new Date(recordDate),
       });
+
+      auditLogService.create({
+        request,
+        action: 'SALES_RECORD_CREATE',
+        detail: `メンバーID:${numMemberId}の売上${numAmount}円を記録`,
+      }).catch((err) => console.error('Audit log failed:', err));
 
       return ApiResponse.created(record);
     } catch (error) {

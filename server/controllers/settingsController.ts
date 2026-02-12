@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
 import { settingsService } from '../services/settingsService';
+import { auditLogService } from '../services/auditLogService';
 import { ApiResponse } from '../lib/apiResponse';
 
 export const settingsController = {
@@ -20,6 +21,12 @@ export const settingsController = {
       for (const [key, value] of Object.entries(body)) {
         await settingsService.updateSetting(key, String(value));
       }
+
+      auditLogService.create({
+        request,
+        action: 'SETTINGS_UPDATE',
+        detail: `システム設定を更新`,
+      }).catch((err) => console.error('Audit log failed:', err));
 
       return ApiResponse.success({ success: true });
     } catch (error) {
@@ -47,6 +54,13 @@ export const settingsController = {
       }
 
       const integration = await settingsService.updateIntegrationStatus(id, status);
+
+      auditLogService.create({
+        request,
+        action: 'INTEGRATION_STATUS_UPDATE',
+        detail: `連携ID:${id}のステータスを${status}に変更`,
+      }).catch((err) => console.error('Audit log failed:', err));
+
       return ApiResponse.success(integration);
     } catch (error) {
       return ApiResponse.fromError(error, 'Failed to update integration');

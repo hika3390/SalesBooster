@@ -212,28 +212,6 @@ async function main() {
 
   console.log('Integrations created:', integrationsData.length);
 
-  // --- 操作ログ ---
-  const logsData = [
-    { action: '売上データ入力', detail: '500万円 / 商談A' },
-    { action: 'メンバー追加', detail: '山田美咲を追加' },
-    { action: '目標設定変更', detail: '田中太郎の月間目標を600万円に変更' },
-    { action: 'グループ設定変更', detail: '3Aグループに新メンバー追加' },
-    { action: '売上データ入力', detail: '300万円 / 商談B' },
-    { action: 'レポート出力', detail: '月次レポートをPDF出力' },
-    { action: 'メンバーステータス変更', detail: '山田美咲を無効に変更' },
-    { action: 'システム設定変更', detail: '通知設定を更新' },
-  ];
-
-  for (const data of logsData) {
-    await prisma.auditLog.create({
-      data: {
-        userId: adminUser.id,
-        ...data,
-      },
-    });
-  }
-
-  console.log('Audit logs created:', logsData.length);
 }
 
 main()

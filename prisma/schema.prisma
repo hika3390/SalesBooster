@@ -40,6 +40,23 @@ enum DisplayViewType {
   RECORD
 }
 
+enum AuditAction {
+  USER_LOGIN
+  USER_LOGOUT
+  MEMBER_CREATE
+  MEMBER_UPDATE
+  MEMBER_DELETE
+  GROUP_CREATE
+  GROUP_UPDATE
+  GROUP_DELETE
+  GROUP_SYNC_MEMBERS
+  SALES_RECORD_CREATE
+  TARGET_UPSERT
+  SETTINGS_UPDATE
+  INTEGRATION_STATUS_UPDATE
+  DISPLAY_CONFIG_UPDATE
+}
+
 // ─── Auth Model ───
 
 model User {
@@ -149,7 +166,7 @@ model AuditLog {
   id        Int      @id @default(autoincrement())
   userId    String
   user      User     @relation(fields: [userId], references: [id])
-  action    String
+  action    AuditAction
   detail    String?
   createdAt DateTime @default(now())
 }

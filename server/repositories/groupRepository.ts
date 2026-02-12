@@ -4,7 +4,11 @@ export const groupRepository = {
   findAll() {
     return prisma.group.findMany({
       include: {
-        members: { include: { member: true } },
+        members: {
+          include: {
+            member: { select: { id: true, name: true } },
+          },
+        },
       },
       orderBy: { id: 'asc' },
     });
@@ -14,7 +18,7 @@ export const groupRepository = {
     return prisma.group.findUnique({
       where: { id },
       include: {
-        members: { include: { member: true } },
+        members: { select: { memberId: true } },
       },
     });
   },

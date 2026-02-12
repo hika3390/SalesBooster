@@ -13,6 +13,8 @@ import RankingBoard from '@/components/record/RankingBoard';
 import { useSalesPolling } from '@/hooks/useSalesPolling';
 import { PeriodSelection } from '@/components/filter/PeriodNavigator';
 
+const FETCH_DEBOUNCE_MS = 100;
+
 export default function Home() {
   const [currentView, setCurrentView] = useState<ViewType>('PERIOD_GRAPH');
   const [isSalesModalOpen, setIsSalesModalOpen] = useState(false);
@@ -91,7 +93,7 @@ export default function Home() {
       } finally {
         fetchingRef.current = false;
       }
-    }, 100);
+    }, FETCH_DEBOUNCE_MS);
   }, [fetchDataImmediate]);
 
   // フィルター/期間変更時: データをクリアしてローディング表示してからfetch（アニメーション抑制のため）

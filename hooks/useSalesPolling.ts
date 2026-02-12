@@ -2,12 +2,14 @@
 
 import { useEffect, useRef } from 'react';
 
+const DEFAULT_POLLING_INTERVAL_MS = 5000;
+
 interface UseSalesPollingOptions {
   onUpdate: () => void;
   intervalMs?: number;
 }
 
-export function useSalesPolling({ onUpdate, intervalMs = 5000 }: UseSalesPollingOptions) {
+export function useSalesPolling({ onUpdate, intervalMs = DEFAULT_POLLING_INTERVAL_MS }: UseSalesPollingOptions) {
   const onUpdateRef = useRef(onUpdate);
 
   useEffect(() => {

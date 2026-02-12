@@ -5,6 +5,8 @@ import { DisplayConfig, DisplayViewConfig, DEFAULT_DISPLAY_CONFIG, TransitionTyp
 import { VIEW_TYPE_LABELS } from '@/types';
 import Button from '@/components/common/Button';
 
+const MESSAGE_DISPLAY_MS = 3000;
+
 interface GroupOption {
   id: number;
   name: string;
@@ -69,7 +71,7 @@ export default function DisplaySettings() {
       setMessage({ type: 'error', text: '保存に失敗しました' });
     } finally {
       setSaving(false);
-      setTimeout(() => setMessage(null), 3000);
+      setTimeout(() => setMessage(null), MESSAGE_DISPLAY_MS);
     }
   };
 

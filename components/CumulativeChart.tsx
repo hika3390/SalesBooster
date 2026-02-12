@@ -69,6 +69,7 @@ export default function CumulativeChart({ salesData, darkMode = false }: Cumulat
                 top20Index={top20Index}
                 low20Index={low20Index}
                 columnWidth={columnWidth}
+                darkMode={darkMode}
               />
             ))}
           </div>

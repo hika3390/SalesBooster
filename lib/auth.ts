@@ -4,6 +4,39 @@ import { compare } from 'bcryptjs';
 import { prisma } from './prisma';
 import { auditLogRepository } from '@/server/repositories/auditLogRepository';
 
+const WEAK_SECRETS = [
+  'sales-booster-secret-key-change-in-production',
+  'secret',
+  'password',
+  'changeme',
+];
+
+const MIN_SECRET_LENGTH = 32;
+
+function validateNextAuthSecret(): void {
+  const secret = process.env.NEXTAUTH_SECRET;
+  if (!secret) {
+    throw new Error(
+      'NEXTAUTH_SECRET が設定されていません。以下のコマンドで生成してください:\n' +
+      'node -e "console.log(require(\'crypto\').randomBytes(32).toString(\'base64url\'))"'
+    );
+  }
+  if (secret.length < MIN_SECRET_LENGTH) {
+    throw new Error(
+      `NEXTAUTH_SECRET は${MIN_SECRET_LENGTH}文字以上である必要があります（現在: ${secret.length}文字）`
+    );
+  }
+  if (WEAK_SECRETS.includes(secret)) {
+    throw new Error(
+      'NEXTAUTH_SECRET に既知の弱いシークレットが使用されています。安全なランダム値に変更してください。'
+    );
+  }
+}
+
+if (process.env.NODE_ENV === 'production') {
+  validateNextAuthSecret();
+}
+
 export const authOptions: NextAuthOptions = {
   session: {
     strategy: 'jwt',

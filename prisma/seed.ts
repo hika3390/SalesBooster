@@ -3,14 +3,34 @@ import { hashSync } from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
+const MIN_PASSWORD_LENGTH = 12;
+
+function getAdminPassword(): string {
+  const password = process.env.SEED_ADMIN_PASSWORD;
+  if (!password) {
+    throw new Error(
+      'SEED_ADMIN_PASSWORD 環境変数が設定されていません。\n' +
+      `.env ファイルに SEED_ADMIN_PASSWORD を設定してください（${MIN_PASSWORD_LENGTH}文字以上）`
+    );
+  }
+  if (password.length < MIN_PASSWORD_LENGTH) {
+    throw new Error(
+      `SEED_ADMIN_PASSWORD は${MIN_PASSWORD_LENGTH}文字以上である必要があります（現在: ${password.length}文字）`
+    );
+  }
+  return password;
+}
+
 async function main() {
+  const adminPassword = getAdminPassword();
+
   // --- 初期ユーザー ---
   const adminUser = await prisma.user.upsert({
     where: { email: 'admin@salesbooster.com' },
     update: {},
     create: {
       email: 'admin@salesbooster.com',
-      password: hashSync('password123', 10),
+      password: hashSync(adminPassword, 10),
       name: '管理者',
     },
   });

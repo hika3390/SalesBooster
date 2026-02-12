@@ -13,13 +13,6 @@ interface SalesPersonCardProps {
 }
 
 export default function SalesPersonCard({ person, index, top20Index, low20Index, columnWidth, changed }: SalesPersonCardProps) {
-  // 背景色の取得
-  const getBackgroundColor = (index: number): string => {
-    if (index < top20Index) return 'bg-red-50';
-    if (index < low20Index) return 'bg-blue-50';
-    return 'bg-blue-100';
-  };
-
   // バッジの取得（TOP 20%で達成率100%以上）
   const getBadge = (index: number, person: SalesPerson) => {
     if (index < top20Index && person.achievement >= 100) {
@@ -36,7 +29,7 @@ export default function SalesPersonCard({ person, index, top20Index, low20Index,
 
   return (
     <div
-      className={`flex-1 border-r border-gray-200 ${getBackgroundColor(index)}${changed ? ' animate-border-gold' : ''}`}
+      className={`flex-1 border-r border-gray-200${changed ? ' animate-border-gold' : ''}`}
       style={{
         minWidth: `${columnWidth}px`,
         borderWidth: changed ? '3px' : undefined,

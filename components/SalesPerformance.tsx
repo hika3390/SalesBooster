@@ -171,9 +171,8 @@ export default function SalesPerformance({ salesData, recordCount, darkMode = fa
           <div className="flex-1 flex px-1 gap-1">
             {salesData.map((person, index) => {
               const isChanged = changedNames.has(person.name);
-              const bgColor = index < top20Index ? 'bg-red-50' : index < low20Index ? 'bg-blue-50' : 'bg-blue-100';
               return (
-                <div key={person.name} className={`flex-1 flex flex-col items-center py-2 ${bgColor}`}
+                <div key={person.name} className="flex-1 flex flex-col items-center py-2"
                   style={{ minWidth: `${columnWidth}px` }}
                 >
                   <div className="relative mb-1.5">

@@ -17,7 +17,6 @@ import LogViewer from '@/components/settings/LogViewer';
 
 export default function SettingsPage() {
   const [activeSection, setActiveSection] = useState<SettingsSection>('member');
-
   const renderContent = () => {
     switch (activeSection) {
       case 'member': return <MemberSettings />;

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Modal from '@/components/common/Modal';
 import Button from '@/components/common/Button';
+import Select from '@/components/common/Select';
 import { Dialog } from '@/components/common/Dialog';
 
 interface SalesRecord {
@@ -97,17 +98,16 @@ export default function EditSalesRecordModal({ isOpen, onClose, onUpdated, recor
         {/* メンバー */}
         <div className="flex items-center">
           <label className="w-24 text-sm text-gray-700 text-right pr-4">メンバー</label>
-          <div className="flex-1 flex items-center space-x-2">
-            <select
+          <div className="flex-1">
+            <Select
               value={memberId}
-              onChange={(e) => setMemberId(e.target.value)}
-              className="flex-1 border border-gray-300 rounded px-3 py-2 text-sm bg-white"
-            >
-              <option value="">選択してください...</option>
-              {members.map((m) => (
-                <option key={m.id} value={m.id}>{m.name}</option>
-              ))}
-            </select>
+              onChange={setMemberId}
+              options={[
+                { value: '', label: '選択してください...' },
+                ...members.map((m) => ({ value: String(m.id), label: m.name })),
+              ]}
+              placeholder="選択してください..."
+            />
           </div>
         </div>
 

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Dialog } from '@/components/common/Dialog';
 import Modal from '@/components/common/Modal';
 import Button from '@/components/common/Button';
+import Select from '@/components/common/Select';
 
 interface Department {
   id: number;
@@ -100,27 +101,25 @@ export default function AddMemberModal({ isOpen, onClose, onAdded }: AddMemberMo
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">役割</label>
-          <select
+          <Select
             value={role}
-            onChange={(e) => setRole(e.target.value)}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          >
-            <option value="SALES">営業</option>
-            <option value="MANAGER">マネージャー</option>
-          </select>
+            onChange={setRole}
+            options={[
+              { value: 'SALES', label: '営業' },
+              { value: 'MANAGER', label: 'マネージャー' },
+            ]}
+          />
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">部署</label>
-          <select
+          <Select
             value={departmentId}
-            onChange={(e) => setDepartmentId(e.target.value)}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          >
-            <option value="">未所属</option>
-            {departments.map((d) => (
-              <option key={d.id} value={d.id}>{d.name}</option>
-            ))}
-          </select>
+            onChange={setDepartmentId}
+            options={[
+              { value: '', label: '未所属' },
+              ...departments.map((d) => ({ value: String(d.id), label: d.name })),
+            ]}
+          />
         </div>
       </div>
     </Modal>

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import DataTable, { Column } from '@/components/common/DataTable';
 import Button from '@/components/common/Button';
+import Select from '@/components/common/Select';
 import EditTargetModal from './EditTargetModal';
 
 interface Target {
@@ -91,10 +92,14 @@ export default function TargetSettings() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
         <h2 className="text-xl font-bold text-gray-800">目標設定</h2>
         <div className="flex space-x-2">
-          <select className="border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white">
-            <option>2025年度</option>
-            <option>2026年度</option>
-          </select>
+          <Select
+            value="2025年度"
+            onChange={() => {}}
+            options={[
+              { value: '2025年度', label: '2025年度' },
+              { value: '2026年度', label: '2026年度' },
+            ]}
+          />
           <Button label="一括設定" />
         </div>
       </div>

@@ -1,5 +1,6 @@
 'use client';
 
+import Select from '@/components/common/Select';
 
 export default function RecordSettings() {
   return (
@@ -38,12 +39,16 @@ export default function RecordSettings() {
               <div className="text-sm font-medium text-gray-700">レコード保持期間</div>
               <div className="text-xs text-gray-500">指定期間を超えたレコードはアーカイブされます</div>
             </div>
-            <select className="border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white">
-              <option>1年</option>
-              <option>2年</option>
-              <option>3年</option>
-              <option>無制限</option>
-            </select>
+            <Select
+              value="1年"
+              onChange={() => {}}
+              options={[
+                { value: '1年', label: '1年' },
+                { value: '2年', label: '2年' },
+                { value: '3年', label: '3年' },
+                { value: '無制限', label: '無制限' },
+              ]}
+            />
           </div>
         </div>
       </div>

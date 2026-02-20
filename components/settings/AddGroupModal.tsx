@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Dialog } from '@/components/common/Dialog';
 import Modal from '@/components/common/Modal';
 import Button from '@/components/common/Button';
+import Select from '@/components/common/Select';
 
 interface MemberOption {
   id: number;
@@ -84,16 +85,14 @@ export default function AddGroupModal({ isOpen, onClose, onAdded }: AddGroupModa
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">マネージャー</label>
-          <select
+          <Select
             value={managerId}
-            onChange={(e) => setManagerId(e.target.value)}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          >
-            <option value="">未設定</option>
-            {memberOptions.map((m) => (
-              <option key={m.id} value={m.id}>{m.name}</option>
-            ))}
-          </select>
+            onChange={setManagerId}
+            options={[
+              { value: '', label: '未設定' },
+              ...memberOptions.map((m) => ({ value: String(m.id), label: m.name })),
+            ]}
+          />
         </div>
       </div>
     </Modal>

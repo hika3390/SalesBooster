@@ -1,5 +1,6 @@
 'use client';
 
+import Select from '@/components/common/Select';
 
 export default function GraphSettings() {
   return (
@@ -15,33 +16,45 @@ export default function GraphSettings() {
                 <div className="text-sm font-medium text-gray-700">デフォルトグラフ種類</div>
                 <div className="text-xs text-gray-500">初期表示時のグラフタイプ</div>
               </div>
-              <select className="border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white">
-                <option value="PERIOD_GRAPH">期間グラフ</option>
-                <option value="CUMULATIVE_GRAPH">累計グラフ</option>
-                <option value="TREND_GRAPH">推移グラフ</option>
-              </select>
+              <Select
+                value="PERIOD_GRAPH"
+                onChange={() => {}}
+                options={[
+                  { value: 'PERIOD_GRAPH', label: '期間グラフ' },
+                  { value: 'CUMULATIVE_GRAPH', label: '累計グラフ' },
+                  { value: 'TREND_GRAPH', label: '推移グラフ' },
+                ]}
+              />
             </div>
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-sm font-medium text-gray-700">デフォルト期間単位</div>
                 <div className="text-xs text-gray-500">初期表示時の期間単位</div>
               </div>
-              <select className="border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white">
-                <option>月</option>
-                <option>週</option>
-                <option>日</option>
-              </select>
+              <Select
+                value="月"
+                onChange={() => {}}
+                options={[
+                  { value: '月', label: '月' },
+                  { value: '週', label: '週' },
+                  { value: '日', label: '日' },
+                ]}
+              />
             </div>
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-sm font-medium text-gray-700">グラフバースタイル</div>
                 <div className="text-xs text-gray-500">棒グラフの見た目</div>
               </div>
-              <select className="border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white">
-                <option>3D円柱</option>
-                <option>フラット</option>
-                <option>角丸</option>
-              </select>
+              <Select
+                value="3D円柱"
+                onChange={() => {}}
+                options={[
+                  { value: '3D円柱', label: '3D円柱' },
+                  { value: 'フラット', label: 'フラット' },
+                  { value: '角丸', label: '角丸' },
+                ]}
+              />
             </div>
           </div>
         </div>

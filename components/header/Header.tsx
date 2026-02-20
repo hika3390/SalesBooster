@@ -25,7 +25,6 @@ export default function Header({ onAddSalesClick, subtitle, rightContent, active
   const isSettingsPage = pathname.startsWith('/settings');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
-
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (mobileMenuRef.current && !mobileMenuRef.current.contains(event.target as Node)) {
@@ -42,10 +41,10 @@ export default function Header({ onAddSalesClick, subtitle, rightContent, active
         <Logo subtitle={subtitle} />
 
         <div className="flex items-center space-x-3">
-          {/* PC: 既存のボタン群 */}
+          {/* PC: ボタン群 */}
           {rightContent ? (
             <div className="hidden md:flex items-center space-x-3">{rightContent}</div>
-          ) : (
+          ) : onAddSalesClick ? (
             <>
               <div className="hidden md:block">
                 <DisplayModeButton />
@@ -54,10 +53,10 @@ export default function Header({ onAddSalesClick, subtitle, rightContent, active
                 <SalesInputButton onClick={onAddSalesClick} />
               </div>
             </>
-          )}
+          ) : null}
 
-          {/* PC: 仕切り + UserDropdown */}
-          <div className="hidden md:block h-8 w-px bg-gray-300"></div>
+          {/* PC: UserDropdown */}
+          {(rightContent || onAddSalesClick) && <div className="hidden md:block h-8 w-px bg-gray-300"></div>}
           <div className="hidden md:block">
             <UserDropdown userName={userName} />
           </div>

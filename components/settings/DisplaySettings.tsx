@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { DisplayConfig, DisplayViewConfig, DEFAULT_DISPLAY_CONFIG, TransitionType } from '@/types/display';
 import { VIEW_TYPE_LABELS } from '@/types';
 import Button from '@/components/common/Button';
+import Select from '@/components/common/Select';
 
 const MESSAGE_DISPLAY_MS = 3000;
 
@@ -273,32 +274,34 @@ export default function DisplaySettings() {
                 <div className="text-sm font-medium text-gray-700">データ更新間隔</div>
                 <div className="text-xs text-gray-500">売上データの自動更新間隔</div>
               </div>
-              <select
-                value={config.dataRefreshInterval}
-                onChange={(e) => setConfig((prev) => ({ ...prev, dataRefreshInterval: Number(e.target.value) }))}
-                className="border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white w-full sm:w-auto sm:min-w-[200px]"
-              >
-                <option value={60000}>1分</option>
-                <option value={300000}>5分</option>
-                <option value={900000}>15分</option>
-                <option value={1800000}>30分</option>
-              </select>
+              <Select
+                value={String(config.dataRefreshInterval)}
+                onChange={(v) => setConfig((prev) => ({ ...prev, dataRefreshInterval: Number(v) }))}
+                options={[
+                  { value: '60000', label: '1分' },
+                  { value: '300000', label: '5分' },
+                  { value: '900000', label: '15分' },
+                  { value: '1800000', label: '30分' },
+                ]}
+                className="w-full sm:w-auto sm:min-w-[200px]"
+              />
             </div>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
                 <div className="text-sm font-medium text-gray-700">トランジション効果</div>
                 <div className="text-xs text-gray-500">ビュー切替時のアニメーション</div>
               </div>
-              <select
+              <Select
                 value={config.transition}
-                onChange={(e) => setConfig((prev) => ({ ...prev, transition: e.target.value as TransitionType }))}
-                className="border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white w-full sm:w-auto sm:min-w-[200px]"
-              >
-                <option value="NONE">なし</option>
-                <option value="FADE">フェード</option>
-                <option value="SLIDE_LEFT">スライド（左）</option>
-                <option value="SLIDE_RIGHT">スライド（右）</option>
-              </select>
+                onChange={(v) => setConfig((prev) => ({ ...prev, transition: v as TransitionType }))}
+                options={[
+                  { value: 'NONE', label: 'なし' },
+                  { value: 'FADE', label: 'フェード' },
+                  { value: 'SLIDE_LEFT', label: 'スライド（左）' },
+                  { value: 'SLIDE_RIGHT', label: 'スライド（右）' },
+                ]}
+                className="w-full sm:w-auto sm:min-w-[200px]"
+              />
             </div>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
@@ -327,42 +330,40 @@ export default function DisplaySettings() {
                 <div className="text-sm font-medium text-gray-700">グループ</div>
                 <div className="text-xs text-gray-500">表示対象のグループ</div>
               </div>
-              <select
+              <Select
                 value={config.filter.groupId}
-                onChange={(e) =>
+                onChange={(v) =>
                   setConfig((prev) => ({
                     ...prev,
-                    filter: { ...prev.filter, groupId: e.target.value, memberId: '' },
+                    filter: { ...prev.filter, groupId: v, memberId: '' },
                   }))
                 }
-                className="border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white w-full sm:w-auto sm:min-w-[200px]"
-              >
-                <option value="">全グループ</option>
-                {groups.map((g) => (
-                  <option key={g.id} value={String(g.id)}>{g.name}</option>
-                ))}
-              </select>
+                options={[
+                  { value: '', label: '全グループ' },
+                  ...groups.map((g) => ({ value: String(g.id), label: g.name })),
+                ]}
+                className="w-full sm:w-auto sm:min-w-[200px]"
+              />
             </div>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
                 <div className="text-sm font-medium text-gray-700">メンバー</div>
                 <div className="text-xs text-gray-500">表示対象のメンバー</div>
               </div>
-              <select
+              <Select
                 value={config.filter.memberId}
-                onChange={(e) =>
+                onChange={(v) =>
                   setConfig((prev) => ({
                     ...prev,
-                    filter: { ...prev.filter, memberId: e.target.value },
+                    filter: { ...prev.filter, memberId: v },
                   }))
                 }
-                className="border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white w-full sm:w-auto sm:min-w-[200px]"
-              >
-                <option value="">全メンバー</option>
-                {members.map((m) => (
-                  <option key={m.id} value={String(m.id)}>{m.name}</option>
-                ))}
-              </select>
+                options={[
+                  { value: '', label: '全メンバー' },
+                  ...members.map((m) => ({ value: String(m.id), label: m.name })),
+                ]}
+                className="w-full sm:w-auto sm:min-w-[200px]"
+              />
             </div>
           </div>
         </div>

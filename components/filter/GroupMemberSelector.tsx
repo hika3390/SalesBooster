@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Select from '@/components/common/Select';
 
 interface GroupOption {
   id: number;
@@ -51,34 +52,34 @@ export default function GroupMemberSelector({ onFilterChange }: GroupMemberSelec
     onFilterChange?.({ groupId: selectedGroupId, memberId: value });
   };
 
+  const groupOptions = [
+    { value: '', label: 'すべて' },
+    ...groups.map((g) => ({ value: String(g.id), label: g.name })),
+  ];
+
+  const memberSelectOptions = [
+    { value: '', label: '全員' },
+    ...memberOptions.map((m) => ({ value: String(m.id), label: m.name })),
+  ];
+
   return (
     <div className="flex items-center space-x-4">
       <div className="flex items-center space-x-2">
         <label className="text-sm text-gray-600">グループ</label>
-        <select
+        <Select
           value={selectedGroupId}
-          onChange={(e) => handleGroupChange(e.target.value)}
-          className="border border-gray-300 rounded px-3 py-1 text-sm bg-white"
-        >
-          <option value="">すべて</option>
-          {groups.map((g) => (
-            <option key={g.id} value={g.id}>{g.name}</option>
-          ))}
-        </select>
+          onChange={handleGroupChange}
+          options={groupOptions}
+        />
       </div>
 
       <div className="flex items-center space-x-2">
         <label className="text-sm text-gray-600">メンバー</label>
-        <select
+        <Select
           value={selectedMemberId}
-          onChange={(e) => handleMemberChange(e.target.value)}
-          className="border border-gray-300 rounded px-3 py-1 text-sm bg-white"
-        >
-          <option value="">全員</option>
-          {memberOptions.map((m) => (
-            <option key={m.id} value={m.id}>{m.name}</option>
-          ))}
-        </select>
+          onChange={handleMemberChange}
+          options={memberSelectOptions}
+        />
       </div>
     </div>
   );

@@ -4,6 +4,7 @@ import { useState, useRef, ReactNode } from 'react';
 import ExcelJS from 'exceljs';
 import Modal from '@/components/common/Modal';
 import Button from '@/components/common/Button';
+import Select from '@/components/common/Select';
 import { Dialog } from '@/components/common/Dialog';
 
 // --- 汎用型定義 ---
@@ -315,15 +316,12 @@ export default function ImportModal({
             <svg className="w-4 h-4 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
             </svg>
-            <select
+            <Select
               value={mapping[header] || ''}
-              onChange={(e) => handleMappingChange(header, e.target.value)}
-              className="w-1/2 border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white"
-            >
-              {fieldOptions.map((opt) => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
-              ))}
-            </select>
+              onChange={(value) => handleMappingChange(header, value)}
+              options={fieldOptions.map((opt) => ({ value: opt.value, label: opt.label }))}
+              className="w-1/2"
+            />
           </div>
         ))}
       </div>

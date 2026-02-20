@@ -1,5 +1,6 @@
 'use client';
 
+import Select from '@/components/common/Select';
 
 export default function SystemSettings() {
   return (
@@ -16,20 +17,28 @@ export default function SystemSettings() {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">会計年度開始月</label>
-              <select className="border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white">
-                <option>1月</option>
-                <option>4月</option>
-                <option>7月</option>
-                <option>10月</option>
-              </select>
+              <Select
+                value="4月"
+                onChange={() => {}}
+                options={[
+                  { value: '1月', label: '1月' },
+                  { value: '4月', label: '4月' },
+                  { value: '7月', label: '7月' },
+                  { value: '10月', label: '10月' },
+                ]}
+              />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">通貨単位</label>
-              <select className="border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white">
-                <option>万円</option>
-                <option>千円</option>
-                <option>円</option>
-              </select>
+              <Select
+                value="万円"
+                onChange={() => {}}
+                options={[
+                  { value: '万円', label: '万円' },
+                  { value: '千円', label: '千円' },
+                  { value: '円', label: '円' },
+                ]}
+              />
             </div>
           </div>
         </div>
@@ -52,12 +61,16 @@ export default function SystemSettings() {
                 <div className="text-sm font-medium text-gray-700">セッションタイムアウト</div>
                 <div className="text-xs text-gray-500">無操作時の自動ログアウト時間</div>
               </div>
-              <select className="border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white">
-                <option>30分</option>
-                <option>1時間</option>
-                <option>2時間</option>
-                <option>なし</option>
-              </select>
+              <Select
+                value="30分"
+                onChange={() => {}}
+                options={[
+                  { value: '30分', label: '30分' },
+                  { value: '1時間', label: '1時間' },
+                  { value: '2時間', label: '2時間' },
+                  { value: 'なし', label: 'なし' },
+                ]}
+              />
             </div>
           </div>
         </div>

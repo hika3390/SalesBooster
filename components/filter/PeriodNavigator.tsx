@@ -3,6 +3,7 @@
 import { PeriodUnit } from '@/types';
 import { DateRange } from '../FilterBar';
 import { usePeriodNavigation, PeriodSelection } from '@/hooks/usePeriodNavigation';
+import Select from '@/components/common/Select';
 
 export type { PeriodSelection };
 
@@ -48,36 +49,24 @@ export default function PeriodNavigator({ periodUnit, showPeriodSelection, dateR
 
         {periodType === '期間' ? (
           <>
-            <select
-              className="border border-gray-300 rounded px-3 py-1 text-sm bg-white"
+            <Select
               value={startMonth}
-              onChange={(e) => setStartMonth(e.target.value)}
-            >
-              {monthOptions.map((label) => (
-                <option key={label} value={label}>{label}</option>
-              ))}
-            </select>
+              onChange={setStartMonth}
+              options={monthOptions.map((label) => ({ value: label, label }))}
+            />
             <span className="text-sm text-gray-600">〜</span>
-            <select
-              className="border border-gray-300 rounded px-3 py-1 text-sm bg-white"
+            <Select
               value={endMonth}
-              onChange={(e) => setEndMonth(e.target.value)}
-            >
-              {monthOptions.map((label) => (
-                <option key={label} value={label}>{label}</option>
-              ))}
-            </select>
+              onChange={setEndMonth}
+              options={monthOptions.map((label) => ({ value: label, label }))}
+            />
           </>
         ) : (
-          <select
-            className="border border-gray-300 rounded px-3 py-1 text-sm bg-white"
+          <Select
             value={formatMonthLabel(selectedDate.getFullYear(), selectedDate.getMonth() + 1)}
-            onChange={(e) => handleDateChange(e.target.value)}
-          >
-            {monthOptions.map((label) => (
-              <option key={label} value={label}>{label}</option>
-            ))}
-          </select>
+            onChange={handleDateChange}
+            options={monthOptions.map((label) => ({ value: label, label }))}
+          />
         )}
       </div>
     );
@@ -118,17 +107,11 @@ export default function PeriodNavigator({ periodUnit, showPeriodSelection, dateR
       </button>
 
       {/* 日付選択ドロップダウン */}
-      <select
-        className="border border-gray-300 rounded px-3 py-1 text-sm bg-white"
+      <Select
         value={currentDateStr}
-        onChange={(e) => handleDateChange(e.target.value)}
-      >
-        {dateOptions.map((option) => (
-          <option key={option} value={option}>
-            {option}
-          </option>
-        ))}
-      </select>
+        onChange={handleDateChange}
+        options={dateOptions.map((option) => ({ value: option, label: option }))}
+      />
     </div>
   );
 }

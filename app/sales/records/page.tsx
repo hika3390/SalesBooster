@@ -212,6 +212,7 @@ export default function SalesRecordsPage() {
         onUpdated={() => fetchRecords(currentPage)}
         record={editingRecord}
       />
+
     </div>
   );
 }

@@ -195,5 +195,6 @@ model DisplayConfigView {
   enabled         Boolean       @default(true)
   duration        Int           @default(30) // 秒
   order           Int           @default(0)
+  title           String        @default("")
   displayConfig   DisplayConfig @relation(fields: [displayConfigId], references: [id], onDelete: Cascade)
 }

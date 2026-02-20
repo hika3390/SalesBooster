@@ -62,13 +62,14 @@ function DisplayContent({
   setShowHeader: (v: boolean) => void;
   onExit: () => void;
 }) {
-  const { currentView, currentViewIndex, enabledViews, progress, goToNext, goToPrev } = useDisplayMode(config);
+  const { currentView, currentViewTitle, currentViewIndex, enabledViews, progress, goToNext, goToPrev } = useDisplayMode(config);
   const { salesData, recordCount, cumulativeSalesData, trendData, reportData, rankingData, loading, error } = useDisplayData(config);
 
   useAutoHideCursor(true, 3000);
 
   const [transitionPhase, setTransitionPhase] = useState<'idle' | 'exiting' | 'entering'>('idle');
   const [displayedView, setDisplayedView] = useState<ViewType>(currentView);
+  const [displayedTitle, setDisplayedTitle] = useState(currentViewTitle);
   const transitionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -79,6 +80,7 @@ function DisplayContent({
 
     if (config.transition === 'NONE') {
       setDisplayedView(currentView);
+      setDisplayedTitle(currentViewTitle);
       setTransitionPhase('idle');
       return;
     }
@@ -86,6 +88,7 @@ function DisplayContent({
     setTransitionPhase('exiting');
     transitionTimerRef.current = setTimeout(() => {
       setDisplayedView(currentView);
+      setDisplayedTitle(currentViewTitle);
       requestAnimationFrame(() => {
         setTransitionPhase('entering');
         transitionTimerRef.current = setTimeout(() => {
@@ -129,6 +132,19 @@ function DisplayContent({
         onNext={goToNext}
         onExit={handleExit}
       />
+
+      {/* タイトルバー */}
+      {displayedTitle && (
+        <div
+          className={`shrink-0 px-6 py-3 border-b ${isDark ? 'border-gray-700' : 'border-gray-200'}`}
+          style={{
+            backgroundColor: isDark ? 'var(--display-bg)' : 'var(--display-bg)',
+            color: isDark ? 'rgba(255, 255, 255, 0.9)' : 'rgba(0, 0, 0, 0.8)',
+          }}
+        >
+          <span className="text-lg font-bold">{displayedTitle}</span>
+        </div>
+      )}
 
       <main className="flex-1 min-h-0 overflow-hidden">
         {error ? (

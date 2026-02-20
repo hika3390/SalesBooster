@@ -17,7 +17,7 @@ export const displayConfigRepository = {
     companyLogoUrl: string;
     teamName: string;
     darkMode: boolean;
-    views: { viewType: DisplayViewType; enabled: boolean; duration: number; order: number }[];
+    views: { viewType: DisplayViewType; enabled: boolean; duration: number; order: number; title: string }[];
   }) {
     const existing = await prisma.displayConfig.findFirst();
 
@@ -42,6 +42,7 @@ export const displayConfigRepository = {
                 enabled: v.enabled,
                 duration: v.duration,
                 order: v.order,
+                title: v.title,
               })),
             },
           },
@@ -67,6 +68,7 @@ export const displayConfigRepository = {
             enabled: v.enabled,
             duration: v.duration,
             order: v.order,
+            title: v.title,
           })),
         },
       },

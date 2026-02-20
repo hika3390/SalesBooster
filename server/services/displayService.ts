@@ -23,6 +23,7 @@ export const displayService = {
         enabled: v.enabled,
         duration: v.duration,
         order: v.order,
+        title: v.title,
       })),
     };
   },
@@ -42,6 +43,7 @@ export const displayService = {
         enabled: v.enabled,
         duration: v.duration,
         order: v.order,
+        title: v.title ?? '',
       })),
     });
   },

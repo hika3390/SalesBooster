@@ -1,11 +1,12 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { DisplayConfig, DisplayViewConfig } from '@/types/display';
+import { DisplayConfig, DisplayViewConfig, getViewTitle } from '@/types/display';
 import { ViewType } from '@/types';
 
 interface UseDisplayModeReturn {
   currentView: ViewType;
+  currentViewTitle: string;
   currentViewIndex: number;
   enabledViews: DisplayViewConfig[];
   progress: number;
@@ -72,8 +73,11 @@ export function useDisplayMode(config: DisplayConfig): UseDisplayModeReturn {
     setCurrentIndex((prev) => (prev <= 0 ? enabledViews.length - 1 : prev - 1));
   }, [enabledViews.length]);
 
+  const currentViewConfig = enabledViews[currentIndex];
+
   return {
-    currentView: enabledViews[currentIndex]?.viewType ?? 'PERIOD_GRAPH',
+    currentView: currentViewConfig?.viewType ?? 'PERIOD_GRAPH',
+    currentViewTitle: currentViewConfig ? getViewTitle(currentViewConfig) : '',
     currentViewIndex: currentIndex,
     enabledViews,
     progress,

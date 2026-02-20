@@ -111,7 +111,8 @@ export default function DisplaySettings() {
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-4 py-3 text-left font-medium text-gray-600 w-16">順番</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-600">ビュー名</th>
+                  <th className="px-4 py-3 text-left font-medium text-gray-600 w-32">ビュー名</th>
+                  <th className="px-4 py-3 text-left font-medium text-gray-600">表示タイトル</th>
                   <th className="px-4 py-3 text-center font-medium text-gray-600 w-20">有効</th>
                   <th className="px-4 py-3 text-center font-medium text-gray-600 w-32">表示秒数</th>
                   <th className="px-4 py-3 text-center font-medium text-gray-600 w-24">操作</th>
@@ -122,6 +123,15 @@ export default function DisplaySettings() {
                   <tr key={view.viewType} className="border-t border-gray-200">
                     <td className="px-4 py-3 text-gray-600">{index + 1}</td>
                     <td className="px-4 py-3 font-medium text-gray-800">{VIEW_TYPE_LABELS[view.viewType]}</td>
+                    <td className="px-4 py-3">
+                      <input
+                        type="text"
+                        value={view.title}
+                        onChange={(e) => updateView(index, { title: e.target.value })}
+                        placeholder={VIEW_TYPE_LABELS[view.viewType]}
+                        className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
+                      />
+                    </td>
                     <td className="px-4 py-3 text-center">
                       <input
                         type="checkbox"

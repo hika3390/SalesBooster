@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Dialog } from '@/components/common/Dialog';
 import DataTable, { Column } from '@/components/common/DataTable';
 import Button from '@/components/common/Button';
+import DropdownMenu from '@/components/common/DropdownMenu';
 import AddMemberModal from './AddMemberModal';
 import EditMemberModal from './EditMemberModal';
 import ImportMembersModal from './ImportMembersModal';
@@ -28,7 +29,6 @@ export default function MemberSettings() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [editingMember, setEditingMember] = useState<Member | null>(null);
-
   const fetchMembers = async () => {
     try {
       setFetchError(null);
@@ -117,12 +117,28 @@ export default function MemberSettings() {
 
   return (
     <div>
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+      <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-bold text-gray-800">メンバー設定</h2>
-        <div className="flex items-center space-x-2">
-          <Button label="インポート" variant="outline" color="blue" onClick={() => setIsImportModalOpen(true)} />
-          <Button label="メンバーを追加" onClick={() => setIsAddModalOpen(true)} />
-        </div>
+        <DropdownMenu items={[
+          {
+            label: 'メンバーを追加',
+            icon: (
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+              </svg>
+            ),
+            onClick: () => setIsAddModalOpen(true),
+          },
+          {
+            label: 'インポート',
+            icon: (
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+              </svg>
+            ),
+            onClick: () => setIsImportModalOpen(true),
+          },
+        ]} />
       </div>
 
       <DataTable

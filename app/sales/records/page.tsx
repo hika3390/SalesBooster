@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import Header from '@/components/header/Header';
 import DataTable, { Column } from '@/components/common/DataTable';
 import Button from '@/components/common/Button';
@@ -42,7 +41,6 @@ const formatAmount = (amount: number) => {
 };
 
 export default function SalesRecordsPage() {
-  const router = useRouter();
   const [data, setData] = useState<RecordsResponse | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
@@ -137,9 +135,7 @@ export default function SalesRecordsPage() {
   if (loading && !data) {
     return (
       <div className="h-screen flex flex-col bg-gray-100">
-        <Header subtitle="売上データ管理" rightContent={
-          <Button label="ダッシュボードに戻る" variant="outline" color="gray" onClick={() => router.push('/')} />
-        } />
+        <Header subtitle="売上データ管理" />
         <div className="flex-1 flex items-center justify-center">
           <div className="text-gray-500">読み込み中...</div>
         </div>
@@ -150,9 +146,7 @@ export default function SalesRecordsPage() {
   if (fetchError && !data) {
     return (
       <div className="h-screen flex flex-col bg-gray-100">
-        <Header subtitle="売上データ管理" rightContent={
-          <Button label="ダッシュボードに戻る" variant="outline" color="gray" onClick={() => router.push('/')} />
-        } />
+        <Header subtitle="売上データ管理" />
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
             <div className="text-red-500 mb-3">{fetchError}</div>
@@ -169,9 +163,7 @@ export default function SalesRecordsPage() {
 
   return (
     <div className="h-screen flex flex-col bg-gray-100">
-      <Header subtitle="売上データ管理" rightContent={
-        <Button label="ダッシュボードに戻る" variant="outline" color="gray" onClick={() => router.push('/')} />
-      } />
+      <Header subtitle="売上データ管理" />
 
       <main className="flex-1 p-4 md:p-8 overflow-y-auto">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">

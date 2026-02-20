@@ -1,9 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import Header from '@/components/header/Header';
-import Button from '@/components/common/Button';
 import SettingsSidebar, { SettingsSection } from '@/components/settings/SettingsSidebar';
 import MemberSettings from '@/components/settings/MemberSettings';
 import GroupSettings from '@/components/settings/GroupSettings';
@@ -18,7 +16,6 @@ import IntegrationSettings from '@/components/settings/IntegrationSettings';
 import LogViewer from '@/components/settings/LogViewer';
 
 export default function SettingsPage() {
-  const router = useRouter();
   const [activeSection, setActiveSection] = useState<SettingsSection>('member');
 
   const renderContent = () => {
@@ -42,9 +39,6 @@ export default function SettingsPage() {
       {/* ヘッダー */}
       <Header
         subtitle="管理画面"
-        rightContent={
-          <Button label="ダッシュボードに戻る" variant="outline" color="gray" onClick={() => router.push('/')} />
-        }
         activeSettingsSection={activeSection}
         onSettingsSectionChange={setActiveSection}
       />

@@ -69,4 +69,27 @@ export const memberController = {
       return ApiResponse.fromError(error, 'Failed to delete member');
     }
   },
+
+  async importMembers(request: NextRequest) {
+    try {
+      const body = await request.json();
+      const { members } = body;
+
+      if (!Array.isArray(members) || members.length === 0) {
+        return ApiResponse.badRequest('members array is required');
+      }
+
+      const results = await memberService.importMembers(members);
+
+      auditLogService.create({
+        request,
+        action: 'MEMBER_CREATE',
+        detail: `メンバー一括インポート: ${results.created}件追加, ${results.errors.length}件エラー`,
+      }).catch((err) => console.error('Audit log failed:', err));
+
+      return ApiResponse.success(results);
+    } catch (error) {
+      return ApiResponse.fromError(error, 'Failed to import members');
+    }
+  },
 };

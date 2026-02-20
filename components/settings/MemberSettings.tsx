@@ -6,6 +6,7 @@ import DataTable, { Column } from '@/components/common/DataTable';
 import Button from '@/components/common/Button';
 import AddMemberModal from './AddMemberModal';
 import EditMemberModal from './EditMemberModal';
+import ImportMembersModal from './ImportMembersModal';
 
 interface Member {
   id: number;
@@ -25,6 +26,7 @@ export default function MemberSettings() {
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [editingMember, setEditingMember] = useState<Member | null>(null);
 
   const fetchMembers = async () => {
@@ -115,9 +117,12 @@ export default function MemberSettings() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
         <h2 className="text-xl font-bold text-gray-800">メンバー設定</h2>
-        <Button label="メンバーを追加" onClick={() => setIsAddModalOpen(true)} />
+        <div className="flex items-center space-x-2">
+          <Button label="インポート" variant="outline" color="blue" onClick={() => setIsImportModalOpen(true)} />
+          <Button label="メンバーを追加" onClick={() => setIsAddModalOpen(true)} />
+        </div>
       </div>
 
       <DataTable
@@ -161,6 +166,12 @@ export default function MemberSettings() {
         onClose={() => setEditingMember(null)}
         onUpdated={fetchMembers}
         member={editingMember}
+      />
+
+      <ImportMembersModal
+        isOpen={isImportModalOpen}
+        onClose={() => setIsImportModalOpen(false)}
+        onImported={fetchMembers}
       />
     </div>
   );

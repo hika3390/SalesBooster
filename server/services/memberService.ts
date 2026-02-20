@@ -37,4 +37,36 @@ export const memberService = {
   async delete(id: number) {
     return memberRepository.delete(id);
   },
+
+  async importMembers(members: { name: string; email: string; role?: MemberRole; departmentId?: number }[]) {
+    const emails = members.map((m) => m.email);
+    const existing = await memberRepository.findByEmails(emails);
+    const existingEmails = new Set(existing.map((e) => e.email));
+
+    const results: { created: number; skipped: number; errors: { email: string; reason: string }[] } = {
+      created: 0,
+      skipped: 0,
+      errors: [],
+    };
+
+    for (const member of members) {
+      if (existingEmails.has(member.email)) {
+        results.errors.push({ email: member.email, reason: '既に登録済みのメールアドレスです' });
+        continue;
+      }
+      try {
+        await memberRepository.create({
+          name: member.name,
+          email: member.email,
+          role: member.role,
+          departmentId: member.departmentId,
+        });
+        results.created++;
+      } catch {
+        results.errors.push({ email: member.email, reason: '登録に失敗しました' });
+      }
+    }
+
+    return results;
+  },
 };

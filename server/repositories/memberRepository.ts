@@ -24,6 +24,13 @@ export const memberRepository = {
     });
   },
 
+  findByEmails(emails: string[]) {
+    return prisma.member.findMany({
+      where: { email: { in: emails } },
+      select: { email: true },
+    });
+  },
+
   create(data: { name: string; email: string; role?: MemberRole; imageUrl?: string; departmentId?: number }) {
     return prisma.member.create({ data });
   },

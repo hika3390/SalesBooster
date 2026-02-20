@@ -92,10 +92,10 @@ export default function MemberSettings() {
       label: '操作',
       align: 'right',
       render: (m) => (
-        <>
-          <button onClick={() => setEditingMember(m)} className="text-blue-600 hover:text-blue-800 text-sm mr-3">編集</button>
-          <button onClick={() => handleDelete(m.id)} className="text-red-600 hover:text-red-800 text-sm">削除</button>
-        </>
+        <div className="flex items-center justify-end space-x-2">
+          <Button label="編集" variant="outline" color="blue" onClick={() => setEditingMember(m)} className="px-3 py-1.5 text-xs" />
+          <Button label="削除" variant="outline" color="red" onClick={() => handleDelete(m.id)} className="px-3 py-1.5 text-xs" />
+        </div>
       ),
     },
   ];
@@ -131,6 +131,23 @@ export default function MemberSettings() {
           (m.department != null && m.department.toLowerCase().includes(q))
         }
         emptyMessage="該当するメンバーがいません"
+        mobileRender={(m) => (
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-medium text-gray-800">{m.name}</span>
+              <span className={`px-2 py-0.5 text-xs rounded-full font-medium ${
+                m.status === 'ACTIVE' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
+              }`}>
+                {statusLabel[m.status] || m.status}
+              </span>
+            </div>
+            <div className="text-xs text-gray-500 mb-3">{roleLabel[m.role] || m.role}</div>
+            <div className="flex items-center space-x-2">
+              <Button label="編集" variant="outline" color="blue" onClick={() => setEditingMember(m)} className="px-3 py-1.5 text-xs" />
+              <Button label="削除" variant="outline" color="red" onClick={() => handleDelete(m.id)} className="px-3 py-1.5 text-xs" />
+            </div>
+          </div>
+        )}
       />
 
       <AddMemberModal

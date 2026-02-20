@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo, ReactNode } from 'react';
+import { useIsMobile } from '@/hooks/useIsMobile';
 
 const DEFAULT_PAGE_SIZE = 10;
 
@@ -15,6 +16,7 @@ interface BaseProps<T> {
   columns: Column<T>[];
   keyField: keyof T;
   emptyMessage?: string;
+  mobileRender?: (item: T) => ReactNode;
 }
 
 interface ClientPaginationProps<T> extends BaseProps<T> {
@@ -61,9 +63,11 @@ function ClientPaginatedTable<T>({
   searchFilter,
   emptyMessage = '該当するデータがありません',
   pageSize = DEFAULT_PAGE_SIZE,
+  mobileRender,
 }: ClientPaginationProps<T>) {
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const isMobile = useIsMobile();
 
   const filteredData = useMemo(() => {
     if (!searchQuery.trim() || !searchFilter) return data;
@@ -92,7 +96,11 @@ function ClientPaginatedTable<T>({
         </div>
       )}
 
-      <TableBody columns={columns} data={pagedData} keyField={keyField} emptyMessage={emptyMessage} />
+      {isMobile && mobileRender ? (
+        <MobileCardList data={pagedData} keyField={keyField} emptyMessage={emptyMessage} mobileRender={mobileRender} />
+      ) : (
+        <TableBody columns={columns} data={pagedData} keyField={keyField} emptyMessage={emptyMessage} />
+      )}
 
       <Pagination
         currentPage={currentPage}
@@ -111,10 +119,17 @@ function ServerPaginatedTable<T>({
   keyField,
   emptyMessage = '該当するデータがありません',
   serverPagination,
+  mobileRender,
 }: ServerPaginationProps<T>) {
+  const isMobile = useIsMobile();
+
   return (
     <>
-      <TableBody columns={columns} data={data} keyField={keyField} emptyMessage={emptyMessage} />
+      {isMobile && mobileRender ? (
+        <MobileCardList data={data} keyField={keyField} emptyMessage={emptyMessage} mobileRender={mobileRender} />
+      ) : (
+        <TableBody columns={columns} data={data} keyField={keyField} emptyMessage={emptyMessage} />
+      )}
 
       <Pagination
         currentPage={serverPagination.currentPage}
@@ -124,6 +139,36 @@ function ServerPaginatedTable<T>({
         onPageChange={serverPagination.onPageChange}
       />
     </>
+  );
+}
+
+function MobileCardList<T>({
+  data,
+  keyField,
+  emptyMessage,
+  mobileRender,
+}: {
+  data: T[];
+  keyField: keyof T;
+  emptyMessage: string;
+  mobileRender: (item: T) => ReactNode;
+}) {
+  if (data.length === 0) {
+    return (
+      <div className="bg-white rounded-lg border border-gray-200 px-4 py-8 text-center text-sm text-gray-400">
+        {emptyMessage}
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      {data.map((item) => (
+        <div key={String(item[keyField])} className="bg-white rounded-lg border border-gray-200 p-4">
+          {mobileRender(item)}
+        </div>
+      ))}
+    </div>
   );
 }
 

@@ -108,13 +108,13 @@ export default function LogViewer() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
         <h2 className="text-xl font-bold text-gray-800">操作ログ閲覧</h2>
         <div className="flex items-center space-x-2">
-          <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="border border-gray-300 rounded-lg px-3 py-2 text-sm" />
-          <span className="text-gray-500">&mdash;</span>
-          <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="border border-gray-300 rounded-lg px-3 py-2 text-sm" />
-          <Button label="検索" onClick={handleSearch} />
+          <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full sm:w-auto" />
+          <span className="text-gray-500 shrink-0">&mdash;</span>
+          <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full sm:w-auto" />
+          <Button label="検索" onClick={handleSearch} className="shrink-0" />
         </div>
       </div>
 
@@ -130,6 +130,16 @@ export default function LogViewer() {
           pageSize,
           onPageChange: setCurrentPage,
         }}
+        mobileRender={(log) => (
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-sm font-medium text-gray-800">{log.user}</span>
+              <span className="text-xs text-gray-400">{formatDate(log.date)}</span>
+            </div>
+            <div className="text-sm text-gray-700 mb-1">{AUDIT_ACTION_LABELS[log.action] || log.action}</div>
+            {log.detail && <div className="text-xs text-gray-500">{log.detail}</div>}
+          </div>
+        )}
       />
     </div>
   );

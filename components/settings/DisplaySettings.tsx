@@ -103,10 +103,12 @@ export default function DisplaySettings() {
       <h2 className="text-xl font-bold text-gray-800 mb-6">ディスプレイモード設定</h2>
 
       <div className="space-y-6">
-        {/* ビュー設定テーブル */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
+        {/* ビュー設定 */}
+        <div className="bg-white rounded-lg border border-gray-200 p-4 md:p-6">
           <h3 className="font-semibold text-gray-800 mb-4">表示ビュー設定</h3>
-          <div className="overflow-hidden border border-gray-200 rounded-lg">
+
+          {/* PC: テーブル表示 */}
+          <div className="hidden md:block overflow-hidden border border-gray-200 rounded-lg">
             <table className="w-full text-sm">
               <thead className="bg-gray-50">
                 <tr>
@@ -180,13 +182,78 @@ export default function DisplaySettings() {
               </tbody>
             </table>
           </div>
+
+          {/* モバイル: カードリスト表示 */}
+          <div className="md:hidden space-y-3">
+            {config.views.map((view, index) => (
+              <div key={view.viewType} className="border border-gray-200 rounded-lg p-3">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-xs text-gray-400 font-medium">#{index + 1}</span>
+                    <span className="text-sm font-medium text-gray-800">{VIEW_TYPE_LABELS[view.viewType]}</span>
+                  </div>
+                  <label className="flex items-center space-x-1.5">
+                    <span className="text-xs text-gray-500">有効</span>
+                    <input
+                      type="checkbox"
+                      checked={view.enabled}
+                      onChange={(e) => updateView(index, { enabled: e.target.checked })}
+                      className="w-4 h-4 text-blue-600 rounded"
+                    />
+                  </label>
+                </div>
+                <div className="mb-2">
+                  <input
+                    type="text"
+                    value={view.title}
+                    onChange={(e) => updateView(index, { title: e.target.value })}
+                    placeholder={VIEW_TYPE_LABELS[view.viewType]}
+                    className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm"
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-1">
+                    <input
+                      type="number"
+                      value={view.duration}
+                      onChange={(e) => updateView(index, { duration: Math.max(5, parseInt(e.target.value) || 5) })}
+                      min={5}
+                      max={600}
+                      className="w-16 border border-gray-300 rounded px-2 py-1 text-sm text-center"
+                    />
+                    <span className="text-xs text-gray-500">秒</span>
+                  </div>
+                  <div className="flex items-center space-x-1">
+                    <button
+                      onClick={() => moveView(index, 'up')}
+                      disabled={index === 0}
+                      className={`p-1.5 rounded ${index === 0 ? 'text-gray-300 cursor-not-allowed' : 'text-gray-500 hover:bg-gray-100'}`}
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                      </svg>
+                    </button>
+                    <button
+                      onClick={() => moveView(index, 'down')}
+                      disabled={index === config.views.length - 1}
+                      className={`p-1.5 rounded ${index === config.views.length - 1 ? 'text-gray-300 cursor-not-allowed' : 'text-gray-500 hover:bg-gray-100'}`}
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* 再生設定 */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <div className="bg-white rounded-lg border border-gray-200 p-4 md:p-6">
           <h3 className="font-semibold text-gray-800 mb-4">再生設定</h3>
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
                 <div className="text-sm font-medium text-gray-700">ループ再生</div>
                 <div className="text-xs text-gray-500">最後のビューの後に最初に戻る</div>
@@ -201,7 +268,7 @@ export default function DisplaySettings() {
                 <div className="w-11 h-6 bg-gray-200 peer-focus:ring-2 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
               </label>
             </div>
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
                 <div className="text-sm font-medium text-gray-700">データ更新間隔</div>
                 <div className="text-xs text-gray-500">売上データの自動更新間隔</div>
@@ -209,7 +276,7 @@ export default function DisplaySettings() {
               <select
                 value={config.dataRefreshInterval}
                 onChange={(e) => setConfig((prev) => ({ ...prev, dataRefreshInterval: Number(e.target.value) }))}
-                className="border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white"
+                className="border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white w-full sm:w-auto sm:min-w-[200px]"
               >
                 <option value={60000}>1分</option>
                 <option value={300000}>5分</option>
@@ -217,7 +284,7 @@ export default function DisplaySettings() {
                 <option value={1800000}>30分</option>
               </select>
             </div>
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
                 <div className="text-sm font-medium text-gray-700">トランジション効果</div>
                 <div className="text-xs text-gray-500">ビュー切替時のアニメーション</div>
@@ -225,7 +292,7 @@ export default function DisplaySettings() {
               <select
                 value={config.transition}
                 onChange={(e) => setConfig((prev) => ({ ...prev, transition: e.target.value as TransitionType }))}
-                className="border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white"
+                className="border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white w-full sm:w-auto sm:min-w-[200px]"
               >
                 <option value="NONE">なし</option>
                 <option value="FADE">フェード</option>
@@ -233,7 +300,7 @@ export default function DisplaySettings() {
                 <option value="SLIDE_RIGHT">スライド（右）</option>
               </select>
             </div>
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
                 <div className="text-sm font-medium text-gray-700">ダークモード</div>
                 <div className="text-xs text-gray-500">ディスプレイ画面を暗い配色にする</div>
@@ -252,10 +319,10 @@ export default function DisplaySettings() {
         </div>
 
         {/* フィルター設定 */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <div className="bg-white rounded-lg border border-gray-200 p-4 md:p-6">
           <h3 className="font-semibold text-gray-800 mb-4">フィルター設定</h3>
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
                 <div className="text-sm font-medium text-gray-700">グループ</div>
                 <div className="text-xs text-gray-500">表示対象のグループ</div>
@@ -268,7 +335,7 @@ export default function DisplaySettings() {
                     filter: { ...prev.filter, groupId: e.target.value, memberId: '' },
                   }))
                 }
-                className="border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white min-w-[200px]"
+                className="border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white w-full sm:w-auto sm:min-w-[200px]"
               >
                 <option value="">全グループ</option>
                 {groups.map((g) => (
@@ -276,7 +343,7 @@ export default function DisplaySettings() {
                 ))}
               </select>
             </div>
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
                 <div className="text-sm font-medium text-gray-700">メンバー</div>
                 <div className="text-xs text-gray-500">表示対象のメンバー</div>
@@ -289,7 +356,7 @@ export default function DisplaySettings() {
                     filter: { ...prev.filter, memberId: e.target.value },
                   }))
                 }
-                className="border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white min-w-[200px]"
+                className="border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white w-full sm:w-auto sm:min-w-[200px]"
               >
                 <option value="">全メンバー</option>
                 {members.map((m) => (
@@ -301,10 +368,10 @@ export default function DisplaySettings() {
         </div>
 
         {/* 表示情報設定 */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <div className="bg-white rounded-lg border border-gray-200 p-4 md:p-6">
           <h3 className="font-semibold text-gray-800 mb-4">表示情報設定</h3>
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
                 <div className="text-sm font-medium text-gray-700">チーム名</div>
                 <div className="text-xs text-gray-500">ディスプレイ画面に表示するチーム名</div>
@@ -314,10 +381,10 @@ export default function DisplaySettings() {
                 value={config.teamName}
                 onChange={(e) => setConfig((prev) => ({ ...prev, teamName: e.target.value }))}
                 placeholder="例: 営業1課"
-                className="border border-gray-300 rounded-lg px-3 py-2 text-sm min-w-[200px]"
+                className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full sm:w-auto sm:min-w-[200px]"
               />
             </div>
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
                 <div className="text-sm font-medium text-gray-700">会社ロゴURL</div>
                 <div className="text-xs text-gray-500">ディスプレイ画面に表示するロゴ画像のURL</div>
@@ -327,7 +394,7 @@ export default function DisplaySettings() {
                 value={config.companyLogoUrl}
                 onChange={(e) => setConfig((prev) => ({ ...prev, companyLogoUrl: e.target.value }))}
                 placeholder="https://example.com/logo.png"
-                className="border border-gray-300 rounded-lg px-3 py-2 text-sm min-w-[300px]"
+                className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full sm:w-auto sm:min-w-[300px]"
               />
             </div>
           </div>

@@ -68,7 +68,7 @@ export default function TargetSettings() {
       label: '操作',
       align: 'right',
       render: (t) => (
-        <button onClick={() => setEditingTarget(t)} className="text-blue-600 hover:text-blue-800 text-sm">編集</button>
+        <Button label="編集" variant="outline" color="blue" onClick={() => setEditingTarget(t)} className="px-3 py-1.5 text-xs" />
       ),
     },
   ];
@@ -88,7 +88,7 @@ export default function TargetSettings() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
         <h2 className="text-xl font-bold text-gray-800">目標設定</h2>
         <div className="flex space-x-2">
           <select className="border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white">
@@ -106,6 +106,28 @@ export default function TargetSettings() {
         searchPlaceholder="メンバー名で検索..."
         searchFilter={(t, q) => t.memberName.toLowerCase().includes(q)}
         emptyMessage="目標データがありません"
+        mobileRender={(t) => (
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-medium text-gray-800">{t.memberName}</span>
+              <Button label="編集" variant="outline" color="blue" onClick={() => setEditingTarget(t)} className="px-3 py-1.5 text-xs" />
+            </div>
+            <div className="grid grid-cols-3 gap-2 text-xs">
+              <div>
+                <div className="text-gray-400">月間</div>
+                <div className="text-gray-700 font-medium">{t.monthly}万円</div>
+              </div>
+              <div>
+                <div className="text-gray-400">四半期</div>
+                <div className="text-gray-700 font-medium">{t.quarterly}万円</div>
+              </div>
+              <div>
+                <div className="text-gray-400">年間</div>
+                <div className="text-gray-700 font-medium">{t.annual}万円</div>
+              </div>
+            </div>
+          </div>
+        )}
       />
 
       <EditTargetModal

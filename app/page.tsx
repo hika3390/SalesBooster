@@ -12,6 +12,8 @@ import ReportView from '@/components/report/ReportView';
 import RankingBoard from '@/components/record/RankingBoard';
 import { useSalesPolling } from '@/hooks/useSalesPolling';
 import { PeriodSelection } from '@/components/filter/PeriodNavigator';
+import { useIsMobile } from '@/hooks/useIsMobile';
+import MobileRankingList from '@/components/mobile/MobileRankingList';
 
 const FETCH_DEBOUNCE_MS = 100;
 
@@ -28,6 +30,7 @@ export default function Home() {
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [filter, setFilter] = useState<{ groupId: string; memberId: string }>({ groupId: '', memberId: '' });
   const [period, setPeriod] = useState<PeriodSelection | null>(null);
+  const isMobile = useIsMobile();
 
   const fetchTimerRef = useRef<NodeJS.Timeout | null>(null);
   const fetchingRef = useRef(false);
@@ -141,7 +144,9 @@ export default function Home() {
       <FilterBar onViewChange={handleViewChange} onFilterChange={setFilter} onPeriodChange={setPeriod} />
 
       <main className="w-full flex-1 min-h-0 overflow-auto">
-        {fetchError ? (
+        {isMobile ? (
+          <MobileRankingList salesData={salesData} loading={loading} onAddSalesClick={handleAddSalesClick} />
+        ) : fetchError ? (
           <div className="mx-6 my-4 p-12 bg-white rounded shadow-sm text-center">
             <div className="text-red-500 text-lg mb-2">{fetchError}</div>
             <button

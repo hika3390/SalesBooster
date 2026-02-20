@@ -25,7 +25,7 @@ interface SettingsSidebarProps {
   onSectionChange: (section: SettingsSection) => void;
 }
 
-const menuItems: MenuItem[] = [
+export const menuItems: MenuItem[] = [
   {
     key: 'member',
     label: 'メンバー設定',
@@ -130,7 +130,7 @@ const menuItems: MenuItem[] = [
 
 export default function SettingsSidebar({ activeSection, onSectionChange }: SettingsSidebarProps) {
   return (
-    <nav className="w-64 bg-white border-r border-gray-200 overflow-y-auto">
+    <nav className="hidden md:block w-64 bg-white border-r border-gray-200 overflow-y-auto">
       <div className="py-4">
         {menuItems.map((item) => (
           <button

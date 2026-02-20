@@ -45,12 +45,14 @@ export default function SettingsPage() {
         rightContent={
           <Button label="ダッシュボードに戻る" variant="outline" color="gray" onClick={() => router.push('/')} />
         }
+        activeSettingsSection={activeSection}
+        onSettingsSectionChange={setActiveSection}
       />
 
       {/* メインコンテンツ */}
       <div className="flex flex-1 overflow-hidden">
         <SettingsSidebar activeSection={activeSection} onSectionChange={setActiveSection} />
-        <main className="flex-1 p-8 overflow-y-auto">
+        <main className="flex-1 p-4 md:p-8 overflow-y-auto">
           {renderContent()}
         </main>
       </div>

@@ -42,7 +42,7 @@ export default function FilterBar({ onViewChange, onFilterChange, onPeriodChange
   const hidePeriodControls = selectedView === 'RECORD';
 
   return (
-    <div className="bg-gray-50 border-b border-gray-200">
+    <div className="hidden md:block bg-gray-50 border-b border-gray-200">
       {/* 1段目: グループとメンバー */}
       <div className="px-4 py-3 border-b border-gray-200">
         <div className="flex items-center justify-between">

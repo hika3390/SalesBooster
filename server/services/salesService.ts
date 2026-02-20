@@ -344,4 +344,16 @@ export const salesService = {
     await salesRecordRepository.remove(id);
     return existing;
   },
+
+  async importSalesRecords(records: { memberId: number; amount: number; recordDate: string; description?: string }[]) {
+    const data = records.map((r) => ({
+      memberId: r.memberId,
+      amount: r.amount,
+      description: r.description || undefined,
+      recordDate: new Date(r.recordDate),
+    }));
+
+    const result = await salesRecordRepository.createMany(data);
+    return { created: result.count };
+  },
 };

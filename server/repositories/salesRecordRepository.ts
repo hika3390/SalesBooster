@@ -72,4 +72,8 @@ export const salesRecordRepository = {
   create(data: { memberId: number; amount: number; description?: string; recordDate: Date }) {
     return prisma.salesRecord.create({ data });
   },
+
+  createMany(data: { memberId: number; amount: number; description?: string; recordDate: Date }[]) {
+    return prisma.salesRecord.createMany({ data });
+  },
 };

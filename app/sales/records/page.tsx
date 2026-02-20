@@ -5,7 +5,10 @@ import Header from '@/components/header/Header';
 import DataTable, { Column } from '@/components/common/DataTable';
 import Button from '@/components/common/Button';
 import { Dialog } from '@/components/common/Dialog';
+import DropdownMenu from '@/components/common/DropdownMenu';
 import EditSalesRecordModal from '@/components/sales/EditSalesRecordModal';
+import SalesInputModal from '@/components/SalesInputModal';
+import ImportSalesModal from '@/components/sales/ImportSalesModal';
 
 interface SalesRecord {
   id: number;
@@ -48,6 +51,8 @@ export default function SalesRecordsPage() {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [editingRecord, setEditingRecord] = useState<SalesRecord | null>(null);
+  const [isSalesModalOpen, setIsSalesModalOpen] = useState(false);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const pageSize = 10;
 
   const fetchRecords = async (page: number) => {
@@ -166,14 +171,26 @@ export default function SalesRecordsPage() {
       <Header subtitle="売上データ管理" />
 
       <main className="flex-1 p-4 md:p-8 overflow-y-auto">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+        <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-bold text-gray-800">売上データ管理</h2>
-          <div className="flex items-center space-x-2">
-            <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full sm:w-auto" />
-            <span className="text-gray-500 shrink-0">&mdash;</span>
-            <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full sm:w-auto" />
-            <Button label="検索" onClick={handleSearch} className="shrink-0" />
-          </div>
+          <DropdownMenu items={[
+            {
+              label: '売上入力',
+              icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>,
+              onClick: () => setIsSalesModalOpen(true),
+            },
+            {
+              label: 'インポート',
+              icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>,
+              onClick: () => setIsImportModalOpen(true),
+            },
+          ]} />
+        </div>
+        <div className="flex items-center space-x-2 mb-6">
+          <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full sm:w-auto" />
+          <span className="text-gray-500 shrink-0">&mdash;</span>
+          <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full sm:w-auto" />
+          <Button label="検索" onClick={handleSearch} className="shrink-0" />
         </div>
 
         <DataTable
@@ -213,6 +230,17 @@ export default function SalesRecordsPage() {
         record={editingRecord}
       />
 
+      <SalesInputModal
+        isOpen={isSalesModalOpen}
+        onClose={() => setIsSalesModalOpen(false)}
+        onSubmit={() => { setIsSalesModalOpen(false); fetchRecords(currentPage); }}
+      />
+
+      <ImportSalesModal
+        isOpen={isImportModalOpen}
+        onClose={() => setIsImportModalOpen(false)}
+        onImported={() => fetchRecords(currentPage)}
+      />
     </div>
   );
 }

@@ -214,6 +214,29 @@ export const salesController = {
     }
   },
 
+  async importSalesRecords(request: NextRequest) {
+    try {
+      const body = await request.json();
+      const { records } = body;
+
+      if (!Array.isArray(records) || records.length === 0) {
+        return ApiResponse.badRequest('records array is required');
+      }
+
+      const results = await salesService.importSalesRecords(records);
+
+      auditLogService.create({
+        request,
+        action: 'SALES_RECORD_CREATE',
+        detail: `売上データ一括インポート: ${results.created}件追加`,
+      }).catch((err) => console.error('Audit log failed:', err));
+
+      return ApiResponse.success(results);
+    } catch (error) {
+      return ApiResponse.fromError(error, 'Failed to import sales records');
+    }
+  },
+
   async deleteSalesRecord(request: NextRequest, id: number) {
     try {
       const deleted = await salesService.deleteSalesRecord(id);

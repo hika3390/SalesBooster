@@ -309,4 +309,39 @@ export const salesService = {
     const record = await salesRecordRepository.create(data);
     return record;
   },
+
+  async getSalesRecords(page: number, pageSize: number, filters?: { startDate?: Date; endDate?: Date; memberId?: number }) {
+    const { records, total } = await salesRecordRepository.findPaginated(page, pageSize, filters);
+    const totalPages = Math.max(1, Math.ceil(total / pageSize));
+
+    return {
+      records: records.map((r) => ({
+        id: r.id,
+        memberId: r.memberId,
+        memberName: r.member.name,
+        department: r.member.department?.name || null,
+        amount: r.amount,
+        description: r.description,
+        recordDate: r.recordDate.toISOString(),
+        createdAt: r.createdAt.toISOString(),
+      })),
+      total,
+      page,
+      pageSize,
+      totalPages,
+    };
+  },
+
+  async updateSalesRecord(id: number, data: { memberId?: number; amount?: number; description?: string; recordDate?: Date }) {
+    const existing = await salesRecordRepository.findById(id);
+    if (!existing) return null;
+    return salesRecordRepository.update(id, data);
+  },
+
+  async deleteSalesRecord(id: number) {
+    const existing = await salesRecordRepository.findById(id);
+    if (!existing) return null;
+    await salesRecordRepository.remove(id);
+    return existing;
+  },
 };

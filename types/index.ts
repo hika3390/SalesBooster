@@ -56,6 +56,8 @@ export const AUDIT_ACTION_LABELS: Record<string, string> = {
   GROUP_DELETE: 'グループ削除',
   GROUP_SYNC_MEMBERS: 'グループメンバー同期',
   SALES_RECORD_CREATE: '売上データ入力',
+  SALES_RECORD_UPDATE: '売上データ更新',
+  SALES_RECORD_DELETE: '売上データ削除',
   TARGET_UPSERT: '目標設定',
   SETTINGS_UPDATE: 'システム設定変更',
   INTEGRATION_STATUS_UPDATE: '連携ステータス変更',

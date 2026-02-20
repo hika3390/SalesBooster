@@ -159,4 +159,78 @@ export const salesController = {
       return ApiResponse.serverError();
     }
   },
+
+  async getSalesRecords(request: NextRequest) {
+    const { searchParams } = new URL(request.url);
+    const page = Number(searchParams.get('page')) || 1;
+    const pageSize = Number(searchParams.get('pageSize')) || 10;
+    const startDateParam = searchParams.get('startDate');
+    const endDateParam = searchParams.get('endDate');
+    const memberIdParam = searchParams.get('memberId');
+
+    const filters: { startDate?: Date; endDate?: Date; memberId?: number } = {};
+    if (startDateParam) filters.startDate = new Date(startDateParam);
+    if (endDateParam) filters.endDate = new Date(`${endDateParam}T23:59:59`);
+    if (memberIdParam) filters.memberId = Number(memberIdParam);
+
+    try {
+      const data = await salesService.getSalesRecords(page, pageSize, filters);
+      return ApiResponse.success(data);
+    } catch (error) {
+      console.error('Failed to fetch sales records:', error);
+      return ApiResponse.serverError();
+    }
+  },
+
+  async updateSalesRecord(request: NextRequest, id: number) {
+    try {
+      const body = await request.json();
+      const { memberId, amount, description, recordDate } = body;
+
+      if (!memberId || !amount || !recordDate) {
+        return ApiResponse.badRequest('memberId, amount, recordDate are required');
+      }
+
+      const updated = await salesService.updateSalesRecord(id, {
+        memberId: Number(memberId),
+        amount: Number(amount),
+        description: description || undefined,
+        recordDate: new Date(recordDate),
+      });
+
+      if (!updated) {
+        return ApiResponse.notFound('売上レコードが見つかりません');
+      }
+
+      auditLogService.create({
+        request,
+        action: 'SALES_RECORD_UPDATE',
+        detail: `売上ID:${id}を更新（メンバーID:${memberId}, 金額:${amount}円）`,
+      }).catch((err) => console.error('Audit log failed:', err));
+
+      return ApiResponse.success(updated);
+    } catch (error) {
+      return ApiResponse.fromError(error, 'Failed to update sales record');
+    }
+  },
+
+  async deleteSalesRecord(request: NextRequest, id: number) {
+    try {
+      const deleted = await salesService.deleteSalesRecord(id);
+
+      if (!deleted) {
+        return ApiResponse.notFound('売上レコードが見つかりません');
+      }
+
+      auditLogService.create({
+        request,
+        action: 'SALES_RECORD_DELETE',
+        detail: `売上ID:${id}を削除（メンバー:${deleted.member.name}, 金額:${deleted.amount}円）`,
+      }).catch((err) => console.error('Audit log failed:', err));
+
+      return ApiResponse.success({ message: '削除しました' });
+    } catch (error) {
+      return ApiResponse.fromError(error, 'Failed to delete sales record');
+    }
+  },
 };

@@ -20,4 +20,17 @@ export const integrationRepository = {
       data: { status },
     });
   },
+
+  updateConfig(id: number, config: Record<string, string>) {
+    return prisma.integration.update({
+      where: { id },
+      data: { config },
+    });
+  },
+
+  findByName(name: string) {
+    return prisma.integration.findFirst({
+      where: { name },
+    });
+  },
 };

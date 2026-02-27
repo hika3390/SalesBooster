@@ -2,6 +2,8 @@ import { NextRequest } from 'next/server';
 import { salesService } from '../services/salesService';
 import { groupService } from '../services/groupService';
 import { auditLogService } from '../services/auditLogService';
+import { lineNotificationService } from '../services/lineNotificationService';
+import { memberRepository } from '../repositories/memberRepository';
 import { ApiResponse } from '../lib/apiResponse';
 
 async function resolveMemberIds(searchParams: URLSearchParams): Promise<number[] | undefined> {
@@ -69,6 +71,16 @@ export const salesController = {
         action: 'SALES_RECORD_CREATE',
         detail: `メンバーID:${numMemberId}の売上${numAmount}円を記録`,
       }).catch((err) => console.error('Audit log failed:', err));
+
+      memberRepository.findById(numMemberId).then((member) => {
+        if (member) {
+          lineNotificationService.sendSalesNotification({
+            memberName: member.name,
+            amount: numAmount,
+            recordDate: new Date(recordDate),
+          });
+        }
+      }).catch((err) => console.error('LINE notification failed:', err));
 
       return ApiResponse.created(record);
     } catch (error) {

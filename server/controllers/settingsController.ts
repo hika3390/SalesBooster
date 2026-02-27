@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { settingsService } from '../services/settingsService';
 import { auditLogService } from '../services/auditLogService';
+import { lineNotificationService } from '../services/lineNotificationService';
 import { ApiResponse } from '../lib/apiResponse';
 
 export const settingsController = {
@@ -64,6 +65,50 @@ export const settingsController = {
       return ApiResponse.success(integration);
     } catch (error) {
       return ApiResponse.fromError(error, 'Failed to update integration');
+    }
+  },
+
+  async updateIntegrationConfig(request: NextRequest, id: number) {
+    try {
+      const body = await request.json();
+      const { config } = body;
+
+      if (!config || typeof config !== 'object') {
+        return ApiResponse.badRequest('config is required');
+      }
+
+      const integration = await settingsService.updateIntegrationConfig(id, config);
+
+      auditLogService.create({
+        request,
+        action: 'INTEGRATION_STATUS_UPDATE',
+        detail: `連携ID:${id}の設定を更新`,
+      }).catch((err) => console.error('Audit log failed:', err));
+
+      return ApiResponse.success(integration);
+    } catch (error) {
+      return ApiResponse.fromError(error, 'Failed to update integration config');
+    }
+  },
+
+  async testLineNotification(request: NextRequest) {
+    try {
+      const body = await request.json();
+      const { channelAccessToken, groupId } = body;
+
+      if (!channelAccessToken || !groupId) {
+        return ApiResponse.badRequest('channelAccessToken and groupId are required');
+      }
+
+      const result = await lineNotificationService.sendTestMessage(channelAccessToken, groupId);
+
+      if (!result.success) {
+        return ApiResponse.badRequest(result.error || 'テスト送信に失敗しました');
+      }
+
+      return ApiResponse.success({ message: 'テスト送信に成功しました' });
+    } catch (error) {
+      return ApiResponse.fromError(error, 'Failed to send test notification');
     }
   },
 };

@@ -216,22 +216,29 @@ async function main() {
   console.log('Sales records & targets created (February)');
 
   // --- 外部連携 ---
-  const integrationsData = [
-    { name: 'Salesforce', description: 'CRMデータの自動同期', status: 'CONNECTED' as const, icon: 'SF' },
-    { name: 'Slack', description: '売上通知の自動投稿', status: 'DISCONNECTED' as const, icon: 'SL' },
-    { name: 'Google Sheets', description: 'スプレッドシートへの自動エクスポート', status: 'DISCONNECTED' as const, icon: 'GS' },
-    { name: 'Microsoft Teams', description: 'チーム通知の自動投稿', status: 'DISCONNECTED' as const, icon: 'MT' },
-  ];
+  await prisma.integration.upsert({
+    where: { id: 1 },
+    update: {
+      name: 'LINE Messaging API',
+      description: 'グループトークへの売上通知',
+      icon: 'LINE',
+    },
+    create: {
+      id: 1,
+      name: 'LINE Messaging API',
+      description: 'グループトークへの売上通知',
+      status: 'DISCONNECTED',
+      icon: 'LINE',
+      config: undefined,
+    },
+  });
 
-  for (let i = 0; i < integrationsData.length; i++) {
-    await prisma.integration.upsert({
-      where: { id: i + 1 },
-      update: {},
-      create: { id: i + 1, ...integrationsData[i] },
-    });
-  }
+  // 旧モック連携を削除
+  await prisma.integration.deleteMany({
+    where: { id: { in: [2, 3, 4] } },
+  });
 
-  console.log('Integrations created:', integrationsData.length);
+  console.log('Integration created: LINE Messaging API');
 
 }
 

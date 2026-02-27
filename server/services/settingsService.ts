@@ -23,4 +23,12 @@ export const settingsService = {
   async updateIntegrationStatus(id: number, status: IntegrationStatus) {
     return integrationRepository.updateStatus(id, status);
   },
+
+  async updateIntegrationConfig(id: number, config: Record<string, string>) {
+    return integrationRepository.updateConfig(id, config);
+  },
+
+  async getIntegrationByName(name: string) {
+    return integrationRepository.findByName(name);
+  },
 };

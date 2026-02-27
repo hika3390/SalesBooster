@@ -50,7 +50,7 @@ export const salesRecordRepository = {
     return { records, total };
   },
 
-  update(id: number, data: { memberId?: number; amount?: number; description?: string; recordDate?: Date }) {
+  update(id: number, data: { memberId?: number; amount?: number; description?: string; recordDate?: Date; customFields?: Record<string, string> }) {
     return prisma.salesRecord.update({
       where: { id },
       data,
@@ -69,11 +69,11 @@ export const salesRecordRepository = {
     return result._min.recordDate;
   },
 
-  create(data: { memberId: number; amount: number; description?: string; recordDate: Date }) {
+  create(data: { memberId: number; amount: number; description?: string; recordDate: Date; customFields?: Record<string, string> }) {
     return prisma.salesRecord.create({ data });
   },
 
-  createMany(data: { memberId: number; amount: number; description?: string; recordDate: Date }[]) {
+  createMany(data: { memberId: number; amount: number; description?: string; recordDate: Date; customFields?: Record<string, string> }[]) {
     return prisma.salesRecord.createMany({ data });
   },
 };

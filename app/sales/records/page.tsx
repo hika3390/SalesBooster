@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Header from '@/components/header/Header';
 import DataTable, { Column } from '@/components/common/DataTable';
 import Button from '@/components/common/Button';
@@ -9,6 +9,7 @@ import DropdownMenu from '@/components/common/DropdownMenu';
 import EditSalesRecordModal from '@/components/sales/EditSalesRecordModal';
 import SalesInputModal from '@/components/SalesInputModal';
 import ImportSalesModal from '@/components/sales/ImportSalesModal';
+import type { CustomFieldDefinition } from '@/types/customField';
 
 interface SalesRecord {
   id: number;
@@ -17,6 +18,7 @@ interface SalesRecord {
   department: string | null;
   amount: number;
   description: string | null;
+  customFields: Record<string, string> | null;
   recordDate: string;
   createdAt: string;
 }
@@ -53,6 +55,7 @@ export default function SalesRecordsPage() {
   const [editingRecord, setEditingRecord] = useState<SalesRecord | null>(null);
   const [isSalesModalOpen, setIsSalesModalOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [customFieldDefs, setCustomFieldDefs] = useState<CustomFieldDefinition[]>([]);
   const pageSize = 10;
 
   const fetchRecords = async (page: number) => {
@@ -74,6 +77,10 @@ export default function SalesRecordsPage() {
 
   useEffect(() => {
     fetchRecords(currentPage);
+    fetch('/api/custom-fields?active=true')
+      .then((res) => res.json())
+      .then((data) => setCustomFieldDefs(data))
+      .catch(console.error);
   }, [currentPage]);
 
   const handleSearch = () => {
@@ -97,34 +104,45 @@ export default function SalesRecordsPage() {
     }
   };
 
-  const columns: Column<SalesRecord>[] = [
-    {
-      key: 'recordDate',
-      label: '受注日',
-      render: (r) => <span className="text-sm text-gray-600 whitespace-nowrap">{formatDate(r.recordDate)}</span>,
-    },
-    {
-      key: 'memberName',
-      label: 'メンバー',
-      render: (r) => <span className="text-sm font-medium text-gray-800">{r.memberName}</span>,
-    },
-    {
-      key: 'department',
-      label: '部署',
-      render: (r) => <span className="text-sm text-gray-600">{r.department || '-'}</span>,
-    },
-    {
-      key: 'amount',
-      label: '金額',
-      align: 'right',
-      render: (r) => <span className="text-sm font-medium text-gray-800">{formatAmount(r.amount)}円</span>,
-    },
-    {
-      key: 'description',
-      label: '備考',
-      render: (r) => <span className="text-sm text-gray-500 truncate max-w-[200px] block">{r.description || '-'}</span>,
-    },
-    {
+  const columns: Column<SalesRecord>[] = useMemo(() => {
+    const fixedColumns: Column<SalesRecord>[] = [
+      {
+        key: 'recordDate',
+        label: '受注日',
+        render: (r) => <span className="text-sm text-gray-600 whitespace-nowrap">{formatDate(r.recordDate)}</span>,
+      },
+      {
+        key: 'memberName',
+        label: 'メンバー',
+        render: (r) => <span className="text-sm font-medium text-gray-800">{r.memberName}</span>,
+      },
+      {
+        key: 'department',
+        label: '部署',
+        render: (r) => <span className="text-sm text-gray-600">{r.department || '-'}</span>,
+      },
+      {
+        key: 'amount',
+        label: '金額',
+        align: 'right',
+        render: (r) => <span className="text-sm font-medium text-gray-800">{formatAmount(r.amount)}円</span>,
+      },
+      {
+        key: 'description',
+        label: '備考',
+        render: (r) => <span className="text-sm text-gray-500 truncate max-w-[200px] block">{r.description || '-'}</span>,
+      },
+    ];
+
+    const dynamicColumns: Column<SalesRecord>[] = customFieldDefs.map((field) => ({
+      key: `cf_${field.id}`,
+      label: field.name,
+      render: (r: SalesRecord) => (
+        <span className="text-sm text-gray-600">{r.customFields?.[String(field.id)] || '-'}</span>
+      ),
+    }));
+
+    const actionsColumn: Column<SalesRecord> = {
       key: 'actions',
       label: '操作',
       align: 'right',
@@ -134,8 +152,10 @@ export default function SalesRecordsPage() {
           <Button label="削除" variant="outline" color="red" onClick={() => handleDelete(r)} className="px-3 py-1.5 text-xs" />
         </div>
       ),
-    },
-  ];
+    };
+
+    return [...fixedColumns, ...dynamicColumns, actionsColumn];
+  }, [customFieldDefs]);
 
   if (loading && !data) {
     return (
@@ -213,8 +233,20 @@ export default function SalesRecordsPage() {
               </div>
               {r.department && <div className="text-xs text-gray-500 mb-1">{r.department}</div>}
               <div className="text-sm font-bold text-gray-800 mb-1">{formatAmount(r.amount)}円</div>
-              {r.description && <div className="text-xs text-gray-500 mb-2">{r.description}</div>}
-              <div className="flex items-center space-x-2">
+              {r.description && <div className="text-xs text-gray-500 mb-1">{r.description}</div>}
+              {customFieldDefs.length > 0 && r.customFields && (
+                <div className="text-xs text-gray-500 mb-1 space-y-0.5">
+                  {customFieldDefs.map((field) => {
+                    const val = r.customFields?.[String(field.id)];
+                    return val ? (
+                      <div key={field.id}>
+                        <span className="text-gray-400">{field.name}:</span> {val}
+                      </div>
+                    ) : null;
+                  })}
+                </div>
+              )}
+              <div className="flex items-center space-x-2 mt-2">
                 <Button label="編集" variant="outline" color="blue" onClick={() => setEditingRecord(r)} className="px-3 py-1.5 text-xs" />
                 <Button label="削除" variant="outline" color="red" onClick={() => handleDelete(r)} className="px-3 py-1.5 text-xs" />
               </div>

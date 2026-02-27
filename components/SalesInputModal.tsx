@@ -5,6 +5,8 @@ import Modal from './common/Modal';
 import Button from './common/Button';
 import Select from './common/Select';
 import { Dialog } from './common/Dialog';
+import CustomFieldsRenderer from './sales/CustomFieldsRenderer';
+import type { CustomFieldDefinition, CustomFieldValues } from '@/types/customField';
 
 interface SalesInputModalProps {
   isOpen: boolean;
@@ -37,6 +39,8 @@ export default function SalesInputModal({ isOpen, onClose, onSubmit }: SalesInpu
   const [memo, setMemo] = useState('');
   const [members, setMembers] = useState<MemberOption[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  const [customFieldDefs, setCustomFieldDefs] = useState<CustomFieldDefinition[]>([]);
+  const [customFieldValues, setCustomFieldValues] = useState<CustomFieldValues>({});
 
   useEffect(() => {
     if (isOpen) {
@@ -44,11 +48,29 @@ export default function SalesInputModal({ isOpen, onClose, onSubmit }: SalesInpu
         .then((res) => res.json())
         .then((data) => setMembers(data))
         .catch(console.error);
+      fetch('/api/custom-fields?active=true')
+        .then((res) => res.json())
+        .then((data) => setCustomFieldDefs(data))
+        .catch(console.error);
     }
   }, [isOpen]);
 
   const handleSubmit = async () => {
     if (!memberId || !amount) return;
+
+    // 必須カスタムフィールドのバリデーション
+    for (const field of customFieldDefs) {
+      if (field.isRequired && !customFieldValues[String(field.id)]?.trim()) {
+        await Dialog.error(`「${field.name}」は必須項目です。`);
+        return;
+      }
+    }
+
+    // 空でない値のみ送信
+    const filteredCustomFields: Record<string, string> = {};
+    for (const [key, val] of Object.entries(customFieldValues)) {
+      if (val.trim()) filteredCustomFields[key] = val;
+    }
 
     setSubmitting(true);
     try {
@@ -60,6 +82,7 @@ export default function SalesInputModal({ isOpen, onClose, onSubmit }: SalesInpu
           amount: parseInt(amount) || 0,
           description: memo || undefined,
           recordDate: new Date(orderDate).toISOString(),
+          ...(Object.keys(filteredCustomFields).length > 0 ? { customFields: filteredCustomFields } : {}),
         }),
       });
 
@@ -76,6 +99,7 @@ export default function SalesInputModal({ isOpen, onClose, onSubmit }: SalesInpu
         setAmount('');
         setContracts('1');
         setMemo('');
+        setCustomFieldValues({});
         onClose();
       } else {
         const data = await res.json().catch(() => null);
@@ -176,6 +200,13 @@ export default function SalesInputModal({ isOpen, onClose, onSubmit }: SalesInpu
             placeholder="お客様名：&#10;物件名　："
           />
         </div>
+
+        {/* カスタムフィールド */}
+        <CustomFieldsRenderer
+          fields={customFieldDefs}
+          values={customFieldValues}
+          onChange={(id, val) => setCustomFieldValues((prev) => ({ ...prev, [id]: val }))}
+        />
       </div>
     </Modal>
   );

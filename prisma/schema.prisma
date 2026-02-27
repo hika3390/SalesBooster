@@ -62,6 +62,9 @@ enum AuditAction {
   SETTINGS_UPDATE
   INTEGRATION_STATUS_UPDATE
   DISPLAY_CONFIG_UPDATE
+  CUSTOM_FIELD_CREATE
+  CUSTOM_FIELD_UPDATE
+  CUSTOM_FIELD_DELETE
 }
 
 // ─── Auth Model ───
@@ -132,14 +135,15 @@ model GroupMember {
 }
 
 model SalesRecord {
-  id          Int      @id @default(autoincrement())
-  memberId    Int
-  amount      Int
-  description String?
-  recordDate  DateTime
-  member      Member   @relation(fields: [memberId], references: [id])
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id           Int      @id @default(autoincrement())
+  memberId     Int
+  amount       Int
+  description  String?
+  recordDate   DateTime
+  customFields Json?
+  member       Member   @relation(fields: [memberId], references: [id])
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }
 
 model Target {
@@ -194,6 +198,26 @@ model DisplayConfig {
   views               DisplayConfigView[]
   createdAt           DateTime             @default(now())
   updatedAt           DateTime             @updatedAt
+}
+
+// ─── Custom Fields ───
+
+enum CustomFieldType {
+  TEXT
+  DATE
+  SELECT
+}
+
+model CustomField {
+  id         Int             @id @default(autoincrement())
+  name       String
+  fieldType  CustomFieldType
+  options    Json?           // SELECT用: ["選択肢A", "選択肢B", ...]
+  isRequired Boolean         @default(false)
+  sortOrder  Int             @default(0)
+  isActive   Boolean         @default(true)
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
 }
 
 model DisplayConfigView {

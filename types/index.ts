@@ -62,6 +62,9 @@ export const AUDIT_ACTION_LABELS: Record<string, string> = {
   SETTINGS_UPDATE: 'システム設定変更',
   INTEGRATION_STATUS_UPDATE: '連携ステータス変更',
   DISPLAY_CONFIG_UPDATE: 'ディスプレイ設定変更',
+  CUSTOM_FIELD_CREATE: 'カスタムフィールド追加',
+  CUSTOM_FIELD_UPDATE: 'カスタムフィールド更新',
+  CUSTOM_FIELD_DELETE: 'カスタムフィールド削除',
 };
 
 export interface ReportData {

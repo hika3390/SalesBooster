@@ -5,6 +5,8 @@ import Modal from '@/components/common/Modal';
 import Button from '@/components/common/Button';
 import Select from '@/components/common/Select';
 import { Dialog } from '@/components/common/Dialog';
+import CustomFieldsRenderer from './CustomFieldsRenderer';
+import type { CustomFieldDefinition, CustomFieldValues } from '@/types/customField';
 
 interface SalesRecord {
   id: number;
@@ -12,6 +14,7 @@ interface SalesRecord {
   memberName: string;
   amount: number;
   description: string | null;
+  customFields: Record<string, string> | null;
   recordDate: string;
 }
 
@@ -35,12 +38,18 @@ export default function EditSalesRecordModal({ isOpen, onClose, onUpdated, recor
   const [memo, setMemo] = useState('');
   const [members, setMembers] = useState<MemberOption[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  const [customFieldDefs, setCustomFieldDefs] = useState<CustomFieldDefinition[]>([]);
+  const [customFieldValues, setCustomFieldValues] = useState<CustomFieldValues>({});
 
   useEffect(() => {
     if (isOpen) {
       fetch('/api/members')
         .then((res) => res.json())
         .then((data) => setMembers(data))
+        .catch(console.error);
+      fetch('/api/custom-fields?active=true')
+        .then((res) => res.json())
+        .then((data) => setCustomFieldDefs(data))
         .catch(console.error);
     }
   }, [isOpen]);
@@ -52,11 +61,25 @@ export default function EditSalesRecordModal({ isOpen, onClose, onUpdated, recor
       setMemo(record.description || '');
       const d = new Date(record.recordDate);
       setOrderDate(d.toISOString().slice(0, 16));
+      setCustomFieldValues(record.customFields || {});
     }
   }, [record]);
 
   const handleSubmit = async () => {
     if (!record || !memberId || !amount) return;
+
+    // 必須カスタムフィールドのバリデーション
+    for (const field of customFieldDefs) {
+      if (field.isRequired && !customFieldValues[String(field.id)]?.trim()) {
+        await Dialog.error(`「${field.name}」は必須項目です。`);
+        return;
+      }
+    }
+
+    const filteredCustomFields: Record<string, string> = {};
+    for (const [key, val] of Object.entries(customFieldValues)) {
+      if (val.trim()) filteredCustomFields[key] = val;
+    }
 
     setSubmitting(true);
     try {
@@ -68,6 +91,7 @@ export default function EditSalesRecordModal({ isOpen, onClose, onUpdated, recor
           amount: parseInt(amount) || 0,
           description: memo || undefined,
           recordDate: new Date(orderDate).toISOString(),
+          customFields: filteredCustomFields,
         }),
       });
 
@@ -149,6 +173,13 @@ export default function EditSalesRecordModal({ isOpen, onClose, onUpdated, recor
             placeholder="お客様名：&#10;物件名　："
           />
         </div>
+
+        {/* カスタムフィールド */}
+        <CustomFieldsRenderer
+          fields={customFieldDefs}
+          values={customFieldValues}
+          onChange={(id, val) => setCustomFieldValues((prev) => ({ ...prev, [id]: val }))}
+        />
       </div>
     </Modal>
   );

@@ -47,7 +47,7 @@ export const salesController = {
   async createSalesRecord(request: NextRequest) {
     try {
       const body = await request.json();
-      const { memberId, amount, description, recordDate } = body;
+      const { memberId, amount, description, recordDate, customFields } = body;
 
       if (!memberId || !amount || !recordDate) {
         return ApiResponse.badRequest('memberId, amount, recordDate are required');
@@ -61,6 +61,7 @@ export const salesController = {
         amount: numAmount,
         description,
         recordDate: new Date(recordDate),
+        ...(customFields ? { customFields } : {}),
       });
 
       auditLogService.create({
@@ -185,7 +186,7 @@ export const salesController = {
   async updateSalesRecord(request: NextRequest, id: number) {
     try {
       const body = await request.json();
-      const { memberId, amount, description, recordDate } = body;
+      const { memberId, amount, description, recordDate, customFields } = body;
 
       if (!memberId || !amount || !recordDate) {
         return ApiResponse.badRequest('memberId, amount, recordDate are required');
@@ -196,6 +197,7 @@ export const salesController = {
         amount: Number(amount),
         description: description || undefined,
         recordDate: new Date(recordDate),
+        ...(customFields !== undefined ? { customFields } : {}),
       });
 
       if (!updated) {

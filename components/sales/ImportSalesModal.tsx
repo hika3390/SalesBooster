@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import ImportModal, { ImportField, MappedRow, PreviewColumn, ParsedRow } from '@/components/common/ImportModal';
+import type { CustomFieldDefinition } from '@/types/customField';
 
 interface Member {
   id: number;
@@ -14,14 +15,14 @@ interface ImportSalesModalProps {
   onImported: () => void;
 }
 
-const FIELDS: ImportField[] = [
+const FIXED_FIELDS: ImportField[] = [
   { value: 'memberName', label: 'メンバー名 *', required: true, autoMapKeywords: ['メンバー', '名前', 'name', '担当', '営業'] },
   { value: 'amount', label: '金額 *', required: true, autoMapKeywords: ['金額', '売上', 'amount', '粗利'] },
   { value: 'recordDate', label: '受注日 *', required: true, autoMapKeywords: ['受注日', '日付', 'date', '契約日'] },
   { value: 'description', label: '備考', required: false, autoMapKeywords: ['備考', 'memo', 'description', 'メモ', '説明'] },
 ];
 
-const PREVIEW_COLUMNS: PreviewColumn[] = [
+const FIXED_PREVIEW_COLUMNS: PreviewColumn[] = [
   {
     key: 'memberName',
     label: 'メンバー',
@@ -59,11 +60,35 @@ function parseAmount(value: string): number | null {
 
 export default function ImportSalesModal({ isOpen, onClose, onImported }: ImportSalesModalProps) {
   const [members, setMembers] = useState<Member[]>([]);
+  const [customFieldDefs, setCustomFieldDefs] = useState<CustomFieldDefinition[]>([]);
+
+  const fields: ImportField[] = useMemo(() => {
+    const dynamicFields: ImportField[] = customFieldDefs.map((field) => ({
+      value: `cf_${field.id}`,
+      label: `${field.name}${field.isRequired ? ' *' : ''}`,
+      required: field.isRequired,
+      autoMapKeywords: [field.name],
+    }));
+    return [...FIXED_FIELDS, ...dynamicFields];
+  }, [customFieldDefs]);
+
+  const previewColumns: PreviewColumn[] = useMemo(() => {
+    const dynamicColumns: PreviewColumn[] = customFieldDefs.map((field) => ({
+      key: `cf_${field.id}`,
+      label: field.name,
+      render: (row: MappedRow) => row[`cf_${field.id}`] || '-',
+    }));
+    return [...FIXED_PREVIEW_COLUMNS, ...dynamicColumns];
+  }, [customFieldDefs]);
 
   const handleOpen = () => {
     fetch('/api/members')
       .then((res) => res.json())
       .then((data) => setMembers(data))
+      .catch(console.error);
+    fetch('/api/custom-fields?active=true')
+      .then((res) => res.json())
+      .then((data) => setCustomFieldDefs(data))
       .catch(console.error);
   };
 
@@ -93,24 +118,44 @@ export default function ImportSalesModal({ isOpen, onClose, onImported }: Import
       if (!rawDate) errors.push('受注日が未入力');
       else if (!date) errors.push(`受注日「${rawDate}」が不正`);
 
+      // カスタムフィールド値を収集
+      const cfValues: Record<string, string> = {};
+      for (const field of customFieldDefs) {
+        const cfKey = `cf_${field.id}`;
+        const cfHeader = Object.keys(mapping).find((k) => mapping[k] === cfKey);
+        const cfVal = cfHeader ? row[cfHeader].trim() : '';
+        if (cfVal) cfValues[cfKey] = cfVal;
+        if (field.isRequired && !cfVal) errors.push(`${field.name}が未入力`);
+      }
+
       return {
         memberName: rawName,
         memberId: member ? String(member.id) : undefined,
         amount: amount !== null ? String(amount) : undefined,
         recordDate: date ? date.toISOString() : undefined,
         description: desc || undefined,
+        ...cfValues,
         error: errors.length > 0 ? errors.join(', ') : undefined,
       } as MappedRow;
     });
   };
 
   const handleImport = async (validRows: MappedRow[]) => {
-    const payload = validRows.map((row) => ({
-      memberId: Number(row.memberId),
-      amount: Number(row.amount),
-      recordDate: row.recordDate!,
-      description: row.description || undefined,
-    }));
+    const payload = validRows.map((row) => {
+      const customFields: Record<string, string> = {};
+      for (const field of customFieldDefs) {
+        const val = row[`cf_${field.id}`];
+        if (val) customFields[String(field.id)] = val;
+      }
+
+      return {
+        memberId: Number(row.memberId),
+        amount: Number(row.amount),
+        recordDate: row.recordDate!,
+        description: row.description || undefined,
+        ...(Object.keys(customFields).length > 0 ? { customFields } : {}),
+      };
+    });
 
     const res = await fetch('/api/sales/import', {
       method: 'POST',
@@ -135,8 +180,8 @@ export default function ImportSalesModal({ isOpen, onClose, onImported }: Import
       onClose={onClose}
       onImported={onImported}
       titlePrefix="売上データ"
-      fields={FIELDS}
-      previewColumns={PREVIEW_COLUMNS}
+      fields={fields}
+      previewColumns={previewColumns}
       buildMappedData={buildMappedData}
       onImport={handleImport}
       onOpen={handleOpen}

@@ -305,7 +305,7 @@ export const salesService = {
     return { columns: [totalColumn, ...monthColumns] };
   },
 
-  async createSalesRecord(data: { memberId: number; amount: number; description?: string; recordDate: Date }) {
+  async createSalesRecord(data: { memberId: number; amount: number; description?: string; recordDate: Date; customFields?: Record<string, string> }) {
     const record = await salesRecordRepository.create(data);
     return record;
   },
@@ -322,6 +322,7 @@ export const salesService = {
         department: r.member.department?.name || null,
         amount: r.amount,
         description: r.description,
+        customFields: (r.customFields as Record<string, string>) || null,
         recordDate: r.recordDate.toISOString(),
         createdAt: r.createdAt.toISOString(),
       })),
@@ -332,7 +333,7 @@ export const salesService = {
     };
   },
 
-  async updateSalesRecord(id: number, data: { memberId?: number; amount?: number; description?: string; recordDate?: Date }) {
+  async updateSalesRecord(id: number, data: { memberId?: number; amount?: number; description?: string; recordDate?: Date; customFields?: Record<string, string> }) {
     const existing = await salesRecordRepository.findById(id);
     if (!existing) return null;
     return salesRecordRepository.update(id, data);
@@ -345,12 +346,13 @@ export const salesService = {
     return existing;
   },
 
-  async importSalesRecords(records: { memberId: number; amount: number; recordDate: string; description?: string }[]) {
+  async importSalesRecords(records: { memberId: number; amount: number; recordDate: string; description?: string; customFields?: Record<string, string> }[]) {
     const data = records.map((r) => ({
       memberId: r.memberId,
       amount: r.amount,
       description: r.description || undefined,
       recordDate: new Date(r.recordDate),
+      ...(r.customFields ? { customFields: r.customFields } : {}),
     }));
 
     const result = await salesRecordRepository.createMany(data);

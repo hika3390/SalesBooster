@@ -20,6 +20,7 @@ interface HeaderProps {
 export default function Header({ onAddSalesClick, subtitle, rightContent, activeSettingsSection, onSettingsSectionChange }: HeaderProps) {
   const { data: session } = useSession();
   const userName = session?.user?.name || 'ユーザー';
+  const isAdmin = session?.user?.role === 'ADMIN';
   const router = useRouter();
   const pathname = usePathname();
   const isSettingsPage = pathname.startsWith('/settings');
@@ -58,7 +59,7 @@ export default function Header({ onAddSalesClick, subtitle, rightContent, active
           {/* PC: UserDropdown */}
           {(rightContent || onAddSalesClick) && <div className="hidden md:block h-8 w-px bg-gray-300"></div>}
           <div className="hidden md:block">
-            <UserDropdown userName={userName} />
+            <UserDropdown userName={userName} isAdmin={isAdmin} />
           </div>
 
           {/* モバイル: ハンバーガーメニュー */}
@@ -89,6 +90,7 @@ export default function Header({ onAddSalesClick, subtitle, rightContent, active
                   </svg>
                   <span>ダッシュボード</span>
                 </button>
+                {isAdmin && (
                 <button
                   onClick={() => { setMobileMenuOpen(false); router.push('/settings'); }}
                   className="w-full flex items-center space-x-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
@@ -99,6 +101,7 @@ export default function Header({ onAddSalesClick, subtitle, rightContent, active
                   </svg>
                   <span>設定</span>
                 </button>
+                )}
                 <button
                   onClick={() => { setMobileMenuOpen(false); router.push('/sales/records'); }}
                   className="w-full flex items-center space-x-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"

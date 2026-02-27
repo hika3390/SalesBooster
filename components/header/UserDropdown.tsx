@@ -6,9 +6,10 @@ import { signOut } from 'next-auth/react';
 
 interface UserDropdownProps {
   userName: string;
+  isAdmin?: boolean;
 }
 
-export default function UserDropdown({ userName }: UserDropdownProps) {
+export default function UserDropdown({ userName, isAdmin }: UserDropdownProps) {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -58,6 +59,7 @@ export default function UserDropdown({ userName }: UserDropdownProps) {
             </svg>
             <span>ディスプレイモード</span>
           </button>
+          {isAdmin && (
           <button
             onClick={() => { setIsOpen(false); router.push('/settings'); }}
             className="w-full flex items-center space-x-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
@@ -68,6 +70,7 @@ export default function UserDropdown({ userName }: UserDropdownProps) {
             </svg>
             <span>設定</span>
           </button>
+          )}
           <button
             onClick={() => { setIsOpen(false); router.push('/sales/records'); }}
             className="w-full flex items-center space-x-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"

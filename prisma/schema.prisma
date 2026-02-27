@@ -20,6 +20,11 @@ enum MemberRole {
   MANAGER
 }
 
+enum UserRole {
+  ADMIN
+  USER
+}
+
 enum IntegrationStatus {
   DISCONNECTED
   CONNECTED
@@ -66,6 +71,7 @@ model User {
   email     String     @unique
   password  String
   name      String?
+  role      UserRole   @default(USER)
   sessions  Session[]
   auditLogs AuditLog[]
   createdAt DateTime   @default(now())

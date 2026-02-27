@@ -27,11 +27,12 @@ async function main() {
   // --- 初期ユーザー ---
   const adminUser = await prisma.user.upsert({
     where: { email: 'admin@salesbooster.com' },
-    update: {},
+    update: { role: 'ADMIN' },
     create: {
       email: 'admin@salesbooster.com',
       password: hashSync(adminPassword, 10),
       name: '管理者',
+      role: 'ADMIN',
     },
   });
 

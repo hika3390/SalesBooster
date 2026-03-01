@@ -163,9 +163,11 @@ export default function IntegrationSettings() {
       <div className="bg-white rounded-lg border border-gray-200 p-6">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center space-x-4">
-            <div className="w-12 h-12 rounded-lg bg-green-100 flex items-center justify-center font-bold text-green-700 text-xs">
-              LINE
-            </div>
+            <img
+              src="/line-icon.svg"
+              alt="LINE"
+              className="w-12 h-12 rounded-lg"
+            />
             <div>
               <div className="font-semibold text-gray-800">LINE Messaging API</div>
               <div className="text-sm text-gray-500">{integration.description}</div>

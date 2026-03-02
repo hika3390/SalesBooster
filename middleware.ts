@@ -2,7 +2,7 @@ import { getToken } from 'next-auth/jwt';
 import { NextRequest, NextResponse } from 'next/server';
 
 const ADMIN_PATHS = ['/settings'];
-const ADMIN_API_PREFIXES = ['/api/settings', '/api/integrations'];
+const ADMIN_API_PREFIXES = ['/api/settings', '/api/integrations', '/api/custom-slides', '/api/upload'];
 
 export async function middleware(req: NextRequest) {
   const token = await getToken({ req });

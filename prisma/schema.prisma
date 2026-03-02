@@ -43,6 +43,13 @@ enum DisplayViewType {
   TREND_GRAPH
   REPORT
   RECORD
+  CUSTOM_SLIDE
+}
+
+enum CustomSlideType {
+  IMAGE
+  YOUTUBE
+  TEXT
 }
 
 enum AuditAction {
@@ -65,6 +72,9 @@ enum AuditAction {
   CUSTOM_FIELD_CREATE
   CUSTOM_FIELD_UPDATE
   CUSTOM_FIELD_DELETE
+  CUSTOM_SLIDE_CREATE
+  CUSTOM_SLIDE_UPDATE
+  CUSTOM_SLIDE_DELETE
 }
 
 // ─── Auth Model ───
@@ -221,12 +231,25 @@ model CustomField {
 }
 
 model DisplayConfigView {
-  id              Int           @id @default(autoincrement())
+  id              Int              @id @default(autoincrement())
   displayConfigId Int
   viewType        DisplayViewType
-  enabled         Boolean       @default(true)
-  duration        Int           @default(30) // 秒
-  order           Int           @default(0)
-  title           String        @default("")
-  displayConfig   DisplayConfig @relation(fields: [displayConfigId], references: [id], onDelete: Cascade)
+  enabled         Boolean          @default(true)
+  duration        Int              @default(30) // 秒
+  order           Int              @default(0)
+  title           String           @default("")
+  customSlideId   Int?
+  customSlide     CustomSlide?     @relation(fields: [customSlideId], references: [id], onDelete: SetNull)
+  displayConfig   DisplayConfig    @relation(fields: [displayConfigId], references: [id], onDelete: Cascade)
+}
+
+model CustomSlide {
+  id        Int              @id @default(autoincrement())
+  slideType CustomSlideType
+  title     String           @default("")
+  content   String           @default("") // YOUTUBE: URL, TEXT: 本文
+  imageUrl  String           @default("") // IMAGE: Supabase Storage URL
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  views     DisplayConfigView[]
 }

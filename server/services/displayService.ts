@@ -24,6 +24,14 @@ export const displayService = {
         duration: v.duration,
         order: v.order,
         title: v.title,
+        customSlideId: v.customSlideId ?? null,
+        customSlide: v.customSlide ? {
+          id: v.customSlide.id,
+          slideType: v.customSlide.slideType,
+          title: v.customSlide.title,
+          content: v.customSlide.content,
+          imageUrl: v.customSlide.imageUrl,
+        } : undefined,
       })),
     };
   },
@@ -44,6 +52,7 @@ export const displayService = {
         duration: v.duration,
         order: v.order,
         title: v.title ?? '',
+        customSlideId: v.customSlideId ?? null,
       })),
     });
   },

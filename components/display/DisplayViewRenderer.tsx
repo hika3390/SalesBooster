@@ -1,11 +1,13 @@
 'use client';
 
 import { ViewType, SalesPerson, ReportData, RankingBoardData, TrendData } from '@/types';
+import { CustomSlideData } from '@/types/display';
 import SalesPerformance from '@/components/SalesPerformance';
 import CumulativeChart from '@/components/CumulativeChart';
 import TrendChart from '@/components/TrendChart';
 import ReportView from '@/components/report/ReportView';
 import RankingBoard from '@/components/record/RankingBoard';
+import CustomSlideView from './CustomSlideView';
 
 interface DisplayViewRendererProps {
   view: ViewType;
@@ -17,6 +19,8 @@ interface DisplayViewRendererProps {
   trendData: TrendData[];
   reportData: ReportData | null;
   rankingData: RankingBoardData | null;
+  customSlide?: CustomSlideData | null;
+  onVideoEnd?: () => void;
 }
 
 export default function DisplayViewRenderer({
@@ -29,6 +33,8 @@ export default function DisplayViewRenderer({
   trendData,
   reportData,
   rankingData,
+  customSlide,
+  onVideoEnd,
 }: DisplayViewRendererProps) {
   if (loading) {
     return (
@@ -50,6 +56,8 @@ export default function DisplayViewRenderer({
       return reportData ? <ReportView reportData={reportData} darkMode={darkMode} /> : null;
     case 'RECORD':
       return rankingData ? <RankingBoard data={rankingData} darkMode={darkMode} /> : null;
+    case 'CUSTOM_SLIDE':
+      return customSlide ? <CustomSlideView slide={customSlide} darkMode={darkMode} onVideoEnd={onVideoEnd} /> : null;
     default:
       return (
         <div className="h-full flex items-center justify-center" style={{ color: 'var(--display-text-secondary)' }}>

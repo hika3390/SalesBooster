@@ -3,12 +3,24 @@ import { ViewType, VIEW_TYPE_LABELS } from './index';
 export const VALID_TRANSITIONS = ['NONE', 'FADE', 'SLIDE_LEFT', 'SLIDE_RIGHT'] as const;
 export type TransitionType = (typeof VALID_TRANSITIONS)[number];
 
+export type CustomSlideType = 'IMAGE' | 'YOUTUBE' | 'TEXT';
+
+export interface CustomSlideData {
+  id: number;
+  slideType: CustomSlideType;
+  title: string;
+  content: string;
+  imageUrl: string;
+}
+
 export interface DisplayViewConfig {
   viewType: ViewType;
   enabled: boolean;
   duration: number;  // 秒
   order: number;
   title: string;
+  customSlideId?: number | null;
+  customSlide?: CustomSlideData | null;
 }
 
 export function getViewTitle(view: DisplayViewConfig): string {

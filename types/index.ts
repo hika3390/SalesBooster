@@ -8,7 +8,7 @@ export interface SalesPerson {
   department?: string;
 }
 
-export const VALID_VIEW_TYPES = ['PERIOD_GRAPH', 'CUMULATIVE_GRAPH', 'TREND_GRAPH', 'REPORT', 'RECORD'] as const;
+export const VALID_VIEW_TYPES = ['PERIOD_GRAPH', 'CUMULATIVE_GRAPH', 'TREND_GRAPH', 'REPORT', 'RECORD', 'CUSTOM_SLIDE'] as const;
 export type ViewType = (typeof VALID_VIEW_TYPES)[number];
 
 export const VIEW_TYPE_LABELS: Record<ViewType, string> = {
@@ -17,6 +17,7 @@ export const VIEW_TYPE_LABELS: Record<ViewType, string> = {
   TREND_GRAPH: '推移グラフ',
   REPORT: 'レポート',
   RECORD: 'レコード',
+  CUSTOM_SLIDE: 'カスタムスライド',
 };
 
 export type PeriodUnit = '月' | '週' | '日';
@@ -65,6 +66,9 @@ export const AUDIT_ACTION_LABELS: Record<string, string> = {
   CUSTOM_FIELD_CREATE: 'カスタムフィールド追加',
   CUSTOM_FIELD_UPDATE: 'カスタムフィールド更新',
   CUSTOM_FIELD_DELETE: 'カスタムフィールド削除',
+  CUSTOM_SLIDE_CREATE: 'カスタムスライド追加',
+  CUSTOM_SLIDE_UPDATE: 'カスタムスライド更新',
+  CUSTOM_SLIDE_DELETE: 'カスタムスライド削除',
 };
 
 export interface ReportData {

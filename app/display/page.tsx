@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { DisplayConfig, DEFAULT_DISPLAY_CONFIG, TransitionType } from '@/types/display';
+import { DisplayConfig, DEFAULT_DISPLAY_CONFIG, TransitionType, CustomSlideData } from '@/types/display';
 import { ViewType } from '@/types';
 import { useDisplayMode } from '@/hooks/useDisplayMode';
 import { useDisplayData } from '@/hooks/useDisplayData';
@@ -62,7 +62,7 @@ function DisplayContent({
   setShowHeader: (v: boolean) => void;
   onExit: () => void;
 }) {
-  const { currentView, currentViewTitle, currentViewIndex, enabledViews, progress, goToNext, goToPrev } = useDisplayMode(config);
+  const { currentView, currentViewTitle, currentViewIndex, currentViewConfig, enabledViews, progress, isYouTubeView, goToNext, goToPrev } = useDisplayMode(config);
   const { salesData, recordCount, cumulativeSalesData, trendData, reportData, rankingData, loading, error } = useDisplayData(config);
 
   useAutoHideCursor(true, 3000);
@@ -70,6 +70,9 @@ function DisplayContent({
   const [transitionPhase, setTransitionPhase] = useState<'idle' | 'exiting' | 'entering'>('idle');
   const [displayedView, setDisplayedView] = useState<ViewType>(currentView);
   const [displayedTitle, setDisplayedTitle] = useState(currentViewTitle);
+  const [displayedCustomSlide, setDisplayedCustomSlide] = useState<CustomSlideData | null>(
+    currentViewConfig?.customSlide ?? null
+  );
   const transitionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -81,6 +84,7 @@ function DisplayContent({
     if (config.transition === 'NONE') {
       setDisplayedView(currentView);
       setDisplayedTitle(currentViewTitle);
+      setDisplayedCustomSlide(currentViewConfig?.customSlide ?? null);
       setTransitionPhase('idle');
       return;
     }
@@ -89,6 +93,7 @@ function DisplayContent({
     transitionTimerRef.current = setTimeout(() => {
       setDisplayedView(currentView);
       setDisplayedTitle(currentViewTitle);
+      setDisplayedCustomSlide(currentViewConfig?.customSlide ?? null);
       requestAnimationFrame(() => {
         setTransitionPhase('entering');
         transitionTimerRef.current = setTimeout(() => {
@@ -102,7 +107,7 @@ function DisplayContent({
         clearTimeout(transitionTimerRef.current);
       }
     };
-  }, [currentView, config.transition]);
+  }, [currentView, config.transition, currentViewConfig]);
 
   const handleExit = () => {
     if (window.opener) {
@@ -166,6 +171,8 @@ function DisplayContent({
             trendData={trendData}
             reportData={reportData}
             rankingData={rankingData}
+            customSlide={displayedCustomSlide}
+            onVideoEnd={isYouTubeView ? goToNext : undefined}
           />
         </div>
         )}

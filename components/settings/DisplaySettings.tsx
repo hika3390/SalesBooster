@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { DisplayConfig, DisplayViewConfig, DEFAULT_DISPLAY_CONFIG, TransitionType } from '@/types/display';
+import { useState, useEffect, useCallback } from 'react';
+import { DisplayConfig, DisplayViewConfig, DEFAULT_DISPLAY_CONFIG, TransitionType, CustomSlideData } from '@/types/display';
 import { VIEW_TYPE_LABELS } from '@/types';
 import Button from '@/components/common/Button';
 import Select from '@/components/common/Select';
+import AddCustomSlideModal from './AddCustomSlideModal';
 
 const MESSAGE_DISPLAY_MS = 3000;
 
@@ -18,28 +19,86 @@ interface MemberOption {
   name: string;
 }
 
+const SLIDE_TYPE_LABELS: Record<string, string> = {
+  IMAGE: '画像',
+  YOUTUBE: 'YouTube',
+  TEXT: 'テキスト',
+};
+
 export default function DisplaySettings() {
   const [config, setConfig] = useState<DisplayConfig>(DEFAULT_DISPLAY_CONFIG);
   const [groups, setGroups] = useState<GroupOption[]>([]);
   const [members, setMembers] = useState<MemberOption[]>([]);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [customSlides, setCustomSlides] = useState<CustomSlideData[]>([]);
+  const [showAddSlideModal, setShowAddSlideModal] = useState(false);
+  const [deletingSlideId, setDeletingSlideId] = useState<number | null>(null);
+
+  const loadCustomSlides = useCallback(async () => {
+    try {
+      const res = await fetch('/api/custom-slides');
+      const data = await res.json();
+      const slides: CustomSlideData[] = Array.isArray(data) ? data : [];
+      setCustomSlides(slides);
+      return slides;
+    } catch {
+      return [];
+    }
+  }, []);
 
   useEffect(() => {
-    // 設定を読み込み
-    fetch('/api/settings/display')
-      .then((res) => {
-        if (!res.ok) throw new Error('API error');
-        return res.json();
-      })
-      .then((data) => {
-        if (!data.views || !Array.isArray(data.views)) {
-          setConfig(DEFAULT_DISPLAY_CONFIG);
-        } else {
-          setConfig({ ...DEFAULT_DISPLAY_CONFIG, ...data });
-        }
-      })
-      .catch(() => setConfig(DEFAULT_DISPLAY_CONFIG));
+    const loadAll = async () => {
+      // 設定とカスタムスライドを並列で読み込み
+      const [configData, slides] = await Promise.all([
+        fetch('/api/settings/display')
+          .then((res) => {
+            if (!res.ok) throw new Error('API error');
+            return res.json();
+          })
+          .catch(() => null),
+        loadCustomSlides(),
+      ]);
+
+      let loadedConfig: DisplayConfig;
+      if (!configData || !configData.views || !Array.isArray(configData.views)) {
+        loadedConfig = DEFAULT_DISPLAY_CONFIG;
+      } else {
+        loadedConfig = { ...DEFAULT_DISPLAY_CONFIG, ...configData };
+      }
+
+      // 孤立したカスタムスライド（ビューに紐付いていないもの）をビューに追加
+      const linkedSlideIds = new Set(
+        loadedConfig.views
+          .filter((v) => v.viewType === 'CUSTOM_SLIDE' && v.customSlideId)
+          .map((v) => v.customSlideId)
+      );
+      const orphanSlides = slides.filter((s) => !linkedSlideIds.has(s.id));
+      if (orphanSlides.length > 0) {
+        const newViews = [
+          ...loadedConfig.views,
+          ...orphanSlides.map((s, i) => ({
+            viewType: 'CUSTOM_SLIDE' as const,
+            enabled: true,
+            duration: 15,
+            order: loadedConfig.views.length + i,
+            title: s.title || SLIDE_TYPE_LABELS[s.slideType] || 'カスタムスライド',
+            customSlideId: s.id,
+          })),
+        ];
+        loadedConfig = { ...loadedConfig, views: newViews };
+        // 孤立スライドをDisplayConfigViewにも永続化
+        fetch('/api/settings/display', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(loadedConfig),
+        }).catch(() => {});
+      }
+
+      setConfig(loadedConfig);
+    };
+
+    loadAll();
 
     // グループ一覧を読み込み
     fetch('/api/groups')
@@ -52,22 +111,23 @@ export default function DisplaySettings() {
       .then((res) => res.json())
       .then((data) => setMembers(data.map((m: { id: number; name: string }) => ({ id: m.id, name: m.name }))))
       .catch(() => {});
-  }, []);
+  }, [loadCustomSlides]);
+
+  const saveConfig = async (configToSave: DisplayConfig) => {
+    const res = await fetch('/api/settings/display', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(configToSave),
+    });
+    if (!res.ok) throw new Error('保存に失敗しました');
+  };
 
   const handleSave = async () => {
     setSaving(true);
     setMessage(null);
     try {
-      const res = await fetch('/api/settings/display', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(config),
-      });
-      if (res.ok) {
-        setMessage({ type: 'success', text: '設定を保存しました' });
-      } else {
-        setMessage({ type: 'error', text: '保存に失敗しました' });
-      }
+      await saveConfig(config);
+      setMessage({ type: 'success', text: '設定を保存しました' });
     } catch {
       setMessage({ type: 'error', text: '保存に失敗しました' });
     } finally {
@@ -81,6 +141,65 @@ export default function DisplaySettings() {
       ...prev,
       views: prev.views.map((v, i) => (i === index ? { ...v, ...updates } : v)),
     }));
+  };
+
+  const handleSlideCreated = async () => {
+    setShowAddSlideModal(false);
+    try {
+      const res = await fetch('/api/custom-slides');
+      const slides: CustomSlideData[] = await res.json();
+      setCustomSlides(slides);
+      const latest = slides[slides.length - 1];
+      if (latest) {
+        const newConfig: DisplayConfig = {
+          ...config,
+          views: [
+            ...config.views,
+            {
+              viewType: 'CUSTOM_SLIDE' as const,
+              enabled: true,
+              duration: 15,
+              order: config.views.length,
+              title: latest.title || SLIDE_TYPE_LABELS[latest.slideType] || 'カスタムスライド',
+              customSlideId: latest.id,
+            },
+          ],
+        };
+        setConfig(newConfig);
+        await saveConfig(newConfig);
+        setMessage({ type: 'success', text: 'スライドを追加しました' });
+        setTimeout(() => setMessage(null), MESSAGE_DISPLAY_MS);
+      }
+    } catch {
+      setMessage({ type: 'error', text: 'スライドの追加に失敗しました' });
+      setTimeout(() => setMessage(null), MESSAGE_DISPLAY_MS);
+    }
+  };
+
+  const handleDeleteSlide = async (slideId: number) => {
+    if (!confirm('このスライドを削除しますか？')) return;
+    setDeletingSlideId(slideId);
+    try {
+      const res = await fetch(`/api/custom-slides/${slideId}`, { method: 'DELETE' });
+      if (res.ok) {
+        setCustomSlides((prev) => prev.filter((s) => s.id !== slideId));
+        const newConfig: DisplayConfig = {
+          ...config,
+          views: config.views
+            .filter((v) => !(v.viewType === 'CUSTOM_SLIDE' && v.customSlideId === slideId))
+            .map((v, i) => ({ ...v, order: i })),
+        };
+        setConfig(newConfig);
+        await saveConfig(newConfig);
+        setMessage({ type: 'success', text: 'スライドを削除しました' });
+        setTimeout(() => setMessage(null), MESSAGE_DISPLAY_MS);
+      }
+    } catch {
+      setMessage({ type: 'error', text: 'スライドの削除に失敗しました' });
+      setTimeout(() => setMessage(null), MESSAGE_DISPLAY_MS);
+    } finally {
+      setDeletingSlideId(null);
+    }
   };
 
   const moveView = (index: number, direction: 'up' | 'down') => {
@@ -99,6 +218,10 @@ export default function DisplaySettings() {
     });
   };
 
+  const isYouTubeSlide = (view: DisplayViewConfig) =>
+    view.viewType === 'CUSTOM_SLIDE'
+    && customSlides.find((s) => s.id === view.customSlideId)?.slideType === 'YOUTUBE';
+
   return (
     <div>
       <h2 className="text-xl font-bold text-gray-800 mb-6">ディスプレイモード設定</h2>
@@ -114,18 +237,22 @@ export default function DisplaySettings() {
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-4 py-3 text-left font-medium text-gray-600 w-16">順番</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-600 w-32">ビュー名</th>
+                  <th className="px-4 py-3 text-left font-medium text-gray-600 w-44">ビュー名</th>
                   <th className="px-4 py-3 text-left font-medium text-gray-600">表示タイトル</th>
                   <th className="px-4 py-3 text-center font-medium text-gray-600 w-20">有効</th>
                   <th className="px-4 py-3 text-center font-medium text-gray-600 w-32">表示秒数</th>
-                  <th className="px-4 py-3 text-center font-medium text-gray-600 w-24">操作</th>
+                  <th className="px-4 py-3 text-center font-medium text-gray-600 w-28">操作</th>
                 </tr>
               </thead>
               <tbody>
                 {config.views.map((view, index) => (
-                  <tr key={view.viewType} className="border-t border-gray-200">
+                  <tr key={`${view.viewType}-${view.customSlideId ?? index}`} className="border-t border-gray-200">
                     <td className="px-4 py-3 text-gray-600">{index + 1}</td>
-                    <td className="px-4 py-3 font-medium text-gray-800">{VIEW_TYPE_LABELS[view.viewType]}</td>
+                    <td className="px-4 py-3 font-medium text-gray-800">
+                      {view.viewType === 'CUSTOM_SLIDE'
+                        ? `カスタムスライド (${SLIDE_TYPE_LABELS[customSlides.find((s) => s.id === view.customSlideId)?.slideType ?? ''] || ''})`
+                        : VIEW_TYPE_LABELS[view.viewType]}
+                    </td>
                     <td className="px-4 py-3">
                       <input
                         type="text"
@@ -144,17 +271,21 @@ export default function DisplaySettings() {
                       />
                     </td>
                     <td className="px-4 py-3 text-center">
-                      <div className="flex items-center justify-center space-x-1">
-                        <input
-                          type="number"
-                          value={view.duration}
-                          onChange={(e) => updateView(index, { duration: Math.max(5, parseInt(e.target.value) || 5) })}
-                          min={5}
-                          max={600}
-                          className="w-20 border border-gray-300 rounded px-2 py-1 text-sm text-center"
-                        />
-                        <span className="text-gray-500">秒</span>
-                      </div>
+                      {isYouTubeSlide(view) ? (
+                        <span className="text-sm text-gray-400">動画終了まで</span>
+                      ) : (
+                        <div className="flex items-center justify-center space-x-1">
+                          <input
+                            type="number"
+                            value={view.duration}
+                            onChange={(e) => updateView(index, { duration: Math.max(5, parseInt(e.target.value) || 5) })}
+                            min={5}
+                            max={600}
+                            className="w-20 border border-gray-300 rounded px-2 py-1 text-sm text-center"
+                          />
+                          <span className="text-gray-500">秒</span>
+                        </div>
+                      )}
                     </td>
                     <td className="px-4 py-3 text-center">
                       <div className="flex items-center justify-center space-x-1">
@@ -176,6 +307,18 @@ export default function DisplaySettings() {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                           </svg>
                         </button>
+                        {view.viewType === 'CUSTOM_SLIDE' && (
+                          <button
+                            onClick={() => view.customSlideId && handleDeleteSlide(view.customSlideId)}
+                            disabled={deletingSlideId === view.customSlideId}
+                            className="p-1 rounded text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors disabled:opacity-50"
+                            title="スライドを削除"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -187,11 +330,15 @@ export default function DisplaySettings() {
           {/* モバイル: カードリスト表示 */}
           <div className="md:hidden space-y-3">
             {config.views.map((view, index) => (
-              <div key={view.viewType} className="border border-gray-200 rounded-lg p-3">
+              <div key={`${view.viewType}-${view.customSlideId ?? index}`} className="border border-gray-200 rounded-lg p-3">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center space-x-2">
                     <span className="text-xs text-gray-400 font-medium">#{index + 1}</span>
-                    <span className="text-sm font-medium text-gray-800">{VIEW_TYPE_LABELS[view.viewType]}</span>
+                    <span className="text-sm font-medium text-gray-800">
+                      {view.viewType === 'CUSTOM_SLIDE'
+                        ? `カスタムスライド (${SLIDE_TYPE_LABELS[customSlides.find((s) => s.id === view.customSlideId)?.slideType ?? ''] || ''})`
+                        : VIEW_TYPE_LABELS[view.viewType]}
+                    </span>
                   </div>
                   <label className="flex items-center space-x-1.5">
                     <span className="text-xs text-gray-500">有効</span>
@@ -213,17 +360,21 @@ export default function DisplaySettings() {
                   />
                 </div>
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-1">
-                    <input
-                      type="number"
-                      value={view.duration}
-                      onChange={(e) => updateView(index, { duration: Math.max(5, parseInt(e.target.value) || 5) })}
-                      min={5}
-                      max={600}
-                      className="w-16 border border-gray-300 rounded px-2 py-1 text-sm text-center"
-                    />
-                    <span className="text-xs text-gray-500">秒</span>
-                  </div>
+                  {isYouTubeSlide(view) ? (
+                    <span className="text-xs text-gray-400">動画終了まで</span>
+                  ) : (
+                    <div className="flex items-center space-x-1">
+                      <input
+                        type="number"
+                        value={view.duration}
+                        onChange={(e) => updateView(index, { duration: Math.max(5, parseInt(e.target.value) || 5) })}
+                        min={5}
+                        max={600}
+                        className="w-16 border border-gray-300 rounded px-2 py-1 text-sm text-center"
+                      />
+                      <span className="text-xs text-gray-500">秒</span>
+                    </div>
+                  )}
                   <div className="flex items-center space-x-1">
                     <button
                       onClick={() => moveView(index, 'up')}
@@ -243,10 +394,39 @@ export default function DisplaySettings() {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                       </svg>
                     </button>
+                    {view.viewType === 'CUSTOM_SLIDE' && (
+                      <button
+                        onClick={() => view.customSlideId && handleDeleteSlide(view.customSlideId)}
+                        disabled={deletingSlideId === view.customSlideId}
+                        className="p-1.5 rounded text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors disabled:opacity-50"
+                        title="スライドを削除"
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
             ))}
+          </div>
+
+          {/* スライド追加ボタン */}
+          <div className="mt-4">
+            <Button
+              label="カスタムスライドを追加"
+              onClick={() => setShowAddSlideModal(true)}
+              disabled={customSlides.length >= 10}
+              title={customSlides.length >= 10 ? '上限の10件に達しています' : undefined}
+              variant="outline"
+              icon={
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+              }
+            />
+            <p className="text-xs text-gray-400 mt-1.5">画像・YouTube動画・テキストをローテーションに追加（最大10件）</p>
           </div>
         </div>
 
@@ -400,6 +580,12 @@ export default function DisplaySettings() {
             </div>
           </div>
         </div>
+
+        <AddCustomSlideModal
+          open={showAddSlideModal}
+          onClose={() => setShowAddSlideModal(false)}
+          onCreated={handleSlideCreated}
+        />
 
         {/* 操作ボタン */}
         <div className="flex items-center justify-end space-x-3">

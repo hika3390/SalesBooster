@@ -8,9 +8,11 @@ interface UseDisplayModeReturn {
   currentView: ViewType;
   currentViewTitle: string;
   currentViewIndex: number;
+  currentViewConfig: DisplayViewConfig | null;
   enabledViews: DisplayViewConfig[];
   progress: number;
   isLastView: boolean;
+  isYouTubeView: boolean;
   goToNext: () => void;
   goToPrev: () => void;
 }
@@ -31,13 +33,18 @@ export function useDisplayMode(config: DisplayConfig): UseDisplayModeReturn {
   }, [currentIndex]);
 
   const currentDuration = enabledViews[currentIndex]?.duration ?? 30;
+  const isYouTubeView = enabledViews[currentIndex]?.viewType === 'CUSTOM_SLIDE'
+    && enabledViews[currentIndex]?.customSlide?.slideType === 'YOUTUBE';
 
-  // プログレスバー更新 + ビュー切替タイマー
+  // プログレスバー更新 + ビュー切替タイマー（YouTubeスライドではタイマー停止）
   useEffect(() => {
     if (enabledViews.length === 0) return;
 
     elapsedRef.current = 0;
     setProgress(0);
+
+    // YouTubeスライドの場合はタイマーを起動しない（動画終了で次へ進む）
+    if (isYouTubeView) return;
 
     const intervalId = setInterval(() => {
       elapsedRef.current += 1;
@@ -61,7 +68,7 @@ export function useDisplayMode(config: DisplayConfig): UseDisplayModeReturn {
     }, 1000);
 
     return () => clearInterval(intervalId);
-  }, [currentIndex, currentDuration, enabledViews.length, config.loop]);
+  }, [currentIndex, currentDuration, enabledViews.length, config.loop, isYouTubeView]);
 
   const goToNext = useCallback(() => {
     if (enabledViews.length === 0) return;
@@ -79,9 +86,11 @@ export function useDisplayMode(config: DisplayConfig): UseDisplayModeReturn {
     currentView: currentViewConfig?.viewType ?? 'PERIOD_GRAPH',
     currentViewTitle: currentViewConfig ? getViewTitle(currentViewConfig) : '',
     currentViewIndex: currentIndex,
+    currentViewConfig: currentViewConfig ?? null,
     enabledViews,
     progress,
     isLastView: currentIndex >= enabledViews.length - 1,
+    isYouTubeView,
     goToNext,
     goToPrev,
   };

@@ -4,7 +4,7 @@ import { DisplayTransition, DisplayViewType } from '@prisma/client';
 export const displayConfigRepository = {
   async find() {
     return prisma.displayConfig.findFirst({
-      include: { views: { orderBy: { order: 'asc' } } },
+      include: { views: { orderBy: { order: 'asc' }, include: { customSlide: true } } },
     });
   },
 
@@ -17,7 +17,7 @@ export const displayConfigRepository = {
     companyLogoUrl: string;
     teamName: string;
     darkMode: boolean;
-    views: { viewType: DisplayViewType; enabled: boolean; duration: number; order: number; title: string }[];
+    views: { viewType: DisplayViewType; enabled: boolean; duration: number; order: number; title: string; customSlideId?: number | null }[];
   }) {
     const existing = await prisma.displayConfig.findFirst();
 
@@ -43,10 +43,11 @@ export const displayConfigRepository = {
                 duration: v.duration,
                 order: v.order,
                 title: v.title,
+                ...(v.customSlideId ? { customSlideId: v.customSlideId } : {}),
               })),
             },
           },
-          include: { views: { orderBy: { order: 'asc' } } },
+          include: { views: { orderBy: { order: 'asc' }, include: { customSlide: true } } },
         });
       });
     }
@@ -69,10 +70,11 @@ export const displayConfigRepository = {
             duration: v.duration,
             order: v.order,
             title: v.title,
+            ...(v.customSlideId ? { customSlideId: v.customSlideId } : {}),
           })),
         },
       },
-      include: { views: { orderBy: { order: 'asc' } } },
+      include: { views: { orderBy: { order: 'asc' }, include: { customSlide: true } } },
     });
   },
 };

@@ -2,8 +2,8 @@ import { memberRepository } from '../repositories/memberRepository';
 import { MemberRole, MemberStatus } from '@prisma/client';
 
 export const memberService = {
-  async getAll() {
-    const members = await memberRepository.findAll();
+  async getAll(tenantId: number) {
+    const members = await memberRepository.findAll(tenantId);
     return members.map((m) => ({
       id: m.id,
       name: m.name,
@@ -16,12 +16,12 @@ export const memberService = {
     }));
   },
 
-  async getById(id: number) {
-    return memberRepository.findById(id);
+  async getById(tenantId: number, id: number) {
+    return memberRepository.findById(id, tenantId);
   },
 
-  async create(data: { name: string; email: string; role?: MemberRole; imageUrl?: string; departmentId?: number }) {
-    return memberRepository.create({
+  async create(tenantId: number, data: { name: string; email: string; role?: MemberRole; imageUrl?: string; departmentId?: number }) {
+    return memberRepository.create(tenantId, {
       name: data.name,
       email: data.email,
       role: data.role,
@@ -30,17 +30,21 @@ export const memberService = {
     });
   },
 
-  async update(id: number, data: { name?: string; email?: string; role?: MemberRole; status?: MemberStatus; imageUrl?: string; departmentId?: number }) {
-    return memberRepository.update(id, data);
+  async update(tenantId: number, id: number, data: { name?: string; email?: string; role?: MemberRole; status?: MemberStatus; imageUrl?: string; departmentId?: number }) {
+    await memberRepository.update(id, tenantId, data);
+    return memberRepository.findById(id, tenantId);
   },
 
-  async delete(id: number) {
-    return memberRepository.delete(id);
+  async delete(tenantId: number, id: number) {
+    const existing = await memberRepository.findById(id, tenantId);
+    if (!existing) return null;
+    await memberRepository.delete(id, tenantId);
+    return existing;
   },
 
-  async importMembers(members: { name: string; email: string; role?: MemberRole; departmentId?: number }[]) {
+  async importMembers(tenantId: number, members: { name: string; email: string; role?: MemberRole; departmentId?: number }[]) {
     const emails = members.map((m) => m.email);
-    const existing = await memberRepository.findByEmails(emails);
+    const existing = await memberRepository.findByEmails(emails, tenantId);
     const existingEmails = new Set(existing.map((e) => e.email));
 
     const results: { created: number; skipped: number; errors: { email: string; reason: string }[] } = {
@@ -55,7 +59,7 @@ export const memberService = {
         continue;
       }
       try {
-        await memberRepository.create({
+        await memberRepository.create(tenantId, {
           name: member.name,
           email: member.email,
           role: member.role,

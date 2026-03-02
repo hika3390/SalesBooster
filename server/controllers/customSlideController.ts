@@ -2,14 +2,16 @@ import { NextRequest } from 'next/server';
 import { customSlideService } from '../services/customSlideService';
 import { auditLogService } from '../services/auditLogService';
 import { supabase } from '@/lib/supabase';
+import { getTenantId } from '../lib/auth';
 import { ApiResponse } from '../lib/apiResponse';
 
 const BUCKET_NAME = 'custom-slides';
 
 export const customSlideController = {
-  async getCustomSlides() {
+  async getCustomSlides(request: NextRequest) {
     try {
-      const slides = await customSlideService.getAll();
+      const tenantId = await getTenantId(request);
+      const slides = await customSlideService.getAll(tenantId);
       return ApiResponse.success(slides);
     } catch (error) {
       return ApiResponse.fromError(error, 'Failed to fetch custom slides');
@@ -18,6 +20,7 @@ export const customSlideController = {
 
   async createCustomSlide(request: NextRequest) {
     try {
+      const tenantId = await getTenantId(request);
       const body = await request.json();
       const { slideType, title, content, imageUrl } = body;
 
@@ -37,14 +40,14 @@ export const customSlideController = {
         return ApiResponse.badRequest('TEXT type requires content');
       }
 
-      const slide = await customSlideService.create({
+      const slide = await customSlideService.create(tenantId, {
         slideType,
         title: title || '',
         content: content || '',
         imageUrl: imageUrl || '',
       });
 
-      auditLogService.create({
+      auditLogService.create(tenantId, {
         request,
         action: 'CUSTOM_SLIDE_CREATE',
         detail: `カスタムスライド「${title || slideType}」を追加`,
@@ -61,12 +64,13 @@ export const customSlideController = {
 
   async updateCustomSlide(request: NextRequest, id: number) {
     try {
+      const tenantId = await getTenantId(request);
       const body = await request.json();
       const { title, content, imageUrl } = body;
-      const updated = await customSlideService.update(id, { title, content, imageUrl });
+      const updated = await customSlideService.update(tenantId, id, { title, content, imageUrl });
       if (!updated) return ApiResponse.notFound('カスタムスライドが見つかりません');
 
-      auditLogService.create({
+      auditLogService.create(tenantId, {
         request,
         action: 'CUSTOM_SLIDE_UPDATE',
         detail: `カスタムスライドID:${id}を更新`,
@@ -80,8 +84,9 @@ export const customSlideController = {
 
   async deleteCustomSlide(request: NextRequest, id: number) {
     try {
+      const tenantId = await getTenantId(request);
       // スライド情報を取得して画像がある場合はStorageからも削除
-      const slide = await customSlideService.getAll().then(
+      const slide = await customSlideService.getAll(tenantId).then(
         (slides) => slides.find((s) => s.id === id)
       );
 
@@ -98,10 +103,10 @@ export const customSlideController = {
         }
       }
 
-      const deleted = await customSlideService.delete(id);
+      const deleted = await customSlideService.delete(tenantId, id);
       if (!deleted) return ApiResponse.notFound('カスタムスライドが見つかりません');
 
-      auditLogService.create({
+      auditLogService.create(tenantId, {
         request,
         action: 'CUSTOM_SLIDE_DELETE',
         detail: `カスタムスライドを削除`,

@@ -1,26 +1,27 @@
 import { prisma } from '@/lib/prisma';
 
 export const targetRepository = {
-  findAll() {
+  findAll(tenantId: number) {
     return prisma.target.findMany({
+      where: { tenantId },
       include: { member: true },
       orderBy: { memberId: 'asc' },
     });
   },
 
-  findByMemberAndPeriod(memberId: number, year: number, month: number) {
+  findByMemberAndPeriod(memberId: number, year: number, month: number, tenantId: number) {
     return prisma.target.findUnique({
-      where: { memberId_year_month: { memberId, year, month } },
+      where: { tenantId_memberId_year_month: { tenantId, memberId, year, month } },
     });
   },
 
-  findByMembersAndPeriod(memberIds: number[], year: number, month: number) {
+  findByMembersAndPeriod(memberIds: number[], year: number, month: number, tenantId: number) {
     return prisma.target.findMany({
-      where: { memberId: { in: memberIds }, year, month },
+      where: { memberId: { in: memberIds }, year, month, tenantId },
     });
   },
 
-  findByMembersAndPeriodRange(memberIds: number[], startYear: number, startMonth: number, endYear: number, endMonth: number) {
+  findByMembersAndPeriodRange(memberIds: number[], startYear: number, startMonth: number, endYear: number, endMonth: number, tenantId: number) {
     const conditions: { year: number; month: number }[] = [];
     let y = startYear;
     let m = startMonth;
@@ -32,16 +33,17 @@ export const targetRepository = {
     return prisma.target.findMany({
       where: {
         memberId: { in: memberIds },
+        tenantId,
         OR: conditions,
       },
     });
   },
 
-  upsert(data: { memberId: number; monthly: number; quarterly: number; annual: number; year: number; month: number }) {
+  upsert(tenantId: number, data: { memberId: number; monthly: number; quarterly: number; annual: number; year: number; month: number }) {
     return prisma.target.upsert({
-      where: { memberId_year_month: { memberId: data.memberId, year: data.year, month: data.month } },
+      where: { tenantId_memberId_year_month: { tenantId, memberId: data.memberId, year: data.year, month: data.month } },
       update: { monthly: data.monthly, quarterly: data.quarterly, annual: data.annual },
-      create: data,
+      create: { ...data, tenantId },
     });
   },
 };

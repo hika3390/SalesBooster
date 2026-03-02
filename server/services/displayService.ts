@@ -3,8 +3,8 @@ import { DisplayConfig, DEFAULT_DISPLAY_CONFIG, TransitionType } from '@/types/d
 import { DisplayTransition, DisplayViewType } from '@prisma/client';
 
 export const displayService = {
-  async getConfig(): Promise<DisplayConfig> {
-    const record = await displayConfigRepository.find();
+  async getConfig(tenantId: number): Promise<DisplayConfig> {
+    const record = await displayConfigRepository.find(tenantId);
     if (!record) return DEFAULT_DISPLAY_CONFIG;
 
     return {
@@ -36,8 +36,8 @@ export const displayService = {
     };
   },
 
-  async updateConfig(config: DisplayConfig): Promise<void> {
-    await displayConfigRepository.upsert({
+  async updateConfig(tenantId: number, config: DisplayConfig): Promise<void> {
+    await displayConfigRepository.upsert(tenantId, {
       loop: config.loop,
       dataRefreshInterval: config.dataRefreshInterval,
       filterGroupId: config.filter.groupId,

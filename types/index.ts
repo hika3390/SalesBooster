@@ -69,6 +69,9 @@ export const AUDIT_ACTION_LABELS: Record<string, string> = {
   CUSTOM_SLIDE_CREATE: 'カスタムスライド追加',
   CUSTOM_SLIDE_UPDATE: 'カスタムスライド更新',
   CUSTOM_SLIDE_DELETE: 'カスタムスライド削除',
+  TENANT_CREATE: 'テナント作成',
+  TENANT_UPDATE: 'テナント更新',
+  TENANT_DELETE: 'テナント削除',
 };
 
 export interface ReportData {

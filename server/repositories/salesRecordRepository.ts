@@ -8,9 +8,10 @@ interface PaginationFilters {
 }
 
 export const salesRecordRepository = {
-  findByPeriod(startDate: Date, endDate: Date, memberIds?: number[]) {
+  findByPeriod(startDate: Date, endDate: Date, tenantId: number, memberIds?: number[]) {
     return prisma.salesRecord.findMany({
       where: {
+        tenantId,
         recordDate: { gte: startDate, lte: endDate },
         ...(memberIds ? { memberId: { in: memberIds } } : {}),
       },
@@ -18,15 +19,15 @@ export const salesRecordRepository = {
     });
   },
 
-  findById(id: number) {
-    return prisma.salesRecord.findUnique({
-      where: { id },
+  findById(id: number, tenantId: number) {
+    return prisma.salesRecord.findFirst({
+      where: { id, tenantId },
       include: { member: { include: { department: true } } },
     });
   },
 
-  async findPaginated(page: number, pageSize: number, filters?: PaginationFilters) {
-    const where: Record<string, unknown> = {};
+  async findPaginated(page: number, pageSize: number, tenantId: number, filters?: PaginationFilters) {
+    const where: Record<string, unknown> = { tenantId };
     if (filters?.startDate || filters?.endDate) {
       where.recordDate = {
         ...(filters.startDate ? { gte: filters.startDate } : {}),
@@ -53,8 +54,8 @@ export const salesRecordRepository = {
     return { records, total };
   },
 
-  async findAll(filters?: PaginationFilters) {
-    const where: Record<string, unknown> = {};
+  async findAll(tenantId: number, filters?: PaginationFilters) {
+    const where: Record<string, unknown> = { tenantId };
     if (filters?.startDate || filters?.endDate) {
       where.recordDate = {
         ...(filters.startDate ? { gte: filters.startDate } : {}),
@@ -74,30 +75,32 @@ export const salesRecordRepository = {
     });
   },
 
-  update(id: number, data: { memberId?: number; amount?: number; description?: string; recordDate?: Date; customFields?: Record<string, string> }) {
-    return prisma.salesRecord.update({
-      where: { id },
+  update(id: number, tenantId: number, data: { memberId?: number; amount?: number; description?: string; recordDate?: Date; customFields?: Record<string, string> }) {
+    return prisma.salesRecord.updateMany({
+      where: { id, tenantId },
       data,
-      include: { member: { include: { department: true } } },
     });
   },
 
-  remove(id: number) {
-    return prisma.salesRecord.delete({ where: { id } });
+  remove(id: number, tenantId: number) {
+    return prisma.salesRecord.deleteMany({ where: { id, tenantId } });
   },
 
-  async findMinDate(): Promise<Date | null> {
+  async findMinDate(tenantId: number): Promise<Date | null> {
     const result = await prisma.salesRecord.aggregate({
+      where: { tenantId },
       _min: { recordDate: true },
     });
     return result._min.recordDate;
   },
 
-  create(data: { memberId: number; amount: number; description?: string; recordDate: Date; customFields?: Record<string, string> }) {
-    return prisma.salesRecord.create({ data });
+  create(tenantId: number, data: { memberId: number; amount: number; description?: string; recordDate: Date; customFields?: Record<string, string> }) {
+    return prisma.salesRecord.create({ data: { ...data, tenantId } });
   },
 
-  createMany(data: { memberId: number; amount: number; description?: string; recordDate: Date; customFields?: Record<string, string> }[]) {
-    return prisma.salesRecord.createMany({ data });
+  createMany(tenantId: number, data: { memberId: number; amount: number; description?: string; recordDate: Date; customFields?: Record<string, string> }[]) {
+    return prisma.salesRecord.createMany({
+      data: data.map((d) => ({ ...d, tenantId })),
+    });
   },
 };

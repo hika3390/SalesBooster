@@ -55,9 +55,15 @@ export const authOptions: NextAuthOptions = {
 
         const user = await prisma.user.findUnique({
           where: { email: credentials.email },
+          include: { tenant: true },
         });
 
         if (!user) {
+          return null;
+        }
+
+        // テナントが無効化されている場合はログイン拒否
+        if (user.tenant && !user.tenant.isActive) {
           return null;
         }
 
@@ -72,6 +78,7 @@ export const authOptions: NextAuthOptions = {
           email: user.email,
           name: user.name,
           role: user.role,
+          tenantId: user.tenantId,
         };
       },
     }),
@@ -81,6 +88,7 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.id = user.id;
         token.role = (user as { role?: string }).role || 'USER';
+        token.tenantId = (user as { tenantId?: number | null }).tenantId ?? null;
       }
       return token;
     },
@@ -88,6 +96,7 @@ export const authOptions: NextAuthOptions = {
       if (session.user) {
         session.user.id = token.id as string;
         session.user.role = token.role as string;
+        session.user.tenantId = token.tenantId as number | null;
       }
       return session;
     },
@@ -95,18 +104,26 @@ export const authOptions: NextAuthOptions = {
   events: {
     async signIn({ user }) {
       if (user?.id) {
-        auditLogRepository.create({
-          userId: user.id,
-          action: 'USER_LOGIN',
-        }).catch((err) => console.error('Audit log failed:', err));
+        const tenantId = (user as { tenantId?: number | null }).tenantId;
+        if (tenantId) {
+          auditLogRepository.create({
+            userId: user.id,
+            action: 'USER_LOGIN',
+            tenantId,
+          }).catch((err) => console.error('Audit log failed:', err));
+        }
       }
     },
     async signOut({ token }) {
       if (token?.id) {
-        auditLogRepository.create({
-          userId: token.id as string,
-          action: 'USER_LOGOUT',
-        }).catch((err) => console.error('Audit log failed:', err));
+        const tenantId = token.tenantId as number | null;
+        if (tenantId) {
+          auditLogRepository.create({
+            userId: token.id as string,
+            action: 'USER_LOGOUT',
+            tenantId,
+          }).catch((err) => console.error('Audit log failed:', err));
+        }
       }
     },
   },

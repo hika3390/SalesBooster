@@ -1,4 +1,4 @@
-import { integrationRepository } from '../repositories/integrationRepository';
+import { settingsService } from './settingsService';
 
 interface LineConfig {
   channelAccessToken: string;
@@ -12,8 +12,8 @@ interface SalesNotificationData {
 }
 
 export const lineNotificationService = {
-  async sendSalesNotification(data: SalesNotificationData): Promise<void> {
-    const integration = await integrationRepository.findByName('LINE Messaging API');
+  async sendSalesNotification(tenantId: number, data: SalesNotificationData): Promise<void> {
+    const integration = await settingsService.getIntegrationByName(tenantId, 'LINE Messaging API');
 
     if (!integration || integration.status !== 'CONNECTED') {
       return;

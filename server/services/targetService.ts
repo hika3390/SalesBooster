@@ -1,8 +1,8 @@
 import { targetRepository } from '../repositories/targetRepository';
 
 export const targetService = {
-  async getAll() {
-    const targets = await targetRepository.findAll();
+  async getAll(tenantId: number) {
+    const targets = await targetRepository.findAll(tenantId);
     return targets.map((t) => ({
       id: t.id,
       memberId: t.memberId,
@@ -15,7 +15,7 @@ export const targetService = {
     }));
   },
 
-  async upsert(data: { memberId: number; monthly: number; quarterly: number; annual: number; year: number; month: number }) {
-    return targetRepository.upsert(data);
+  async upsert(tenantId: number, data: { memberId: number; monthly: number; quarterly: number; annual: number; year: number; month: number }) {
+    return targetRepository.upsert(tenantId, data);
   },
 };

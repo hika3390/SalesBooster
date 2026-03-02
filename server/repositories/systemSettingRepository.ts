@@ -1,23 +1,24 @@
 import { prisma } from '@/lib/prisma';
 
 export const systemSettingRepository = {
-  findAll() {
+  findAll(tenantId: number) {
     return prisma.systemSetting.findMany({
+      where: { tenantId },
       orderBy: { key: 'asc' },
     });
   },
 
-  findByKey(key: string) {
-    return prisma.systemSetting.findUnique({
-      where: { key },
+  findByKey(key: string, tenantId: number) {
+    return prisma.systemSetting.findFirst({
+      where: { key, tenantId },
     });
   },
 
-  upsert(key: string, value: string) {
+  upsert(tenantId: number, key: string, value: string) {
     return prisma.systemSetting.upsert({
-      where: { key },
+      where: { tenantId_key: { tenantId, key } },
       update: { value },
-      create: { key, value },
+      create: { key, value, tenantId },
     });
   },
 };

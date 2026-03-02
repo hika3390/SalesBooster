@@ -2,12 +2,14 @@ import { NextRequest } from 'next/server';
 import { displayService } from '../services/displayService';
 import { auditLogService } from '../services/auditLogService';
 import { VALID_TRANSITIONS } from '@/types/display';
+import { getTenantId } from '../lib/auth';
 import { ApiResponse } from '../lib/apiResponse';
 
 export const displayController = {
-  async getConfig() {
+  async getConfig(request: NextRequest) {
     try {
-      const config = await displayService.getConfig();
+      const tenantId = await getTenantId(request);
+      const config = await displayService.getConfig(tenantId);
       return ApiResponse.success(config);
     } catch (error) {
       console.error('Failed to fetch display config:', error);
@@ -17,6 +19,7 @@ export const displayController = {
 
   async updateConfig(request: NextRequest) {
     try {
+      const tenantId = await getTenantId(request);
       const body = await request.json();
 
       if (!body.views || !Array.isArray(body.views)) {
@@ -27,9 +30,9 @@ export const displayController = {
         return ApiResponse.badRequest('Invalid transition type');
       }
 
-      await displayService.updateConfig(body);
+      await displayService.updateConfig(tenantId, body);
 
-      auditLogService.create({
+      auditLogService.create(tenantId, {
         request,
         action: 'DISPLAY_CONFIG_UPDATE',
         detail: `ディスプレイ設定を更新`,

@@ -4,6 +4,7 @@ import { hashSync } from 'bcryptjs';
 const prisma = new PrismaClient();
 
 const MIN_PASSWORD_LENGTH = 12;
+const TENANT_ID = 1;
 
 function getAdminPassword(): string {
   const password = process.env.SEED_ADMIN_PASSWORD;
@@ -24,15 +25,44 @@ function getAdminPassword(): string {
 async function main() {
   const adminPassword = getAdminPassword();
 
-  // --- 初期ユーザー ---
+  // --- テナント ---
+  await prisma.tenant.upsert({
+    where: { id: TENANT_ID },
+    update: {},
+    create: {
+      id: TENANT_ID,
+      name: 'デフォルトテナント',
+      slug: 'default',
+    },
+  });
+
+  console.log('Tenant created: default');
+
+  // --- SUPER_ADMIN（テナント横断管理者） ---
+  const superAdmin = await prisma.user.upsert({
+    where: { email: 'superadmin@salesbooster.com' },
+    update: { role: 'SUPER_ADMIN', tenantId: null },
+    create: {
+      email: 'superadmin@salesbooster.com',
+      password: hashSync(adminPassword, 10),
+      name: 'スーパー管理者',
+      role: 'SUPER_ADMIN',
+      tenantId: null,
+    },
+  });
+
+  console.log('Super Admin created:', superAdmin.email);
+
+  // --- テナント管理者 ---
   const adminUser = await prisma.user.upsert({
     where: { email: 'admin@salesbooster.com' },
-    update: { role: 'ADMIN' },
+    update: { role: 'ADMIN', tenantId: TENANT_ID },
     create: {
       email: 'admin@salesbooster.com',
       password: hashSync(adminPassword, 10),
       name: '管理者',
       role: 'ADMIN',
+      tenantId: TENANT_ID,
     },
   });
 
@@ -42,12 +72,12 @@ async function main() {
   const honsha = await prisma.department.upsert({
     where: { id: 1 },
     update: {},
-    create: { id: 1, name: '本社' },
+    create: { id: 1, name: '本社', tenantId: TENANT_ID },
   });
   const eigyobu = await prisma.department.upsert({
     where: { id: 2 },
     update: {},
-    create: { id: 2, name: '営業部' },
+    create: { id: 2, name: '営業部', tenantId: TENANT_ID },
   });
 
   console.log('Departments created:', honsha.name, eigyobu.name);
@@ -78,9 +108,9 @@ async function main() {
 
   for (const data of membersData) {
     await prisma.member.upsert({
-      where: { email: data.email },
+      where: { tenantId_email: { tenantId: TENANT_ID, email: data.email } },
       update: {},
-      create: data,
+      create: { ...data, tenantId: TENANT_ID },
     });
   }
 
@@ -97,17 +127,17 @@ async function main() {
     await prisma.group.upsert({
       where: { id: data.id },
       update: {},
-      create: data,
+      create: { ...data, tenantId: TENANT_ID },
     });
   }
 
   console.log('Groups created:', groupsData.length);
 
   // --- 目標 ---
-  const members = await prisma.member.findMany();
+  const members = await prisma.member.findMany({ where: { tenantId: TENANT_ID } });
   for (const member of members) {
     await prisma.target.upsert({
-      where: { memberId_year_month: { memberId: member.id, year: 2026, month: 1 } },
+      where: { tenantId_memberId_year_month: { tenantId: TENANT_ID, memberId: member.id, year: 2026, month: 1 } },
       update: {},
       create: {
         memberId: member.id,
@@ -116,6 +146,7 @@ async function main() {
         annual: 12000000,
         year: 2026,
         month: 1,
+        tenantId: TENANT_ID,
       },
     });
   }
@@ -133,6 +164,7 @@ async function main() {
           amount: salesAmounts[i],
           description: 'サンプル売上データ',
           recordDate: new Date(2026, 0, 15),
+          tenantId: TENANT_ID,
         },
       });
     }
@@ -192,6 +224,7 @@ async function main() {
           amount: record.amount,
           description: '2月サンプル売上データ',
           recordDate: new Date(2026, 1, record.day),
+          tenantId: TENANT_ID,
         },
       });
     }
@@ -200,7 +233,7 @@ async function main() {
   // 2月の目標
   for (const member of members) {
     await prisma.target.upsert({
-      where: { memberId_year_month: { memberId: member.id, year: 2026, month: 2 } },
+      where: { tenantId_memberId_year_month: { tenantId: TENANT_ID, memberId: member.id, year: 2026, month: 2 } },
       update: {},
       create: {
         memberId: member.id,
@@ -209,6 +242,7 @@ async function main() {
         annual: 12000000,
         year: 2026,
         month: 2,
+        tenantId: TENANT_ID,
       },
     });
   }
@@ -222,6 +256,7 @@ async function main() {
       name: 'LINE Messaging API',
       description: 'グループトークへの売上通知',
       icon: 'LINE',
+      tenantId: TENANT_ID,
     },
     create: {
       id: 1,
@@ -230,6 +265,7 @@ async function main() {
       status: 'DISCONNECTED',
       icon: 'LINE',
       config: undefined,
+      tenantId: TENANT_ID,
     },
   });
 

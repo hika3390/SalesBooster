@@ -1,12 +1,14 @@
 import { NextRequest } from 'next/server';
 import { memberService } from '../services/memberService';
 import { auditLogService } from '../services/auditLogService';
+import { getTenantId } from '../lib/auth';
 import { ApiResponse } from '../lib/apiResponse';
 
 export const memberController = {
-  async getAll() {
+  async getAll(request: NextRequest) {
     try {
-      const data = await memberService.getAll();
+      const tenantId = await getTenantId(request);
+      const data = await memberService.getAll(tenantId);
       return ApiResponse.success(data);
     } catch (error) {
       console.error('Failed to fetch members:', error);
@@ -16,6 +18,7 @@ export const memberController = {
 
   async create(request: NextRequest) {
     try {
+      const tenantId = await getTenantId(request);
       const body = await request.json();
       const { name, email, role, imageUrl, departmentId } = body;
 
@@ -23,9 +26,9 @@ export const memberController = {
         return ApiResponse.badRequest('name and email are required');
       }
 
-      const member = await memberService.create({ name, email, role, imageUrl, departmentId });
+      const member = await memberService.create(tenantId, { name, email, role, imageUrl, departmentId });
 
-      auditLogService.create({
+      auditLogService.create(tenantId, {
         request,
         action: 'MEMBER_CREATE',
         detail: `メンバー「${name}」(${email})を作成`,
@@ -39,10 +42,11 @@ export const memberController = {
 
   async update(request: NextRequest, id: number) {
     try {
+      const tenantId = await getTenantId(request);
       const body = await request.json();
-      const member = await memberService.update(id, body);
+      const member = await memberService.update(tenantId, id, body);
 
-      auditLogService.create({
+      auditLogService.create(tenantId, {
         request,
         action: 'MEMBER_UPDATE',
         detail: `メンバーID:${id}の情報を更新`,
@@ -56,9 +60,10 @@ export const memberController = {
 
   async delete(request: NextRequest, id: number) {
     try {
-      await memberService.delete(id);
+      const tenantId = await getTenantId(request);
+      await memberService.delete(tenantId, id);
 
-      auditLogService.create({
+      auditLogService.create(tenantId, {
         request,
         action: 'MEMBER_DELETE',
         detail: `メンバーID:${id}を削除`,
@@ -72,6 +77,7 @@ export const memberController = {
 
   async importMembers(request: NextRequest) {
     try {
+      const tenantId = await getTenantId(request);
       const body = await request.json();
       const { members } = body;
 
@@ -79,9 +85,9 @@ export const memberController = {
         return ApiResponse.badRequest('members array is required');
       }
 
-      const results = await memberService.importMembers(members);
+      const results = await memberService.importMembers(tenantId, members);
 
-      auditLogService.create({
+      auditLogService.create(tenantId, {
         request,
         action: 'MEMBER_CREATE',
         detail: `メンバー一括インポート: ${results.created}件追加, ${results.errors.length}件エラー`,

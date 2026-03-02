@@ -2,35 +2,36 @@ import { prisma } from '@/lib/prisma';
 import { IntegrationStatus } from '@prisma/client';
 
 export const integrationRepository = {
-  findAll() {
+  findAll(tenantId: number) {
     return prisma.integration.findMany({
+      where: { tenantId },
       orderBy: { id: 'asc' },
     });
   },
 
-  findById(id: number) {
-    return prisma.integration.findUnique({
-      where: { id },
+  findById(id: number, tenantId: number) {
+    return prisma.integration.findFirst({
+      where: { id, tenantId },
     });
   },
 
-  updateStatus(id: number, status: IntegrationStatus) {
-    return prisma.integration.update({
-      where: { id },
+  updateStatus(id: number, tenantId: number, status: IntegrationStatus) {
+    return prisma.integration.updateMany({
+      where: { id, tenantId },
       data: { status },
     });
   },
 
-  updateConfig(id: number, config: Record<string, string>) {
-    return prisma.integration.update({
-      where: { id },
+  updateConfig(id: number, tenantId: number, config: Record<string, string>) {
+    return prisma.integration.updateMany({
+      where: { id, tenantId },
       data: { config },
     });
   },
 
-  findByName(name: string) {
+  findByName(name: string, tenantId: number) {
     return prisma.integration.findFirst({
-      where: { name },
+      where: { name, tenantId },
     });
   },
 };

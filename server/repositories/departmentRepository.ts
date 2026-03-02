@@ -1,8 +1,9 @@
 import { prisma } from '@/lib/prisma';
 
 export const departmentRepository = {
-  findAll() {
+  findAll(tenantId: number) {
     return prisma.department.findMany({
+      where: { tenantId },
       orderBy: { id: 'asc' },
     });
   },

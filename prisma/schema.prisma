@@ -21,6 +21,7 @@ enum MemberRole {
 }
 
 enum UserRole {
+  SUPER_ADMIN
   ADMIN
   USER
 }
@@ -75,6 +76,34 @@ enum AuditAction {
   CUSTOM_SLIDE_CREATE
   CUSTOM_SLIDE_UPDATE
   CUSTOM_SLIDE_DELETE
+  TENANT_CREATE
+  TENANT_UPDATE
+  TENANT_DELETE
+}
+
+// ─── Tenant Model ───
+
+model Tenant {
+  id        Int      @id @default(autoincrement())
+  name      String
+  slug      String   @unique
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users          User[]
+  departments    Department[]
+  members        Member[]
+  groups         Group[]
+  groupMembers   GroupMember[]
+  salesRecords   SalesRecord[]
+  targets        Target[]
+  systemSettings SystemSetting[]
+  integrations   Integration[]
+  displayConfigs DisplayConfig[]
+  customSlides   CustomSlide[]
+  customFields   CustomField[]
+  auditLogs      AuditLog[]
 }
 
 // ─── Auth Model ───
@@ -85,10 +114,14 @@ model User {
   password  String
   name      String?
   role      UserRole   @default(USER)
+  tenantId  Int?
+  tenant    Tenant?    @relation(fields: [tenantId], references: [id])
   sessions  Session[]
   auditLogs AuditLog[]
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
+
+  @@index([tenantId])
 }
 
 model Session {
@@ -104,44 +137,60 @@ model Session {
 model Department {
   id        Int      @id @default(autoincrement())
   name      String
+  tenantId  Int
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
   members   Member[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([tenantId])
 }
 
 model Member {
   id           Int            @id @default(autoincrement())
   name         String
-  email        String         @unique
+  email        String
   role         MemberRole     @default(SALES)
   status       MemberStatus   @default(ACTIVE)
   imageUrl     String?
   departmentId Int?
+  tenantId     Int
+  tenant       Tenant         @relation(fields: [tenantId], references: [id])
   department   Department?    @relation(fields: [departmentId], references: [id])
   salesRecords SalesRecord[]
   targets      Target[]
   groupMembers GroupMember[]
   createdAt    DateTime       @default(now())
   updatedAt    DateTime       @updatedAt
+
+  @@unique([tenantId, email])
+  @@index([tenantId])
 }
 
 model Group {
   id        Int           @id @default(autoincrement())
   name      String
   managerId Int?
+  tenantId  Int
+  tenant    Tenant        @relation(fields: [tenantId], references: [id])
   members   GroupMember[]
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
+
+  @@index([tenantId])
 }
 
 model GroupMember {
   id       Int    @id @default(autoincrement())
   groupId  Int
   memberId Int
+  tenantId Int
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
   group    Group  @relation(fields: [groupId], references: [id])
   member   Member @relation(fields: [memberId], references: [id])
 
   @@unique([groupId, memberId])
+  @@index([tenantId])
 }
 
 model SalesRecord {
@@ -151,9 +200,13 @@ model SalesRecord {
   description  String?
   recordDate   DateTime
   customFields Json?
+  tenantId     Int
+  tenant       Tenant   @relation(fields: [tenantId], references: [id])
   member       Member   @relation(fields: [memberId], references: [id])
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+
+  @@index([tenantId])
 }
 
 model Target {
@@ -164,15 +217,23 @@ model Target {
   annual    Int
   year      Int
   month     Int
+  tenantId  Int
+  tenant    Tenant @relation(fields: [tenantId], references: [id])
   member    Member @relation(fields: [memberId], references: [id])
 
-  @@unique([memberId, year, month])
+  @@unique([tenantId, memberId, year, month])
+  @@index([tenantId])
 }
 
 model SystemSetting {
-  id    Int    @id @default(autoincrement())
-  key   String @unique
-  value String
+  id       Int    @id @default(autoincrement())
+  key      String
+  value    String
+  tenantId Int
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  @@unique([tenantId, key])
+  @@index([tenantId])
 }
 
 model Integration {
@@ -182,15 +243,23 @@ model Integration {
   status      IntegrationStatus @default(DISCONNECTED)
   icon        String
   config      Json?
+  tenantId    Int
+  tenant      Tenant            @relation(fields: [tenantId], references: [id])
+
+  @@index([tenantId])
 }
 
 model AuditLog {
-  id        Int      @id @default(autoincrement())
+  id        Int         @id @default(autoincrement())
   userId    String
-  user      User     @relation(fields: [userId], references: [id])
+  user      User        @relation(fields: [userId], references: [id])
   action    AuditAction
   detail    String?
-  createdAt DateTime @default(now())
+  tenantId  Int
+  tenant    Tenant      @relation(fields: [tenantId], references: [id])
+  createdAt DateTime    @default(now())
+
+  @@index([tenantId])
 }
 
 // ─── Display Mode ───
@@ -198,16 +267,20 @@ model AuditLog {
 model DisplayConfig {
   id                  Int                  @id @default(autoincrement())
   loop                Boolean              @default(true)
-  dataRefreshInterval Int                  @default(60000) // ミリ秒
+  dataRefreshInterval Int                  @default(60000)
   filterGroupId       String               @default("")
   filterMemberId      String               @default("")
   transition          DisplayTransition    @default(NONE)
   companyLogoUrl      String               @default("")
   teamName            String               @default("")
   darkMode            Boolean              @default(false)
+  tenantId            Int
+  tenant              Tenant               @relation(fields: [tenantId], references: [id])
   views               DisplayConfigView[]
   createdAt           DateTime             @default(now())
   updatedAt           DateTime             @updatedAt
+
+  @@index([tenantId])
 }
 
 // ─── Custom Fields ───
@@ -222,12 +295,16 @@ model CustomField {
   id         Int             @id @default(autoincrement())
   name       String
   fieldType  CustomFieldType
-  options    Json?           // SELECT用: ["選択肢A", "選択肢B", ...]
+  options    Json?
   isRequired Boolean         @default(false)
   sortOrder  Int             @default(0)
   isActive   Boolean         @default(true)
+  tenantId   Int
+  tenant     Tenant          @relation(fields: [tenantId], references: [id])
   createdAt  DateTime        @default(now())
   updatedAt  DateTime        @updatedAt
+
+  @@index([tenantId])
 }
 
 model DisplayConfigView {
@@ -235,7 +312,7 @@ model DisplayConfigView {
   displayConfigId Int
   viewType        DisplayViewType
   enabled         Boolean          @default(true)
-  duration        Int              @default(30) // 秒
+  duration        Int              @default(30)
   order           Int              @default(0)
   title           String           @default("")
   customSlideId   Int?
@@ -247,9 +324,13 @@ model CustomSlide {
   id        Int              @id @default(autoincrement())
   slideType CustomSlideType
   title     String           @default("")
-  content   String           @default("") // YOUTUBE: URL, TEXT: 本文
-  imageUrl  String           @default("") // IMAGE: Supabase Storage URL
+  content   String           @default("")
+  imageUrl  String           @default("")
+  tenantId  Int
+  tenant    Tenant           @relation(fields: [tenantId], references: [id])
   createdAt DateTime         @default(now())
   updatedAt DateTime         @updatedAt
   views     DisplayConfigView[]
+
+  @@index([tenantId])
 }

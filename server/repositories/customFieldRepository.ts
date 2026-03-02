@@ -2,34 +2,35 @@ import { prisma } from '@/lib/prisma';
 import { CustomFieldType, Prisma } from '@prisma/client';
 
 export const customFieldRepository = {
-  findAll() {
+  findAll(tenantId: number) {
     return prisma.customField.findMany({
+      where: { tenantId },
       orderBy: { sortOrder: 'asc' },
     });
   },
 
-  findActive() {
+  findActive(tenantId: number) {
     return prisma.customField.findMany({
-      where: { isActive: true },
+      where: { isActive: true, tenantId },
       orderBy: { sortOrder: 'asc' },
     });
   },
 
-  findById(id: number) {
-    return prisma.customField.findUnique({ where: { id } });
+  findById(id: number, tenantId: number) {
+    return prisma.customField.findFirst({ where: { id, tenantId } });
   },
 
-  create(data: { name: string; fieldType: CustomFieldType; options?: Prisma.InputJsonValue; isRequired?: boolean; sortOrder?: number }) {
-    return prisma.customField.create({ data });
+  create(tenantId: number, data: { name: string; fieldType: CustomFieldType; options?: Prisma.InputJsonValue; isRequired?: boolean; sortOrder?: number }) {
+    return prisma.customField.create({ data: { ...data, tenantId } });
   },
 
-  update(id: number, data: { name?: string; fieldType?: CustomFieldType; options?: Prisma.InputJsonValue; isRequired?: boolean; sortOrder?: number; isActive?: boolean }) {
-    return prisma.customField.update({ where: { id }, data });
+  update(id: number, tenantId: number, data: { name?: string; fieldType?: CustomFieldType; options?: Prisma.InputJsonValue; isRequired?: boolean; sortOrder?: number; isActive?: boolean }) {
+    return prisma.customField.updateMany({ where: { id, tenantId }, data });
   },
 
-  softDelete(id: number) {
-    return prisma.customField.update({
-      where: { id },
+  softDelete(id: number, tenantId: number) {
+    return prisma.customField.updateMany({
+      where: { id, tenantId },
       data: { isActive: false },
     });
   },

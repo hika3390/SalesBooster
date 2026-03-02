@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
 import { auditLogService } from '../services/auditLogService';
+import { getTenantId } from '../lib/auth';
 import { ApiResponse } from '../lib/apiResponse';
 
 export const auditLogController = {
@@ -13,7 +14,8 @@ export const auditLogController = {
     const endDate = endDateParam ? new Date(`${endDateParam}T23:59:59`) : undefined;
 
     try {
-      const data = await auditLogService.getAll(page, pageSize, startDate, endDate);
+      const tenantId = await getTenantId(request);
+      const data = await auditLogService.getAll(tenantId, page, pageSize, startDate, endDate);
       return ApiResponse.success(data);
     } catch (error) {
       console.error('Failed to fetch audit logs:', error);

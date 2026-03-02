@@ -1,17 +1,19 @@
 import { NextRequest } from 'next/server';
 import { customFieldService } from '../services/customFieldService';
 import { auditLogService } from '../services/auditLogService';
+import { getTenantId } from '../lib/auth';
 import { ApiResponse } from '../lib/apiResponse';
 
 export const customFieldController = {
   async getCustomFields(request: NextRequest) {
     try {
+      const tenantId = await getTenantId(request);
       const { searchParams } = new URL(request.url);
       const activeOnly = searchParams.get('active') === 'true';
 
       const fields = activeOnly
-        ? await customFieldService.getActive()
-        : await customFieldService.getAll();
+        ? await customFieldService.getActive(tenantId)
+        : await customFieldService.getAll(tenantId);
 
       return ApiResponse.success(fields);
     } catch (error) {
@@ -21,6 +23,7 @@ export const customFieldController = {
 
   async createCustomField(request: NextRequest) {
     try {
+      const tenantId = await getTenantId(request);
       const body = await request.json();
       const { name, fieldType, options, isRequired } = body;
 
@@ -36,14 +39,14 @@ export const customFieldController = {
         return ApiResponse.badRequest('SELECT type requires options array');
       }
 
-      const field = await customFieldService.create({
+      const field = await customFieldService.create(tenantId, {
         name,
         fieldType,
         options: fieldType === 'SELECT' ? options : undefined,
         isRequired: isRequired ?? false,
       });
 
-      auditLogService.create({
+      auditLogService.create(tenantId, {
         request,
         action: 'CUSTOM_FIELD_CREATE',
         detail: `カスタムフィールド「${name}」(${fieldType})を追加`,
@@ -57,6 +60,7 @@ export const customFieldController = {
 
   async updateCustomField(request: NextRequest, id: number) {
     try {
+      const tenantId = await getTenantId(request);
       const body = await request.json();
       const { name, fieldType, options, isRequired, sortOrder, isActive } = body;
 
@@ -68,7 +72,7 @@ export const customFieldController = {
         return ApiResponse.badRequest('SELECT type requires options array');
       }
 
-      const updated = await customFieldService.update(id, {
+      const updated = await customFieldService.update(tenantId, id, {
         name,
         fieldType,
         options: fieldType === 'SELECT' ? options : fieldType ? undefined : undefined,
@@ -81,7 +85,7 @@ export const customFieldController = {
         return ApiResponse.notFound('カスタムフィールドが見つかりません');
       }
 
-      auditLogService.create({
+      auditLogService.create(tenantId, {
         request,
         action: 'CUSTOM_FIELD_UPDATE',
         detail: `カスタムフィールドID:${id}を更新`,
@@ -95,16 +99,17 @@ export const customFieldController = {
 
   async deleteCustomField(request: NextRequest, id: number) {
     try {
-      const deleted = await customFieldService.softDelete(id);
+      const tenantId = await getTenantId(request);
+      const result = await customFieldService.softDelete(tenantId, id);
 
-      if (!deleted) {
+      if (!result || result.count === 0) {
         return ApiResponse.notFound('カスタムフィールドが見つかりません');
       }
 
-      auditLogService.create({
+      auditLogService.create(tenantId, {
         request,
         action: 'CUSTOM_FIELD_DELETE',
-        detail: `カスタムフィールド「${deleted.name}」を無効化`,
+        detail: `カスタムフィールドID:${id}を無効化`,
       }).catch((err) => console.error('Audit log failed:', err));
 
       return ApiResponse.success({ message: '削除しました' });

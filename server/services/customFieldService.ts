@@ -2,19 +2,19 @@ import { CustomFieldType } from '@prisma/client';
 import { customFieldRepository } from '../repositories/customFieldRepository';
 
 export const customFieldService = {
-  async getAll() {
-    return customFieldRepository.findAll();
+  async getAll(tenantId: number) {
+    return customFieldRepository.findAll(tenantId);
   },
 
-  async getActive() {
-    return customFieldRepository.findActive();
+  async getActive(tenantId: number) {
+    return customFieldRepository.findActive(tenantId);
   },
 
-  async create(data: { name: string; fieldType: CustomFieldType; options?: string[]; isRequired?: boolean }) {
-    const all = await customFieldRepository.findAll();
+  async create(tenantId: number, data: { name: string; fieldType: CustomFieldType; options?: string[]; isRequired?: boolean }) {
+    const all = await customFieldRepository.findAll(tenantId);
     const maxOrder = all.reduce((max, f) => Math.max(max, f.sortOrder), -1);
 
-    return customFieldRepository.create({
+    return customFieldRepository.create(tenantId, {
       name: data.name,
       fieldType: data.fieldType,
       options: data.options || undefined,
@@ -23,11 +23,11 @@ export const customFieldService = {
     });
   },
 
-  async update(id: number, data: { name?: string; fieldType?: CustomFieldType; options?: string[]; isRequired?: boolean; sortOrder?: number; isActive?: boolean }) {
-    const existing = await customFieldRepository.findById(id);
+  async update(tenantId: number, id: number, data: { name?: string; fieldType?: CustomFieldType; options?: string[]; isRequired?: boolean; sortOrder?: number; isActive?: boolean }) {
+    const existing = await customFieldRepository.findById(id, tenantId);
     if (!existing) return null;
 
-    return customFieldRepository.update(id, {
+    await customFieldRepository.update(id, tenantId, {
       ...(data.name !== undefined ? { name: data.name } : {}),
       ...(data.fieldType !== undefined ? { fieldType: data.fieldType } : {}),
       ...(data.options !== undefined ? { options: data.options } : {}),
@@ -35,12 +35,13 @@ export const customFieldService = {
       ...(data.sortOrder !== undefined ? { sortOrder: data.sortOrder } : {}),
       ...(data.isActive !== undefined ? { isActive: data.isActive } : {}),
     });
+    return customFieldRepository.findById(id, tenantId);
   },
 
-  async softDelete(id: number) {
-    const existing = await customFieldRepository.findById(id);
+  async softDelete(tenantId: number, id: number) {
+    const existing = await customFieldRepository.findById(id, tenantId);
     if (!existing) return null;
 
-    return customFieldRepository.softDelete(id);
+    return customFieldRepository.softDelete(id, tenantId);
   },
 };

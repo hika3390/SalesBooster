@@ -4,9 +4,10 @@ import { groupService } from '../services/groupService';
 import { auditLogService } from '../services/auditLogService';
 import { lineNotificationService } from '../services/lineNotificationService';
 import { memberRepository } from '../repositories/memberRepository';
+import { getTenantId } from '../lib/auth';
 import { ApiResponse } from '../lib/apiResponse';
 
-async function resolveMemberIds(searchParams: URLSearchParams): Promise<number[] | undefined> {
+async function resolveMemberIds(tenantId: number, searchParams: URLSearchParams): Promise<number[] | undefined> {
   const memberId = searchParams.get('memberId');
   const groupId = searchParams.get('groupId');
 
@@ -15,7 +16,7 @@ async function resolveMemberIds(searchParams: URLSearchParams): Promise<number[]
   }
 
   if (groupId) {
-    const group = await groupService.getById(Number(groupId));
+    const group = await groupService.getById(tenantId, Number(groupId));
     if (group) {
       return group.members.map((gm) => gm.memberId);
     }
@@ -27,6 +28,7 @@ async function resolveMemberIds(searchParams: URLSearchParams): Promise<number[]
 
 export const salesController = {
   async getSalesByPeriod(request: NextRequest) {
+    const tenantId = await getTenantId(request);
     const { searchParams } = new URL(request.url);
     const startDateParam = searchParams.get('startDate');
     const endDateParam = searchParams.get('endDate');
@@ -37,8 +39,8 @@ export const salesController = {
     const endDate = endDateParam ? new Date(endDateParam) : new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
 
     try {
-      const memberIds = await resolveMemberIds(searchParams);
-      const { salesPeople, recordCount } = await salesService.getSalesByDateRange(startDate, endDate, memberIds);
+      const memberIds = await resolveMemberIds(tenantId, searchParams);
+      const { salesPeople, recordCount } = await salesService.getSalesByDateRange(tenantId, startDate, endDate, memberIds);
       return ApiResponse.success({ data: salesPeople, recordCount });
     } catch (error) {
       console.error('Failed to fetch sales data:', error);
@@ -48,6 +50,7 @@ export const salesController = {
 
   async createSalesRecord(request: NextRequest) {
     try {
+      const tenantId = await getTenantId(request);
       const body = await request.json();
       const { memberId, amount, description, recordDate, customFields } = body;
 
@@ -58,7 +61,7 @@ export const salesController = {
       const numAmount = Number(amount);
       const numMemberId = Number(memberId);
 
-      const record = await salesService.createSalesRecord({
+      const record = await salesService.createSalesRecord(tenantId, {
         memberId: numMemberId,
         amount: numAmount,
         description,
@@ -66,15 +69,15 @@ export const salesController = {
         ...(customFields ? { customFields } : {}),
       });
 
-      auditLogService.create({
+      auditLogService.create(tenantId, {
         request,
         action: 'SALES_RECORD_CREATE',
         detail: `メンバーID:${numMemberId}の売上${numAmount}円を記録`,
       }).catch((err) => console.error('Audit log failed:', err));
 
-      memberRepository.findById(numMemberId).then((member) => {
+      memberRepository.findById(numMemberId, tenantId).then((member) => {
         if (member) {
-          lineNotificationService.sendSalesNotification({
+          lineNotificationService.sendSalesNotification(tenantId, {
             memberName: member.name,
             amount: numAmount,
             recordDate: new Date(recordDate),
@@ -88,9 +91,10 @@ export const salesController = {
     }
   },
 
-  async getDateRange() {
+  async getDateRange(request: NextRequest) {
     try {
-      const dateRange = await salesService.getDateRange();
+      const tenantId = await getTenantId(request);
+      const dateRange = await salesService.getDateRange(tenantId);
       return ApiResponse.success(dateRange);
     } catch (error) {
       console.error('Failed to fetch date range:', error);
@@ -99,6 +103,7 @@ export const salesController = {
   },
 
   async getCumulativeSales(request: NextRequest) {
+    const tenantId = await getTenantId(request);
     const { searchParams } = new URL(request.url);
     const startDateParam = searchParams.get('startDate');
     const endDateParam = searchParams.get('endDate');
@@ -108,8 +113,8 @@ export const salesController = {
     const endDate = endDateParam ? new Date(endDateParam) : new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
 
     try {
-      const memberIds = await resolveMemberIds(searchParams);
-      const data = await salesService.getCumulativeSales(startDate, endDate, memberIds);
+      const memberIds = await resolveMemberIds(tenantId, searchParams);
+      const data = await salesService.getCumulativeSales(tenantId, startDate, endDate, memberIds);
       return ApiResponse.success(data);
     } catch (error) {
       console.error('Failed to fetch cumulative sales data:', error);
@@ -118,6 +123,7 @@ export const salesController = {
   },
 
   async getReportData(request: NextRequest) {
+    const tenantId = await getTenantId(request);
     const { searchParams } = new URL(request.url);
     const startDateParam = searchParams.get('startDate');
     const endDateParam = searchParams.get('endDate');
@@ -127,8 +133,8 @@ export const salesController = {
     const startDate = startDateParam ? new Date(startDateParam) : new Date(endDate.getFullYear(), endDate.getMonth() - 11, 1);
 
     try {
-      const memberIds = await resolveMemberIds(searchParams);
-      const data = await salesService.getReportData(startDate, endDate, memberIds);
+      const memberIds = await resolveMemberIds(tenantId, searchParams);
+      const data = await salesService.getReportData(tenantId, startDate, endDate, memberIds);
       return ApiResponse.success(data);
     } catch (error) {
       console.error('Failed to fetch report data:', error);
@@ -137,6 +143,7 @@ export const salesController = {
   },
 
   async getTrendData(request: NextRequest) {
+    const tenantId = await getTenantId(request);
     const { searchParams } = new URL(request.url);
     const startDateParam = searchParams.get('startDate');
     const endDateParam = searchParams.get('endDate');
@@ -146,8 +153,8 @@ export const salesController = {
     const startDate = startDateParam ? new Date(startDateParam) : new Date(endDate.getFullYear(), endDate.getMonth() - 11, 1);
 
     try {
-      const memberIds = await resolveMemberIds(searchParams);
-      const data = await salesService.getTrendData(startDate, endDate, memberIds);
+      const memberIds = await resolveMemberIds(tenantId, searchParams);
+      const data = await salesService.getTrendData(tenantId, startDate, endDate, memberIds);
       return ApiResponse.success(data);
     } catch (error) {
       console.error('Failed to fetch trend data:', error);
@@ -156,6 +163,7 @@ export const salesController = {
   },
 
   async getRankingBoardData(request: NextRequest) {
+    const tenantId = await getTenantId(request);
     const { searchParams } = new URL(request.url);
 
     // 直近3ヶ月固定（期間パラメータは無視）
@@ -164,8 +172,8 @@ export const salesController = {
     const startDate = new Date(now.getFullYear(), now.getMonth() - 2, 1);
 
     try {
-      const memberIds = await resolveMemberIds(searchParams);
-      const data = await salesService.getRankingBoardData(startDate, endDate, memberIds);
+      const memberIds = await resolveMemberIds(tenantId, searchParams);
+      const data = await salesService.getRankingBoardData(tenantId, startDate, endDate, memberIds);
       return ApiResponse.success(data);
     } catch (error) {
       console.error('Failed to fetch ranking board data:', error);
@@ -174,6 +182,7 @@ export const salesController = {
   },
 
   async getSalesRecords(request: NextRequest) {
+    const tenantId = await getTenantId(request);
     const { searchParams } = new URL(request.url);
     const page = Number(searchParams.get('page')) || 1;
     const pageSize = Number(searchParams.get('pageSize')) || 10;
@@ -188,12 +197,12 @@ export const salesController = {
     if (memberIdParam) {
       filters.memberId = Number(memberIdParam);
     } else if (groupIdParam) {
-      const memberIds = await resolveMemberIds(searchParams);
+      const memberIds = await resolveMemberIds(tenantId, searchParams);
       if (memberIds) filters.memberIds = memberIds;
     }
 
     try {
-      const data = await salesService.getSalesRecords(page, pageSize, filters);
+      const data = await salesService.getSalesRecords(tenantId, page, pageSize, filters);
       return ApiResponse.success(data);
     } catch (error) {
       console.error('Failed to fetch sales records:', error);
@@ -203,6 +212,7 @@ export const salesController = {
 
   async updateSalesRecord(request: NextRequest, id: number) {
     try {
+      const tenantId = await getTenantId(request);
       const body = await request.json();
       const { memberId, amount, description, recordDate, customFields } = body;
 
@@ -210,7 +220,7 @@ export const salesController = {
         return ApiResponse.badRequest('memberId, amount, recordDate are required');
       }
 
-      const updated = await salesService.updateSalesRecord(id, {
+      const updated = await salesService.updateSalesRecord(tenantId, id, {
         memberId: Number(memberId),
         amount: Number(amount),
         description: description || undefined,
@@ -222,7 +232,7 @@ export const salesController = {
         return ApiResponse.notFound('売上レコードが見つかりません');
       }
 
-      auditLogService.create({
+      auditLogService.create(tenantId, {
         request,
         action: 'SALES_RECORD_UPDATE',
         detail: `売上ID:${id}を更新（メンバーID:${memberId}, 金額:${amount}円）`,
@@ -236,6 +246,7 @@ export const salesController = {
 
   async importSalesRecords(request: NextRequest) {
     try {
+      const tenantId = await getTenantId(request);
       const body = await request.json();
       const { records } = body;
 
@@ -243,9 +254,9 @@ export const salesController = {
         return ApiResponse.badRequest('records array is required');
       }
 
-      const results = await salesService.importSalesRecords(records);
+      const results = await salesService.importSalesRecords(tenantId, records);
 
-      auditLogService.create({
+      auditLogService.create(tenantId, {
         request,
         action: 'SALES_RECORD_CREATE',
         detail: `売上データ一括インポート: ${results.created}件追加`,
@@ -258,6 +269,7 @@ export const salesController = {
   },
 
   async exportSalesRecords(request: NextRequest) {
+    const tenantId = await getTenantId(request);
     const { searchParams } = new URL(request.url);
     const startDateParam = searchParams.get('startDate');
     const endDateParam = searchParams.get('endDate');
@@ -270,12 +282,12 @@ export const salesController = {
     if (memberIdParam) {
       filters.memberId = Number(memberIdParam);
     } else if (groupIdParam) {
-      const memberIds = await resolveMemberIds(searchParams);
+      const memberIds = await resolveMemberIds(tenantId, searchParams);
       if (memberIds) filters.memberIds = memberIds;
     }
 
     try {
-      const data = await salesService.getAllSalesRecords(filters);
+      const data = await salesService.getAllSalesRecords(tenantId, filters);
       return ApiResponse.success(data);
     } catch (error) {
       console.error('Failed to export sales records:', error);
@@ -285,13 +297,14 @@ export const salesController = {
 
   async deleteSalesRecord(request: NextRequest, id: number) {
     try {
-      const deleted = await salesService.deleteSalesRecord(id);
+      const tenantId = await getTenantId(request);
+      const deleted = await salesService.deleteSalesRecord(tenantId, id);
 
       if (!deleted) {
         return ApiResponse.notFound('売上レコードが見つかりません');
       }
 
-      auditLogService.create({
+      auditLogService.create(tenantId, {
         request,
         action: 'SALES_RECORD_DELETE',
         detail: `売上ID:${id}を削除（メンバー:${deleted.member.name}, 金額:${deleted.amount}円）`,

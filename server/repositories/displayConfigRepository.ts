@@ -2,13 +2,14 @@ import { prisma } from '@/lib/prisma';
 import { DisplayTransition, DisplayViewType } from '@prisma/client';
 
 export const displayConfigRepository = {
-  async find() {
+  async find(tenantId: number) {
     return prisma.displayConfig.findFirst({
+      where: { tenantId },
       include: { views: { orderBy: { order: 'asc' }, include: { customSlide: true } } },
     });
   },
 
-  async upsert(data: {
+  async upsert(tenantId: number, data: {
     loop: boolean;
     dataRefreshInterval: number;
     filterGroupId: string;
@@ -19,10 +20,9 @@ export const displayConfigRepository = {
     darkMode: boolean;
     views: { viewType: DisplayViewType; enabled: boolean; duration: number; order: number; title: string; customSlideId?: number | null }[];
   }) {
-    const existing = await prisma.displayConfig.findFirst();
+    const existing = await prisma.displayConfig.findFirst({ where: { tenantId } });
 
     if (existing) {
-      // 既存レコードを更新：ビューを全削除してから再作成（トランザクションで一貫性を保証）
       return prisma.$transaction(async (tx) => {
         await tx.displayConfigView.deleteMany({ where: { displayConfigId: existing.id } });
         return tx.displayConfig.update({
@@ -52,9 +52,9 @@ export const displayConfigRepository = {
       });
     }
 
-    // 新規作成
     return prisma.displayConfig.create({
       data: {
+        tenantId,
         loop: data.loop,
         dataRefreshInterval: data.dataRefreshInterval,
         filterGroupId: data.filterGroupId,

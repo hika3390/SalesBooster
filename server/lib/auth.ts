@@ -16,7 +16,26 @@ export async function getUserRole(req: NextRequest): Promise<string> {
 
 export async function requireAdmin(req: NextRequest): Promise<void> {
   const role = await getUserRole(req);
-  if (role !== 'ADMIN') {
+  if (role !== 'ADMIN' && role !== 'SUPER_ADMIN') {
     throw new Error('Forbidden: admin access required');
+  }
+}
+
+export async function getTenantId(req: NextRequest): Promise<number> {
+  const token = await getToken({ req });
+  if (!token?.tenantId) {
+    throw new Error('Unauthorized: tenantId not found');
+  }
+  return token.tenantId as number;
+}
+
+export async function isSuperAdmin(req: NextRequest): Promise<boolean> {
+  const role = await getUserRole(req);
+  return role === 'SUPER_ADMIN';
+}
+
+export async function requireSuperAdmin(req: NextRequest): Promise<void> {
+  if (!(await isSuperAdmin(req))) {
+    throw new Error('Forbidden: super admin access required');
   }
 }

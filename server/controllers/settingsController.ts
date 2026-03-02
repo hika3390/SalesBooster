@@ -2,12 +2,14 @@ import { NextRequest } from 'next/server';
 import { settingsService } from '../services/settingsService';
 import { auditLogService } from '../services/auditLogService';
 import { lineNotificationService } from '../services/lineNotificationService';
+import { getTenantId } from '../lib/auth';
 import { ApiResponse } from '../lib/apiResponse';
 
 export const settingsController = {
-  async getSettings() {
+  async getSettings(request: NextRequest) {
     try {
-      const data = await settingsService.getAllSettings();
+      const tenantId = await getTenantId(request);
+      const data = await settingsService.getAllSettings(tenantId);
       return ApiResponse.success(data);
     } catch (error) {
       console.error('Failed to fetch settings:', error);
@@ -17,13 +19,14 @@ export const settingsController = {
 
   async updateSettings(request: NextRequest) {
     try {
+      const tenantId = await getTenantId(request);
       const body = await request.json();
 
       for (const [key, value] of Object.entries(body)) {
-        await settingsService.updateSetting(key, String(value));
+        await settingsService.updateSetting(tenantId, key, String(value));
       }
 
-      auditLogService.create({
+      auditLogService.create(tenantId, {
         request,
         action: 'SETTINGS_UPDATE',
         detail: `システム設定を更新`,
@@ -35,9 +38,10 @@ export const settingsController = {
     }
   },
 
-  async getIntegrations() {
+  async getIntegrations(request: NextRequest) {
     try {
-      const data = await settingsService.getAllIntegrations();
+      const tenantId = await getTenantId(request);
+      const data = await settingsService.getAllIntegrations(tenantId);
       return ApiResponse.success(data);
     } catch (error) {
       console.error('Failed to fetch integrations:', error);
@@ -47,6 +51,7 @@ export const settingsController = {
 
   async updateIntegrationStatus(request: NextRequest, id: number) {
     try {
+      const tenantId = await getTenantId(request);
       const body = await request.json();
       const { status } = body;
 
@@ -54,9 +59,9 @@ export const settingsController = {
         return ApiResponse.badRequest('status is required');
       }
 
-      const integration = await settingsService.updateIntegrationStatus(id, status);
+      const integration = await settingsService.updateIntegrationStatus(tenantId, id, status);
 
-      auditLogService.create({
+      auditLogService.create(tenantId, {
         request,
         action: 'INTEGRATION_STATUS_UPDATE',
         detail: `連携ID:${id}のステータスを${status}に変更`,
@@ -70,6 +75,7 @@ export const settingsController = {
 
   async updateIntegrationConfig(request: NextRequest, id: number) {
     try {
+      const tenantId = await getTenantId(request);
       const body = await request.json();
       const { config } = body;
 
@@ -77,9 +83,9 @@ export const settingsController = {
         return ApiResponse.badRequest('config is required');
       }
 
-      const integration = await settingsService.updateIntegrationConfig(id, config);
+      const integration = await settingsService.updateIntegrationConfig(tenantId, id, config);
 
-      auditLogService.create({
+      auditLogService.create(tenantId, {
         request,
         action: 'INTEGRATION_STATUS_UPDATE',
         detail: `連携ID:${id}の設定を更新`,

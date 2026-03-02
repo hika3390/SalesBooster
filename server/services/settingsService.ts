@@ -3,8 +3,8 @@ import { integrationRepository } from '../repositories/integrationRepository';
 import { IntegrationStatus } from '@prisma/client';
 
 export const settingsService = {
-  async getAllSettings() {
-    const settings = await systemSettingRepository.findAll();
+  async getAllSettings(tenantId: number) {
+    const settings = await systemSettingRepository.findAll(tenantId);
     const settingsMap: Record<string, string> = {};
     for (const s of settings) {
       settingsMap[s.key] = s.value;
@@ -12,23 +12,23 @@ export const settingsService = {
     return settingsMap;
   },
 
-  async updateSetting(key: string, value: string) {
-    return systemSettingRepository.upsert(key, value);
+  async updateSetting(tenantId: number, key: string, value: string) {
+    return systemSettingRepository.upsert(tenantId, key, value);
   },
 
-  async getAllIntegrations() {
-    return integrationRepository.findAll();
+  async getAllIntegrations(tenantId: number) {
+    return integrationRepository.findAll(tenantId);
   },
 
-  async updateIntegrationStatus(id: number, status: IntegrationStatus) {
-    return integrationRepository.updateStatus(id, status);
+  async updateIntegrationStatus(tenantId: number, id: number, status: IntegrationStatus) {
+    return integrationRepository.updateStatus(id, tenantId, status);
   },
 
-  async updateIntegrationConfig(id: number, config: Record<string, string>) {
-    return integrationRepository.updateConfig(id, config);
+  async updateIntegrationConfig(tenantId: number, id: number, config: Record<string, string>) {
+    return integrationRepository.updateConfig(id, tenantId, config);
   },
 
-  async getIntegrationByName(name: string) {
-    return integrationRepository.findByName(name);
+  async getIntegrationByName(tenantId: number, name: string) {
+    return integrationRepository.findByName(name, tenantId);
   },
 };

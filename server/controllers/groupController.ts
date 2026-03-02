@@ -1,12 +1,14 @@
 import { NextRequest } from 'next/server';
 import { groupService } from '../services/groupService';
 import { auditLogService } from '../services/auditLogService';
+import { getTenantId } from '../lib/auth';
 import { ApiResponse } from '../lib/apiResponse';
 
 export const groupController = {
-  async getAll() {
+  async getAll(request: NextRequest) {
     try {
-      const data = await groupService.getAll();
+      const tenantId = await getTenantId(request);
+      const data = await groupService.getAll(tenantId);
       return ApiResponse.success(data);
     } catch (error) {
       console.error('Failed to fetch groups:', error);
@@ -16,6 +18,7 @@ export const groupController = {
 
   async create(request: NextRequest) {
     try {
+      const tenantId = await getTenantId(request);
       const body = await request.json();
       const { name, managerId } = body;
 
@@ -23,9 +26,9 @@ export const groupController = {
         return ApiResponse.badRequest('name is required');
       }
 
-      const group = await groupService.create({ name, managerId });
+      const group = await groupService.create(tenantId, { name, managerId });
 
-      auditLogService.create({
+      auditLogService.create(tenantId, {
         request,
         action: 'GROUP_CREATE',
         detail: `グループ「${name}」を作成`,
@@ -39,10 +42,11 @@ export const groupController = {
 
   async update(request: NextRequest, id: number) {
     try {
+      const tenantId = await getTenantId(request);
       const body = await request.json();
-      const group = await groupService.update(id, body);
+      const group = await groupService.update(tenantId, id, body);
 
-      auditLogService.create({
+      auditLogService.create(tenantId, {
         request,
         action: 'GROUP_UPDATE',
         detail: `グループID:${id}の情報を更新`,
@@ -56,9 +60,10 @@ export const groupController = {
 
   async delete(request: NextRequest, id: number) {
     try {
-      await groupService.delete(id);
+      const tenantId = await getTenantId(request);
+      await groupService.delete(tenantId, id);
 
-      auditLogService.create({
+      auditLogService.create(tenantId, {
         request,
         action: 'GROUP_DELETE',
         detail: `グループID:${id}を削除`,
@@ -72,6 +77,7 @@ export const groupController = {
 
   async syncMembers(request: NextRequest, groupId: number) {
     try {
+      const tenantId = await getTenantId(request);
       const body = await request.json();
       const { memberIds } = body;
 
@@ -79,9 +85,9 @@ export const groupController = {
         return ApiResponse.badRequest('memberIds must be an array');
       }
 
-      await groupService.syncMembers(groupId, memberIds);
+      await groupService.syncMembers(tenantId, groupId, memberIds);
 
-      auditLogService.create({
+      auditLogService.create(tenantId, {
         request,
         action: 'GROUP_SYNC_MEMBERS',
         detail: `グループID:${groupId}のメンバーを同期（${memberIds.length}名）`,

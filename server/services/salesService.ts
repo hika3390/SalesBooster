@@ -310,7 +310,7 @@ export const salesService = {
     return record;
   },
 
-  async getSalesRecords(page: number, pageSize: number, filters?: { startDate?: Date; endDate?: Date; memberId?: number }) {
+  async getSalesRecords(page: number, pageSize: number, filters?: { startDate?: Date; endDate?: Date; memberId?: number; memberIds?: number[] }) {
     const { records, total } = await salesRecordRepository.findPaginated(page, pageSize, filters);
     const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
@@ -331,6 +331,21 @@ export const salesService = {
       pageSize,
       totalPages,
     };
+  },
+
+  async getAllSalesRecords(filters?: { startDate?: Date; endDate?: Date; memberId?: number; memberIds?: number[] }) {
+    const records = await salesRecordRepository.findAll(filters);
+    return records.map((r) => ({
+      id: r.id,
+      memberId: r.memberId,
+      memberName: r.member.name,
+      department: r.member.department?.name || null,
+      amount: r.amount,
+      description: r.description,
+      customFields: (r.customFields as Record<string, string>) || null,
+      recordDate: r.recordDate.toISOString(),
+      createdAt: r.createdAt.toISOString(),
+    }));
   },
 
   async updateSalesRecord(id: number, data: { memberId?: number; amount?: number; description?: string; recordDate?: Date; customFields?: Record<string, string> }) {

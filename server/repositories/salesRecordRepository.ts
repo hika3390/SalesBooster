@@ -4,6 +4,7 @@ interface PaginationFilters {
   startDate?: Date;
   endDate?: Date;
   memberId?: number;
+  memberIds?: number[];
 }
 
 export const salesRecordRepository = {
@@ -34,6 +35,8 @@ export const salesRecordRepository = {
     }
     if (filters?.memberId) {
       where.memberId = filters.memberId;
+    } else if (filters?.memberIds && filters.memberIds.length > 0) {
+      where.memberId = { in: filters.memberIds };
     }
 
     const [records, total] = await Promise.all([
@@ -48,6 +51,27 @@ export const salesRecordRepository = {
     ]);
 
     return { records, total };
+  },
+
+  async findAll(filters?: PaginationFilters) {
+    const where: Record<string, unknown> = {};
+    if (filters?.startDate || filters?.endDate) {
+      where.recordDate = {
+        ...(filters.startDate ? { gte: filters.startDate } : {}),
+        ...(filters.endDate ? { lte: filters.endDate } : {}),
+      };
+    }
+    if (filters?.memberId) {
+      where.memberId = filters.memberId;
+    } else if (filters?.memberIds && filters.memberIds.length > 0) {
+      where.memberId = { in: filters.memberIds };
+    }
+
+    return prisma.salesRecord.findMany({
+      where,
+      include: { member: { include: { department: true } } },
+      orderBy: { recordDate: 'desc' },
+    });
   },
 
   update(id: number, data: { memberId?: number; amount?: number; description?: string; recordDate?: Date; customFields?: Record<string, string> }) {

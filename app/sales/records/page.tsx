@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import Header from '@/components/header/Header';
 import DataTable, { Column } from '@/components/common/DataTable';
 import Button from '@/components/common/Button';
+import Select from '@/components/common/Select';
 import { Dialog } from '@/components/common/Dialog';
 import DropdownMenu from '@/components/common/DropdownMenu';
 import EditSalesRecordModal from '@/components/sales/EditSalesRecordModal';
@@ -31,6 +32,16 @@ interface RecordsResponse {
   totalPages: number;
 }
 
+interface GroupOption {
+  id: number;
+  name: string;
+}
+
+interface MemberOption {
+  id: number;
+  name: string;
+}
+
 const formatDate = (isoDate: string) => {
   const d = new Date(isoDate);
   const yyyy = d.getFullYear();
@@ -41,8 +52,23 @@ const formatDate = (isoDate: string) => {
   return `${yyyy}/${mm}/${dd} ${hh}:${mi}`;
 };
 
+const formatDateShort = (isoDate: string) => {
+  const d = new Date(isoDate);
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${yyyy}/${mm}/${dd}`;
+};
+
 const formatAmount = (amount: number) => {
   return amount.toLocaleString();
+};
+
+const escapeCsvField = (value: string): string => {
+  if (value.includes(',') || value.includes('"') || value.includes('\n')) {
+    return `"${value.replace(/"/g, '""')}"`;
+  }
+  return value;
 };
 
 export default function SalesRecordsPage() {
@@ -52,19 +78,36 @@ export default function SalesRecordsPage() {
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [groupId, setGroupId] = useState('');
+  const [memberId, setMemberId] = useState('');
+  const [groups, setGroups] = useState<GroupOption[]>([]);
+  const [members, setMembers] = useState<MemberOption[]>([]);
+  const [exporting, setExporting] = useState(false);
   const [editingRecord, setEditingRecord] = useState<SalesRecord | null>(null);
   const [isSalesModalOpen, setIsSalesModalOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [customFieldDefs, setCustomFieldDefs] = useState<CustomFieldDefinition[]>([]);
   const pageSize = 10;
 
+  const buildFilterParams = useCallback(() => {
+    const params = new URLSearchParams();
+    if (startDate) params.set('startDate', startDate);
+    if (endDate) params.set('endDate', endDate);
+    if (memberId) {
+      params.set('memberId', memberId);
+    } else if (groupId) {
+      params.set('groupId', groupId);
+    }
+    return params;
+  }, [startDate, endDate, groupId, memberId]);
+
   const fetchRecords = async (page: number) => {
     setLoading(true);
     try {
       setFetchError(null);
-      const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
-      if (startDate) params.set('startDate', startDate);
-      if (endDate) params.set('endDate', endDate);
+      const params = buildFilterParams();
+      params.set('page', String(page));
+      params.set('pageSize', String(pageSize));
       const res = await fetch(`/api/sales/records?${params}`);
       if (res.ok) setData(await res.json());
       else setFetchError('売上データの取得に失敗しました。');
@@ -77,15 +120,82 @@ export default function SalesRecordsPage() {
 
   useEffect(() => {
     fetchRecords(currentPage);
+    // グループ・メンバー一覧を取得
+    fetch('/api/groups').then((res) => res.json()).then((data) => {
+      const list = Array.isArray(data) ? data : data?.data ?? [];
+      setGroups(list.map((g: { id: number; name: string }) => ({ id: g.id, name: g.name })));
+    }).catch(console.error);
+    fetch('/api/members').then((res) => res.json()).then((data) => {
+      const list = Array.isArray(data) ? data : data?.data ?? [];
+      setMembers(list.map((m: { id: number; name: string }) => ({ id: m.id, name: m.name })));
+    }).catch(console.error);
     fetch('/api/custom-fields?active=true')
       .then((res) => res.json())
       .then((data) => setCustomFieldDefs(data))
       .catch(console.error);
-  }, [currentPage]);
+  }, []);
 
   const handleSearch = () => {
     setCurrentPage(1);
     fetchRecords(1);
+  };
+
+  const handleExportCsv = async () => {
+    setExporting(true);
+    try {
+      const params = buildFilterParams();
+      const res = await fetch(`/api/sales/records/export?${params}`);
+      if (!res.ok) {
+        await Dialog.error('エクスポートに失敗しました。');
+        return;
+      }
+      const json = await res.json();
+      const records: SalesRecord[] = Array.isArray(json) ? json : json?.data ?? [];
+
+      if (records.length === 0) {
+        await Dialog.error('エクスポートするデータがありません。');
+        return;
+      }
+
+      // カスタムフィールドのヘッダーを収集
+      const cfHeaders = customFieldDefs.map((f) => f.name);
+
+      const headerRow = ['売上ID', '日付', 'メンバー名', '部署', '金額', '備考', ...cfHeaders, '入力日時'];
+      const csvRows = [headerRow.map(escapeCsvField).join(',')];
+
+      for (const r of records) {
+        const cfValues = customFieldDefs.map((f) => r.customFields?.[String(f.id)] || '');
+        const row = [
+          String(r.id),
+          formatDateShort(r.recordDate),
+          r.memberName,
+          r.department || '',
+          String(r.amount),
+          r.description || '',
+          ...cfValues,
+          formatDate(r.createdAt),
+        ];
+        csvRows.push(row.map(escapeCsvField).join(','));
+      }
+
+      const bom = '\uFEFF';
+      const csvContent = bom + csvRows.join('\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      const now = new Date();
+      const fileName = `売上データ_${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}.csv`;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch {
+      await Dialog.error('エクスポートに失敗しました。ネットワーク接続を確認してください。');
+    } finally {
+      setExporting(false);
+    }
   };
 
   const handleDelete = async (record: SalesRecord) => {
@@ -186,6 +296,9 @@ export default function SalesRecordsPage() {
   const total = data?.total || 0;
   const totalPages = data?.totalPages || 1;
 
+  const groupOptions = [{ value: '', label: 'すべてのグループ' }, ...groups.map((g) => ({ value: String(g.id), label: g.name }))];
+  const memberOptions = [{ value: '', label: 'すべてのメンバー' }, ...members.map((m) => ({ value: String(m.id), label: m.name }))];
+
   return (
     <div className="h-screen flex flex-col bg-gray-100">
       <Header subtitle="売上データ管理" />
@@ -204,12 +317,19 @@ export default function SalesRecordsPage() {
               icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>,
               onClick: () => setIsImportModalOpen(true),
             },
+            {
+              label: exporting ? 'エクスポート中...' : 'CSVエクスポート',
+              icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>,
+              onClick: handleExportCsv,
+            },
           ]} />
         </div>
-        <div className="flex items-center space-x-2 mb-6">
+        <div className="flex flex-wrap items-center gap-2 mb-6">
           <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full sm:w-auto" />
           <span className="text-gray-500 shrink-0">&mdash;</span>
           <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full sm:w-auto" />
+          <Select value={groupId} onChange={(v) => { setGroupId(v); if (v) setMemberId(''); }} options={groupOptions} placeholder="グループ" className="w-full sm:w-44" />
+          <Select value={memberId} onChange={(v) => { setMemberId(v); if (v) setGroupId(''); }} options={memberOptions} placeholder="メンバー" className="w-full sm:w-44" />
           <Button label="検索" onClick={handleSearch} className="shrink-0" />
         </div>
 

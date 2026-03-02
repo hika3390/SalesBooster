@@ -180,11 +180,17 @@ export const salesController = {
     const startDateParam = searchParams.get('startDate');
     const endDateParam = searchParams.get('endDate');
     const memberIdParam = searchParams.get('memberId');
+    const groupIdParam = searchParams.get('groupId');
 
-    const filters: { startDate?: Date; endDate?: Date; memberId?: number } = {};
+    const filters: { startDate?: Date; endDate?: Date; memberId?: number; memberIds?: number[] } = {};
     if (startDateParam) filters.startDate = new Date(startDateParam);
     if (endDateParam) filters.endDate = new Date(`${endDateParam}T23:59:59`);
-    if (memberIdParam) filters.memberId = Number(memberIdParam);
+    if (memberIdParam) {
+      filters.memberId = Number(memberIdParam);
+    } else if (groupIdParam) {
+      const memberIds = await resolveMemberIds(searchParams);
+      if (memberIds) filters.memberIds = memberIds;
+    }
 
     try {
       const data = await salesService.getSalesRecords(page, pageSize, filters);
@@ -248,6 +254,32 @@ export const salesController = {
       return ApiResponse.success(results);
     } catch (error) {
       return ApiResponse.fromError(error, 'Failed to import sales records');
+    }
+  },
+
+  async exportSalesRecords(request: NextRequest) {
+    const { searchParams } = new URL(request.url);
+    const startDateParam = searchParams.get('startDate');
+    const endDateParam = searchParams.get('endDate');
+    const memberIdParam = searchParams.get('memberId');
+    const groupIdParam = searchParams.get('groupId');
+
+    const filters: { startDate?: Date; endDate?: Date; memberId?: number; memberIds?: number[] } = {};
+    if (startDateParam) filters.startDate = new Date(startDateParam);
+    if (endDateParam) filters.endDate = new Date(`${endDateParam}T23:59:59`);
+    if (memberIdParam) {
+      filters.memberId = Number(memberIdParam);
+    } else if (groupIdParam) {
+      const memberIds = await resolveMemberIds(searchParams);
+      if (memberIds) filters.memberIds = memberIds;
+    }
+
+    try {
+      const data = await salesService.getAllSalesRecords(filters);
+      return ApiResponse.success(data);
+    } catch (error) {
+      console.error('Failed to export sales records:', error);
+      return ApiResponse.serverError();
     }
   },
 

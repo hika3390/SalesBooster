@@ -7,6 +7,7 @@ import Select from './common/Select';
 import { Dialog } from './common/Dialog';
 import CustomFieldsRenderer from './sales/CustomFieldsRenderer';
 import type { CustomFieldDefinition, CustomFieldValues } from '@/types/customField';
+import type { DataTypeInfo } from '@/types';
 
 interface SalesInputModalProps {
   isOpen: boolean;
@@ -16,8 +17,7 @@ interface SalesInputModalProps {
 
 interface SalesInputData {
   member: string;
-  amount: number;
-  contracts: number;
+  value: number;
   orderDate: string;
   memo: string;
 }
@@ -29,9 +29,10 @@ interface MemberOption {
 }
 
 export default function SalesInputModal({ isOpen, onClose, onSubmit }: SalesInputModalProps) {
+  const [dataTypes, setDataTypes] = useState<DataTypeInfo[]>([]);
+  const [selectedDataTypeId, setSelectedDataTypeId] = useState('');
   const [memberId, setMemberId] = useState('');
-  const [amount, setAmount] = useState('');
-  const [contracts, setContracts] = useState('1');
+  const [value, setValue] = useState('');
   const [orderDate, setOrderDate] = useState(() => {
     const now = new Date();
     return now.toISOString().slice(0, 16);
@@ -41,6 +42,8 @@ export default function SalesInputModal({ isOpen, onClose, onSubmit }: SalesInpu
   const [submitting, setSubmitting] = useState(false);
   const [customFieldDefs, setCustomFieldDefs] = useState<CustomFieldDefinition[]>([]);
   const [customFieldValues, setCustomFieldValues] = useState<CustomFieldValues>({});
+
+  const selectedDataType = dataTypes.find((dt) => String(dt.id) === selectedDataTypeId);
 
   useEffect(() => {
     if (isOpen) {
@@ -52,11 +55,32 @@ export default function SalesInputModal({ isOpen, onClose, onSubmit }: SalesInpu
         .then((res) => res.json())
         .then((data) => setCustomFieldDefs(data))
         .catch(console.error);
+      fetch('/api/data-types?active=true')
+        .then((res) => res.json())
+        .then((data: DataTypeInfo[]) => {
+          setDataTypes(data);
+          // デフォルトのデータ種類を自動選択
+          const defaultType = data.find((dt) => dt.isDefault);
+          if (defaultType) {
+            setSelectedDataTypeId(String(defaultType.id));
+          } else if (data.length > 0) {
+            setSelectedDataTypeId(String(data[0].id));
+          }
+        })
+        .catch(console.error);
     }
   }, [isOpen]);
 
+  const getSubmitValue = (): number => {
+    return parseInt(value) || 0;
+  };
+
+  const isValueEmpty = (): boolean => {
+    return !value || parseInt(value) === 0;
+  };
+
   const handleSubmit = async () => {
-    if (!memberId || !amount) return;
+    if (!memberId || !selectedDataTypeId || isValueEmpty()) return;
 
     // 必須カスタムフィールドのバリデーション
     for (const field of customFieldDefs) {
@@ -72,6 +96,8 @@ export default function SalesInputModal({ isOpen, onClose, onSubmit }: SalesInpu
       if (val.trim()) filteredCustomFields[key] = val;
     }
 
+    const submitValue = getSubmitValue();
+
     setSubmitting(true);
     try {
       const res = await fetch('/api/sales', {
@@ -79,7 +105,8 @@ export default function SalesInputModal({ isOpen, onClose, onSubmit }: SalesInpu
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           memberId: Number(memberId),
-          amount: parseInt(amount) || 0,
+          value: submitValue,
+          dataTypeId: Number(selectedDataTypeId),
           description: memo || undefined,
           recordDate: new Date(orderDate).toISOString(),
           ...(Object.keys(filteredCustomFields).length > 0 ? { customFields: filteredCustomFields } : {}),
@@ -90,23 +117,21 @@ export default function SalesInputModal({ isOpen, onClose, onSubmit }: SalesInpu
         const selectedMember = members.find((m) => m.id === Number(memberId));
         onSubmit({
           member: selectedMember?.name || '',
-          amount: parseInt(amount) || 0,
-          contracts: parseInt(contracts) || 0,
+          value: submitValue,
           orderDate,
           memo,
         });
         setMemberId('');
-        setAmount('');
-        setContracts('1');
+        setValue('');
         setMemo('');
         setCustomFieldValues({});
         onClose();
       } else {
         const data = await res.json().catch(() => null);
-        await Dialog.error(data?.error || '売上の登録に失敗しました。');
+        await Dialog.error(data?.error || 'データの登録に失敗しました。');
       }
     } catch {
-      await Dialog.error('売上の登録に失敗しました。ネットワーク接続を確認してください。');
+      await Dialog.error('データの登録に失敗しました。ネットワーク接続を確認してください。');
     } finally {
       setSubmitting(false);
     }
@@ -119,18 +144,70 @@ export default function SalesInputModal({ isOpen, onClose, onSubmit }: SalesInpu
   const footer = (
     <>
       <Button label="キャンセル" variant="outline" color="gray" onClick={handleCancel} />
-      <Button label={submitting ? '送信中...' : '追　加'} onClick={handleSubmit} disabled={submitting || !memberId || !amount} />
+      <Button label={submitting ? '送信中...' : '追　加'} onClick={handleSubmit} disabled={submitting || !memberId || !selectedDataTypeId || isValueEmpty()} />
     </>
   );
+
+  const renderValueInput = () => {
+    if (!selectedDataType) return null;
+
+    return (
+      <div className="flex items-center">
+        <label className="w-24 text-sm text-gray-700 text-right pr-4">{selectedDataType.name}</label>
+        <div className="flex items-center space-x-2">
+          <input
+            type="number"
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            className="w-32 border border-gray-300 rounded px-3 py-2 text-sm"
+            placeholder=""
+          />
+          {selectedDataType.unit && (
+            <span className="text-sm text-blue-600">{selectedDataType.unit}</span>
+          )}
+        </div>
+      </div>
+    );
+  };
 
   return (
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="契約速報"
+      title="データ入力"
       footer={footer}
     >
       <div className="space-y-4">
+        {/* データ種類 */}
+        <div className="flex items-center">
+          <label className="w-24 text-sm text-gray-700 text-right pr-4">データ種類</label>
+          <div className="flex-1">
+            <div className="flex flex-wrap gap-2">
+              {dataTypes.map((dt) => (
+                <button
+                  key={dt.id}
+                  onClick={() => {
+                    setSelectedDataTypeId(String(dt.id));
+                    setValue('');
+                  }}
+                  className={`px-3 py-1.5 text-sm rounded-full border transition-colors ${
+                    selectedDataTypeId === String(dt.id)
+                      ? 'text-white border-transparent'
+                      : 'text-gray-600 border-gray-300 hover:border-gray-400'
+                  }`}
+                  style={
+                    selectedDataTypeId === String(dt.id)
+                      ? { backgroundColor: dt.color || '#3B82F6' }
+                      : undefined
+                  }
+                >
+                  {dt.name}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
         {/* メンバー */}
         <div className="flex items-center">
           <label className="w-24 text-sm text-gray-700 text-right pr-4">メンバー</label>
@@ -147,39 +224,12 @@ export default function SalesInputModal({ isOpen, onClose, onSubmit }: SalesInpu
           </div>
         </div>
 
-        {/* 粗利 */}
-        <div className="flex items-center">
-          <label className="w-24 text-sm text-gray-700 text-right pr-4">粗利</label>
-          <div className="flex items-center space-x-2">
-            <input
-              type="number"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              className="w-32 border border-gray-300 rounded px-3 py-2 text-sm"
-              placeholder=""
-            />
-            <span className="text-sm text-blue-600">円</span>
-          </div>
-        </div>
+        {/* 値の入力（データ種類に応じて動的） */}
+        {renderValueInput()}
 
-        {/* 契約 */}
+        {/* 日時 */}
         <div className="flex items-center">
-          <label className="w-24 text-sm text-gray-700 text-right pr-4">契約</label>
-          <div className="flex items-center space-x-2">
-            <input
-              type="number"
-              value={contracts}
-              onChange={(e) => setContracts(e.target.value)}
-              className="w-32 border border-gray-300 rounded px-3 py-2 text-sm"
-              min="1"
-            />
-            <span className="text-sm text-blue-600">件</span>
-          </div>
-        </div>
-
-        {/* 受注日 */}
-        <div className="flex items-center">
-          <label className="w-24 text-sm text-gray-700 text-right pr-4">受注日</label>
+          <label className="w-24 text-sm text-gray-700 text-right pr-4">日時</label>
           <div className="flex items-center space-x-2">
             <input
               type="datetime-local"

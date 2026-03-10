@@ -20,7 +20,7 @@ export const targetController = {
     try {
       const tenantId = await getTenantId(request);
       const body = await request.json();
-      const { memberId, monthly, quarterly, annual, year, month } = body;
+      const { memberId, monthly, quarterly, annual, year, month, dataTypeId } = body;
 
       if (!memberId || monthly === undefined || !year || !month) {
         return ApiResponse.badRequest('memberId, monthly, year, month are required');
@@ -37,6 +37,7 @@ export const targetController = {
         annual: Number(annual || 0),
         year: numYear,
         month: numMonth,
+        ...(dataTypeId ? { dataTypeId: Number(dataTypeId) } : {}),
       });
 
       auditLogService.create(tenantId, {

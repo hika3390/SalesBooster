@@ -14,6 +14,7 @@ import EmailSettings from '@/components/settings/EmailSettings';
 import SystemSettings from '@/components/settings/SystemSettings';
 import IntegrationSettings from '@/components/settings/IntegrationSettings';
 import LogViewer from '@/components/settings/LogViewer';
+import DataTypeSettings from '@/components/settings/DataTypeSettings';
 
 export default function SettingsPage() {
   const [activeSection, setActiveSection] = useState<SettingsSection>('member');
@@ -21,6 +22,7 @@ export default function SettingsPage() {
     switch (activeSection) {
       case 'member': return <MemberSettings />;
       case 'group': return <GroupSettings />;
+      case 'dataType': return <DataTypeSettings />;
       case 'graph': return <GraphSettings />;
       case 'display': return <DisplaySettings />;
       case 'target': return <TargetSettings />;

@@ -9,9 +9,9 @@ export const targetRepository = {
     });
   },
 
-  findByMemberAndPeriod(memberId: number, year: number, month: number, tenantId: number) {
-    return prisma.target.findUnique({
-      where: { tenantId_memberId_year_month: { tenantId, memberId, year, month } },
+  findByMemberAndPeriod(memberId: number, year: number, month: number, tenantId: number, dataTypeId?: number) {
+    return prisma.target.findFirst({
+      where: { tenantId, memberId, year, month, dataTypeId: dataTypeId ?? null },
     });
   },
 
@@ -39,11 +39,18 @@ export const targetRepository = {
     });
   },
 
-  upsert(tenantId: number, data: { memberId: number; monthly: number; quarterly: number; annual: number; year: number; month: number }) {
-    return prisma.target.upsert({
-      where: { tenantId_memberId_year_month: { tenantId, memberId: data.memberId, year: data.year, month: data.month } },
-      update: { monthly: data.monthly, quarterly: data.quarterly, annual: data.annual },
-      create: { ...data, tenantId },
+  async upsert(tenantId: number, data: { memberId: number; monthly: number; quarterly: number; annual: number; year: number; month: number; dataTypeId?: number }) {
+    const existing = await prisma.target.findFirst({
+      where: { tenantId, memberId: data.memberId, year: data.year, month: data.month, dataTypeId: data.dataTypeId ?? null },
+    });
+    if (existing) {
+      return prisma.target.update({
+        where: { id: existing.id },
+        data: { monthly: data.monthly, quarterly: data.quarterly, annual: data.annual },
+      });
+    }
+    return prisma.target.create({
+      data: { ...data, tenantId },
     });
   },
 };

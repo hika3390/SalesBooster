@@ -26,7 +26,7 @@ export interface RankingMember {
   rank: number;
   name: string;
   imageUrl?: string;
-  amount: number; // 円単位
+  amount: number;
 }
 
 export interface RankingColumn {
@@ -72,7 +72,20 @@ export const AUDIT_ACTION_LABELS: Record<string, string> = {
   TENANT_CREATE: 'テナント作成',
   TENANT_UPDATE: 'テナント更新',
   TENANT_DELETE: 'テナント削除',
+  DATA_TYPE_CREATE: 'データ種類追加',
+  DATA_TYPE_UPDATE: 'データ種類更新',
+  DATA_TYPE_DELETE: 'データ種類削除',
 };
+
+export interface DataTypeInfo {
+  id: number;
+  name: string;
+  unit: string;
+  color?: string | null;
+  sortOrder: number;
+  isActive: boolean;
+  isDefault: boolean;
+}
 
 export interface ReportData {
   monthlyTrend: { month: string; displayMonth: string; sales: number; movingAvg: number | null }[];

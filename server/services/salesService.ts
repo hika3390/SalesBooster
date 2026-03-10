@@ -15,25 +15,35 @@ async function fetchMembers(tenantId: number, memberIds?: number[]): Promise<Mem
   return memberRepository.findAll(tenantId);
 }
 
-/** レコード配列からメンバーごとの売上合計Mapを構築 */
+/** レコードの値を数値として取得 */
+function getNumericValue(record: SalesRecordWithMember): number {
+  return record.value;
+}
+
+/** レコード配列からメンバーごとの合計Mapを構築 */
 function buildSalesMap(records: SalesRecordWithMember[]): Map<number, number> {
   const map = new Map<number, number>();
   for (const record of records) {
-    map.set(record.memberId, (map.get(record.memberId) || 0) + record.amount);
+    const value = getNumericValue(record);
+    map.set(record.memberId, (map.get(record.memberId) || 0) + value);
   }
   return map;
 }
 
 /** 期間内の各月の実際の目標値を合算したMapを構築 */
-async function buildTargetMap(tenantId: number, memberIds: number[], startDate: Date, endDate: Date): Promise<Map<number, number>> {
+async function buildTargetMap(tenantId: number, memberIds: number[], startDate: Date, endDate: Date, dataTypeId?: number): Promise<Map<number, number>> {
   const targets = await targetRepository.findByMembersAndPeriodRange(
     memberIds,
     startDate.getFullYear(), startDate.getMonth() + 1,
     endDate.getFullYear(), endDate.getMonth() + 1,
     tenantId,
   );
+  // dataTypeIdでフィルタ
+  const filtered = dataTypeId
+    ? targets.filter((t: { dataTypeId: number | null }) => t.dataTypeId === dataTypeId)
+    : targets;
   const map = new Map<number, number>();
-  for (const t of targets) {
+  for (const t of filtered) {
     map.set(t.memberId, (map.get(t.memberId) || 0) + (t.monthly || 0));
   }
   return map;
@@ -44,13 +54,14 @@ function buildSalesPeople(
   members: MemberWithDepartment[],
   salesMap: Map<number, number>,
   targetMap: Map<number, number>,
+  useManyen: boolean = true,
 ): SalesPerson[] {
   const salesPeople: SalesPerson[] = members.map((member) => {
-    const salesYen = salesMap.get(member.id) || 0;
-    const targetYen = targetMap.get(member.id) || 0;
-    const sales = toManyen(salesYen);
-    const target = toManyen(targetYen);
-    const achievement = targetYen > 0 ? Math.round((salesYen / targetYen) * 100) : 0;
+    const salesRaw = salesMap.get(member.id) || 0;
+    const targetRaw = targetMap.get(member.id) || 0;
+    const sales = useManyen ? toManyen(salesRaw) : salesRaw;
+    const target = useManyen ? toManyen(targetRaw) : targetRaw;
+    const achievement = targetRaw > 0 ? Math.round((salesRaw / targetRaw) * 100) : 0;
 
     return {
       rank: 0,
@@ -68,7 +79,7 @@ function buildSalesPeople(
   return salesPeople;
 }
 
-/** 期間内の月別売上Mapを構築（0初期化つき） */
+/** 期間内の月別合計Mapを構築（0初期化つき） */
 function buildMonthlyMap(startDate: Date, endDate: Date, records: SalesRecordWithMember[]): Map<string, number> {
   const map = new Map<string, number>();
   const cursor = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
@@ -81,53 +92,54 @@ function buildMonthlyMap(startDate: Date, endDate: Date, records: SalesRecordWit
   for (const r of records) {
     const d = new Date(r.recordDate);
     const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-    map.set(key, (map.get(key) || 0) + r.amount);
+    const value = getNumericValue(r);
+    map.set(key, (map.get(key) || 0) + value);
   }
   return map;
 }
 
 export const salesService = {
-  async getSalesByDateRange(tenantId: number, startDate: Date, endDate: Date, memberIds?: number[]): Promise<{ salesPeople: SalesPerson[]; recordCount: number }> {
+  async getSalesByDateRange(tenantId: number, startDate: Date, endDate: Date, memberIds?: number[], dataTypeId?: number): Promise<{ salesPeople: SalesPerson[]; recordCount: number }> {
     const [records, members] = await Promise.all([
-      salesRecordRepository.findByPeriod(startDate, endDate, tenantId, memberIds),
+      salesRecordRepository.findByPeriod(startDate, endDate, tenantId, memberIds, dataTypeId),
       fetchMembers(tenantId, memberIds),
     ]);
 
     const salesMap = buildSalesMap(records);
     const ids = members.map((m) => m.id);
-    const targetMap = await buildTargetMap(tenantId, ids, startDate, endDate);
+    const targetMap = await buildTargetMap(tenantId, ids, startDate, endDate, dataTypeId);
     const salesPeople = buildSalesPeople(members, salesMap, targetMap);
 
     return { salesPeople, recordCount: records.length };
   },
 
-  async getCumulativeSales(tenantId: number, startDate: Date, endDate: Date, memberIds?: number[]): Promise<SalesPerson[]> {
+  async getCumulativeSales(tenantId: number, startDate: Date, endDate: Date, memberIds?: number[], dataTypeId?: number): Promise<SalesPerson[]> {
     const [records, members] = await Promise.all([
-      salesRecordRepository.findByPeriod(startDate, endDate, tenantId, memberIds),
+      salesRecordRepository.findByPeriod(startDate, endDate, tenantId, memberIds, dataTypeId),
       fetchMembers(tenantId, memberIds),
     ]);
 
     const salesMap = buildSalesMap(records);
     const ids = members.map((m) => m.id);
-    const targetMap = await buildTargetMap(tenantId, ids, startDate, endDate);
+    const targetMap = await buildTargetMap(tenantId, ids, startDate, endDate, dataTypeId);
 
     return buildSalesPeople(members, salesMap, targetMap);
   },
 
-  async getTrendData(tenantId: number, startDate: Date, endDate: Date, memberIds?: number[]) {
+  async getTrendData(tenantId: number, startDate: Date, endDate: Date, memberIds?: number[], dataTypeId?: number) {
     const periodStart = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
     const periodEnd = new Date(endDate.getFullYear(), endDate.getMonth() + 1, 0, 23, 59, 59);
-    const records = await salesRecordRepository.findByPeriod(periodStart, periodEnd, tenantId, memberIds);
+    const records = await salesRecordRepository.findByPeriod(periodStart, periodEnd, tenantId, memberIds, dataTypeId);
 
     const monthlyMap = buildMonthlyMap(startDate, endDate, records);
 
     return Array.from(monthlyMap.entries())
       .sort((a, b) => a[0].localeCompare(b[0]))
-      .map(([month, totalYen]) => {
+      .map(([month, totalValue]) => {
         const m = parseInt(month.split('-')[1]);
         return {
           month,
-          sales: toManyen(totalYen),
+          sales: toManyen(totalValue),
           displayMonth: `${m}月`,
         };
       });
@@ -139,8 +151,8 @@ export const salesService = {
     return { minDate, maxDate: new Date() };
   },
 
-  async getReportData(tenantId: number, startDate: Date, endDate: Date, memberIds?: number[]): Promise<ReportData> {
-    const records = await salesRecordRepository.findByPeriod(startDate, endDate, tenantId, memberIds);
+  async getReportData(tenantId: number, startDate: Date, endDate: Date, memberIds?: number[], dataTypeId?: number): Promise<ReportData> {
+    const records = await salesRecordRepository.findByPeriod(startDate, endDate, tenantId, memberIds, dataTypeId);
 
     const monthlyMap = buildMonthlyMap(startDate, endDate, records);
 
@@ -178,7 +190,7 @@ export const salesService = {
     const dayAmounts = new Array(7).fill(0);
     for (const r of records) {
       const dow = new Date(r.recordDate).getDay();
-      dayAmounts[dow] += r.amount;
+      dayAmounts[dow] += getNumericValue(r);
     }
     const dayTotal = dayAmounts.reduce((a: number, b: number) => a + b, 0) || 1;
     const dayOfWeekRatio = dayNames.map((day, i) => ({
@@ -191,9 +203,10 @@ export const salesService = {
     const periodAmounts = [0, 0, 0]; // 前半(1-10), 中盤(11-20), 後半(21-)
     for (const r of records) {
       const date = new Date(r.recordDate).getDate();
-      if (date <= 10) periodAmounts[0] += r.amount;
-      else if (date <= 20) periodAmounts[1] += r.amount;
-      else periodAmounts[2] += r.amount;
+      const value = getNumericValue(r);
+      if (date <= 10) periodAmounts[0] += value;
+      else if (date <= 20) periodAmounts[1] += value;
+      else periodAmounts[2] += value;
     }
     const periodTotal = periodAmounts.reduce((a, b) => a + b, 0) || 1;
     const periodLabels = ['前半10日間', '中盤10日間', '後半10日間'];
@@ -219,7 +232,10 @@ export const salesService = {
     const targets = await targetRepository.findByMembersAndPeriod(
       members.map((m) => m.id), now.getFullYear(), now.getMonth() + 1, tenantId
     );
-    const monthlyTarget = toManyen(targets.reduce((sum, t) => sum + (t.monthly || 0), 0));
+    const filteredTargets = dataTypeId
+      ? targets.filter((t: { dataTypeId: number | null }) => t.dataTypeId === dataTypeId)
+      : targets;
+    const monthlyTarget = toManyen(filteredTargets.reduce((sum: number, t: { monthly: number }) => sum + (t.monthly || 0), 0));
 
     const targetDays = dailyAvg > 0 ? Math.round((monthlyTarget / dailyAvg) * 10) / 10 : 0;
     const targetMonths = monthlyAvg > 0 ? Math.round((monthlyTarget / monthlyAvg) * 10) / 10 : 0;
@@ -241,10 +257,10 @@ export const salesService = {
     };
   },
 
-  async getRankingBoardData(tenantId: number, startDate: Date, endDate: Date, memberIds?: number[]): Promise<RankingBoardData> {
+  async getRankingBoardData(tenantId: number, startDate: Date, endDate: Date, memberIds?: number[], dataTypeId?: number): Promise<RankingBoardData> {
     const [members, allRecords] = await Promise.all([
       fetchMembers(tenantId, memberIds),
-      salesRecordRepository.findByPeriod(startDate, endDate, tenantId, memberIds),
+      salesRecordRepository.findByPeriod(startDate, endDate, tenantId, memberIds, dataTypeId),
     ]);
 
     // --- 月ごとのカラムを生成（新しい月から並べる）---
@@ -262,7 +278,7 @@ export const salesService = {
     const buildRanking = (records: SalesRecordWithMember[]): RankingMember[] => {
       const salesByMember = new Map<number, number>();
       for (const r of records) {
-        salesByMember.set(r.memberId, (salesByMember.get(r.memberId) || 0) + r.amount);
+        salesByMember.set(r.memberId, (salesByMember.get(r.memberId) || 0) + getNumericValue(r));
       }
       const ranked = members
         .map((m: MemberWithDepartment) => ({
@@ -306,12 +322,12 @@ export const salesService = {
     return { columns: [totalColumn, ...monthColumns] };
   },
 
-  async createSalesRecord(tenantId: number, data: { memberId: number; amount: number; description?: string; recordDate: Date; customFields?: Record<string, string> }) {
+  async createSalesRecord(tenantId: number, data: { memberId: number; value: number; description?: string; recordDate: Date; customFields?: Record<string, string>; dataTypeId?: number }) {
     const record = await salesRecordRepository.create(tenantId, data);
     return record;
   },
 
-  async getSalesRecords(tenantId: number, page: number, pageSize: number, filters?: { startDate?: Date; endDate?: Date; memberId?: number; memberIds?: number[] }) {
+  async getSalesRecords(tenantId: number, page: number, pageSize: number, filters?: { startDate?: Date; endDate?: Date; memberId?: number; memberIds?: number[]; dataTypeId?: number }) {
     const { records, total } = await salesRecordRepository.findPaginated(page, pageSize, tenantId, filters);
     const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
@@ -321,7 +337,9 @@ export const salesService = {
         memberId: r.memberId,
         memberName: r.member.name,
         department: r.member.department?.name || null,
-        amount: r.amount,
+        value: r.value,
+        dataTypeId: r.dataTypeId,
+        dataType: r.dataType ? { id: r.dataType.id, name: r.dataType.name, unit: r.dataType.unit } : null,
         description: r.description,
         customFields: (r.customFields as Record<string, string>) || null,
         recordDate: r.recordDate.toISOString(),
@@ -334,14 +352,16 @@ export const salesService = {
     };
   },
 
-  async getAllSalesRecords(tenantId: number, filters?: { startDate?: Date; endDate?: Date; memberId?: number; memberIds?: number[] }) {
+  async getAllSalesRecords(tenantId: number, filters?: { startDate?: Date; endDate?: Date; memberId?: number; memberIds?: number[]; dataTypeId?: number }) {
     const records = await salesRecordRepository.findAll(tenantId, filters);
     return records.map((r) => ({
       id: r.id,
       memberId: r.memberId,
       memberName: r.member.name,
       department: r.member.department?.name || null,
-      amount: r.amount,
+      value: r.value,
+      dataTypeId: r.dataTypeId,
+      dataType: r.dataType ? { id: r.dataType.id, name: r.dataType.name, unit: r.dataType.unit } : null,
       description: r.description,
       customFields: (r.customFields as Record<string, string>) || null,
       recordDate: r.recordDate.toISOString(),
@@ -349,7 +369,7 @@ export const salesService = {
     }));
   },
 
-  async updateSalesRecord(tenantId: number, id: number, data: { memberId?: number; amount?: number; description?: string; recordDate?: Date; customFields?: Record<string, string> }) {
+  async updateSalesRecord(tenantId: number, id: number, data: { memberId?: number; value?: number; description?: string; recordDate?: Date; customFields?: Record<string, string>; dataTypeId?: number }) {
     const existing = await salesRecordRepository.findById(id, tenantId);
     if (!existing) return null;
     await salesRecordRepository.update(id, tenantId, data);
@@ -363,12 +383,13 @@ export const salesService = {
     return existing;
   },
 
-  async importSalesRecords(tenantId: number, records: { memberId: number; amount: number; recordDate: string; description?: string; customFields?: Record<string, string> }[]) {
+  async importSalesRecords(tenantId: number, records: { memberId: number; value: number; recordDate: string; description?: string; customFields?: Record<string, string>; dataTypeId?: number }[]) {
     const data = records.map((r) => ({
       memberId: r.memberId,
-      amount: r.amount,
+      value: r.value,
       description: r.description || undefined,
       recordDate: new Date(r.recordDate),
+      dataTypeId: r.dataTypeId,
       ...(r.customFields ? { customFields: r.customFields } : {}),
     }));
 

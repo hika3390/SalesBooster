@@ -30,6 +30,7 @@ export default function Home() {
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [filter, setFilter] = useState<{ groupId: string; memberId: string }>({ groupId: '', memberId: '' });
   const [period, setPeriod] = useState<PeriodSelection | null>(null);
+  const [dataTypeId, setDataTypeId] = useState('');
   const isMobile = useIsMobile();
 
   const fetchTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -41,12 +42,13 @@ export default function Home() {
       const rankingParams = new URLSearchParams();
       if (filter.memberId) rankingParams.set('memberId', filter.memberId);
       else if (filter.groupId) rankingParams.set('groupId', filter.groupId);
+      if (dataTypeId) rankingParams.set('dataTypeId', dataTypeId);
       const rankingRes = await fetch(`/api/sales/ranking?${rankingParams.toString()}`);
       if (rankingRes.ok) setRankingData(await rankingRes.json());
     } catch (error) {
       console.error('Failed to fetch ranking data:', error);
     }
-  }, [filter]);
+  }, [filter, dataTypeId]);
 
   const fetchDataImmediate = useCallback(async () => {
     if (!period) return;
@@ -58,6 +60,7 @@ export default function Home() {
       filterParams.set('endDate', period.endDate);
       if (filter.memberId) filterParams.set('memberId', filter.memberId);
       else if (filter.groupId) filterParams.set('groupId', filter.groupId);
+      if (dataTypeId) filterParams.set('dataTypeId', dataTypeId);
       const query = filterParams.toString();
 
       fetchRankingData();
@@ -82,7 +85,7 @@ export default function Home() {
     } finally {
       setLoading(false);
     }
-  }, [period, filter, fetchRankingData]);
+  }, [period, filter, dataTypeId, fetchRankingData]);
 
   // デバウンス付きfetchData: 短時間の連続呼び出しを1回にまとめる
   const fetchData = useCallback(() => {
@@ -133,7 +136,7 @@ export default function Home() {
 
   const emptyMessage = (
     <div className="mx-6 my-4 p-12 bg-white rounded shadow-sm text-center">
-      <div className="text-gray-400 text-lg mb-2">該当する売上データがありません</div>
+      <div className="text-gray-400 text-lg mb-2">該当するデータがありません</div>
       <div className="text-gray-400 text-sm">フィルター条件を変更してください</div>
     </div>
   );
@@ -141,7 +144,12 @@ export default function Home() {
   return (
     <div className="h-screen bg-gray-100 flex flex-col overflow-hidden">
       <Header onAddSalesClick={handleAddSalesClick} />
-      <FilterBar onViewChange={handleViewChange} onFilterChange={setFilter} onPeriodChange={setPeriod} />
+      <FilterBar
+        onViewChange={handleViewChange}
+        onFilterChange={setFilter}
+        onPeriodChange={setPeriod}
+        onDataTypeChange={setDataTypeId}
+      />
 
       <main className="w-full flex-1 min-h-0 overflow-auto">
         {isMobile ? (
@@ -180,7 +188,7 @@ export default function Home() {
         )}
       </main>
 
-      {/* 売上入力モーダル */}
+      {/* データ入力モーダル */}
       <SalesInputModal
         isOpen={isSalesModalOpen}
         onClose={handleSalesModalClose}

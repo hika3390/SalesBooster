@@ -7,7 +7,7 @@ interface LineConfig {
 
 interface SalesNotificationData {
   memberName: string;
-  amount: number;
+  value: number;
   recordDate: Date;
 }
 
@@ -30,9 +30,7 @@ export const lineNotificationService = {
       month: 'long',
       day: 'numeric',
     });
-    const amountStr = data.amount.toLocaleString('ja-JP');
-
-    const message = `売上登録\n\n担当: ${data.memberName}\n金額: ${amountStr}円\n日付: ${dateStr}`;
+    const message = `データ登録\n\n担当: ${data.memberName}\n値: ${data.value}\n日付: ${dateStr}`;
 
     const res = await fetch('https://api.line.me/v2/bot/message/push', {
       method: 'POST',

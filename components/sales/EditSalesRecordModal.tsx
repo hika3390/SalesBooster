@@ -12,7 +12,7 @@ interface SalesRecord {
   id: number;
   memberId: number;
   memberName: string;
-  amount: number;
+  value: number;
   description: string | null;
   customFields: Record<string, string> | null;
   recordDate: string;
@@ -33,7 +33,7 @@ interface EditSalesRecordModalProps {
 
 export default function EditSalesRecordModal({ isOpen, onClose, onUpdated, record }: EditSalesRecordModalProps) {
   const [memberId, setMemberId] = useState('');
-  const [amount, setAmount] = useState('');
+  const [editValue, setEditValue] = useState('');
   const [orderDate, setOrderDate] = useState('');
   const [memo, setMemo] = useState('');
   const [members, setMembers] = useState<MemberOption[]>([]);
@@ -57,7 +57,7 @@ export default function EditSalesRecordModal({ isOpen, onClose, onUpdated, recor
   useEffect(() => {
     if (record) {
       setMemberId(String(record.memberId));
-      setAmount(String(record.amount));
+      setEditValue(String(record.value));
       setMemo(record.description || '');
       const d = new Date(record.recordDate);
       setOrderDate(d.toISOString().slice(0, 16));
@@ -66,7 +66,7 @@ export default function EditSalesRecordModal({ isOpen, onClose, onUpdated, recor
   }, [record]);
 
   const handleSubmit = async () => {
-    if (!record || !memberId || !amount) return;
+    if (!record || !memberId || !editValue) return;
 
     // 必須カスタムフィールドのバリデーション
     for (const field of customFieldDefs) {
@@ -88,7 +88,7 @@ export default function EditSalesRecordModal({ isOpen, onClose, onUpdated, recor
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           memberId: Number(memberId),
-          amount: parseInt(amount) || 0,
+          value: parseInt(editValue) || 0,
           description: memo || undefined,
           recordDate: new Date(orderDate).toISOString(),
           customFields: filteredCustomFields,
@@ -112,7 +112,7 @@ export default function EditSalesRecordModal({ isOpen, onClose, onUpdated, recor
   const footer = (
     <>
       <Button label="キャンセル" variant="outline" color="gray" onClick={onClose} />
-      <Button label={submitting ? '更新中...' : '更　新'} onClick={handleSubmit} disabled={submitting || !memberId || !amount} />
+      <Button label={submitting ? '更新中...' : '更　新'} onClick={handleSubmit} disabled={submitting || !memberId || !editValue} />
     </>
   );
 
@@ -135,18 +135,17 @@ export default function EditSalesRecordModal({ isOpen, onClose, onUpdated, recor
           </div>
         </div>
 
-        {/* 粗利 */}
+        {/* 値 */}
         <div className="flex items-center">
-          <label className="w-24 text-sm text-gray-700 text-right pr-4">粗利</label>
+          <label className="w-24 text-sm text-gray-700 text-right pr-4">値</label>
           <div className="flex items-center space-x-2">
             <input
               type="number"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
+              value={editValue}
+              onChange={(e) => setEditValue(e.target.value)}
               className="w-32 border border-gray-300 rounded px-3 py-2 text-sm"
               placeholder=""
             />
-            <span className="text-sm text-blue-600">円</span>
           </div>
         </div>
 

@@ -12,10 +12,11 @@ export const targetService = {
       annual: t.annual,
       year: t.year,
       month: t.month,
+      dataTypeId: t.dataTypeId,
     }));
   },
 
-  async upsert(tenantId: number, data: { memberId: number; monthly: number; quarterly: number; annual: number; year: number; month: number }) {
+  async upsert(tenantId: number, data: { memberId: number; monthly: number; quarterly: number; annual: number; year: number; month: number; dataTypeId?: number }) {
     return targetRepository.upsert(tenantId, data);
   },
 };

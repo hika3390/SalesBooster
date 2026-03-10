@@ -136,19 +136,20 @@ async function main() {
   // --- 目標 ---
   const members = await prisma.member.findMany({ where: { tenantId: TENANT_ID } });
   for (const member of members) {
-    await prisma.target.upsert({
-      where: { tenantId_memberId_year_month: { tenantId: TENANT_ID, memberId: member.id, year: 2026, month: 1 } },
-      update: {},
-      create: {
-        memberId: member.id,
-        monthly: 1000000,
-        quarterly: 3000000,
-        annual: 12000000,
-        year: 2026,
-        month: 1,
-        tenantId: TENANT_ID,
-      },
-    });
+    const existing1 = await prisma.target.findFirst({ where: { tenantId: TENANT_ID, memberId: member.id, year: 2026, month: 1 } });
+    if (!existing1) {
+      await prisma.target.create({
+        data: {
+          memberId: member.id,
+          monthly: 1000000,
+          quarterly: 3000000,
+          annual: 12000000,
+          year: 2026,
+          month: 1,
+          tenantId: TENANT_ID,
+        },
+      });
+    }
   }
 
   console.log('Targets created for', members.length, 'members');
@@ -161,7 +162,7 @@ async function main() {
       await prisma.salesRecord.create({
         data: {
           memberId: members[i].id,
-          amount: salesAmounts[i],
+          value: salesAmounts[i],
           description: 'サンプル売上データ',
           recordDate: new Date(2026, 0, 15),
           tenantId: TENANT_ID,
@@ -173,39 +174,39 @@ async function main() {
   console.log('Sales records created (January)');
 
   // --- 売上レコード（2026年2月分のサンプル） ---
-  const salesDataFeb: { amount: number; day: number }[][] = [
+  const salesDataFeb: { value: number; day: number }[][] = [
     // 田中太郎
-    [{ amount: 800000, day: 3 }, { amount: 650000, day: 5 }, { amount: 420000, day: 7 }],
+    [{ value: 800000, day: 3 }, { value: 650000, day: 5 }, { value: 420000, day: 7 }],
     // 佐藤花子
-    [{ amount: 500000, day: 2 }, { amount: 700000, day: 4 }, { amount: 350000, day: 6 }],
+    [{ value: 500000, day: 2 }, { value: 700000, day: 4 }, { value: 350000, day: 6 }],
     // 鈴木一郎
-    [{ amount: 600000, day: 1 }, { amount: 400000, day: 3 }, { amount: 300000, day: 6 }],
+    [{ value: 600000, day: 1 }, { value: 400000, day: 3 }, { value: 300000, day: 6 }],
     // 高橋美咲
-    [{ amount: 450000, day: 2 }, { amount: 550000, day: 5 }],
+    [{ value: 450000, day: 2 }, { value: 550000, day: 5 }],
     // 渡辺健太
-    [{ amount: 380000, day: 1 }, { amount: 420000, day: 4 }, { amount: 300000, day: 7 }],
+    [{ value: 380000, day: 1 }, { value: 420000, day: 4 }, { value: 300000, day: 7 }],
     // 伊藤達也
-    [{ amount: 500000, day: 3 }, { amount: 350000, day: 6 }],
+    [{ value: 500000, day: 3 }, { value: 350000, day: 6 }],
     // 山本大輔
-    [{ amount: 400000, day: 2 }, { amount: 300000, day: 5 }],
+    [{ value: 400000, day: 2 }, { value: 300000, day: 5 }],
     // 中村悠介
-    [{ amount: 350000, day: 1 }, { amount: 250000, day: 4 }, { amount: 200000, day: 7 }],
+    [{ value: 350000, day: 1 }, { value: 250000, day: 4 }, { value: 200000, day: 7 }],
     // 小林誠
-    [{ amount: 300000, day: 3 }, { amount: 400000, day: 6 }],
+    [{ value: 300000, day: 3 }, { value: 400000, day: 6 }],
     // 加藤結衣
-    [{ amount: 280000, day: 2 }, { amount: 350000, day: 5 }],
+    [{ value: 280000, day: 2 }, { value: 350000, day: 5 }],
     // 吉田雄介
-    [{ amount: 250000, day: 1 }, { amount: 300000, day: 4 }],
+    [{ value: 250000, day: 1 }, { value: 300000, day: 4 }],
     // 山田麻衣
-    [{ amount: 200000, day: 3 }, { amount: 350000, day: 6 }],
+    [{ value: 200000, day: 3 }, { value: 350000, day: 6 }],
     // 佐々木翔
-    [{ amount: 180000, day: 2 }, { amount: 280000, day: 5 }],
+    [{ value: 180000, day: 2 }, { value: 280000, day: 5 }],
     // 松本美穂
-    [{ amount: 150000, day: 4 }, { amount: 200000, day: 7 }],
+    [{ value: 150000, day: 4 }, { value: 200000, day: 7 }],
     // 井上拓海
-    [{ amount: 120000, day: 1 }],
+    [{ value: 120000, day: 1 }],
     // 木村陽子
-    [{ amount: 100000, day: 3 }],
+    [{ value: 100000, day: 3 }],
     // 林智也
     [],
     // 清水咲良
@@ -221,7 +222,7 @@ async function main() {
       await prisma.salesRecord.create({
         data: {
           memberId: members[i].id,
-          amount: record.amount,
+          value: record.value,
           description: '2月サンプル売上データ',
           recordDate: new Date(2026, 1, record.day),
           tenantId: TENANT_ID,
@@ -232,19 +233,20 @@ async function main() {
 
   // 2月の目標
   for (const member of members) {
-    await prisma.target.upsert({
-      where: { tenantId_memberId_year_month: { tenantId: TENANT_ID, memberId: member.id, year: 2026, month: 2 } },
-      update: {},
-      create: {
-        memberId: member.id,
-        monthly: 1000000,
-        quarterly: 3000000,
-        annual: 12000000,
-        year: 2026,
-        month: 2,
-        tenantId: TENANT_ID,
-      },
-    });
+    const existing2 = await prisma.target.findFirst({ where: { tenantId: TENANT_ID, memberId: member.id, year: 2026, month: 2 } });
+    if (!existing2) {
+      await prisma.target.create({
+        data: {
+          memberId: member.id,
+          monthly: 1000000,
+          quarterly: 3000000,
+          annual: 12000000,
+          year: 2026,
+          month: 2,
+          tenantId: TENANT_ID,
+        },
+      });
+    }
   }
 
   console.log('Sales records & targets created (February)');

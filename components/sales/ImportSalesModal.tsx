@@ -17,7 +17,7 @@ interface ImportSalesModalProps {
 
 const FIXED_FIELDS: ImportField[] = [
   { value: 'memberName', label: 'メンバー名 *', required: true, autoMapKeywords: ['メンバー', '名前', 'name', '担当', '営業'] },
-  { value: 'amount', label: '金額 *', required: true, autoMapKeywords: ['金額', '売上', 'amount', '粗利'] },
+  { value: 'value', label: '値 *', required: true, autoMapKeywords: ['金額', '売上', 'amount', '粗利', '値', 'value'] },
   { value: 'recordDate', label: '受注日 *', required: true, autoMapKeywords: ['受注日', '日付', 'date', '契約日'] },
   { value: 'description', label: '備考', required: false, autoMapKeywords: ['備考', 'memo', 'description', 'メモ', '説明'] },
 ];
@@ -29,9 +29,9 @@ const FIXED_PREVIEW_COLUMNS: PreviewColumn[] = [
     render: (row) => row.memberName || <span className="text-red-400">-</span>,
   },
   {
-    key: 'amount',
-    label: '金額',
-    render: (row) => row.amount ? `${Number(row.amount).toLocaleString()}円` : <span className="text-red-400">-</span>,
+    key: 'value',
+    label: '値',
+    render: (row) => row.value || <span className="text-red-400">-</span>,
   },
   {
     key: 'recordDate',
@@ -49,14 +49,6 @@ function parseDate(value: string): Date | null {
   return null;
 }
 
-function parseAmount(value: string): number | null {
-  if (!value) return null;
-  // カンマ、円記号、¥、スペースを除去
-  const cleaned = value.replace(/[,，円¥￥\s]/g, '');
-  const num = Number(cleaned);
-  if (isNaN(num)) return null;
-  return Math.round(num);
-}
 
 export default function ImportSalesModal({ isOpen, onClose, onImported }: ImportSalesModalProps) {
   const [members, setMembers] = useState<Member[]>([]);
@@ -94,13 +86,13 @@ export default function ImportSalesModal({ isOpen, onClose, onImported }: Import
 
   const buildMappedData = (rows: ParsedRow[], mapping: Record<string, string>): MappedRow[] => {
     const memberNameHeader = Object.keys(mapping).find((k) => mapping[k] === 'memberName');
-    const amountHeader = Object.keys(mapping).find((k) => mapping[k] === 'amount');
+    const valueHeader = Object.keys(mapping).find((k) => mapping[k] === 'value');
     const dateHeader = Object.keys(mapping).find((k) => mapping[k] === 'recordDate');
     const descHeader = Object.keys(mapping).find((k) => mapping[k] === 'description');
 
     return rows.map((row) => {
       const rawName = memberNameHeader ? row[memberNameHeader].trim() : '';
-      const rawAmount = amountHeader ? row[amountHeader].trim() : '';
+      const rawValue = valueHeader ? row[valueHeader].trim() : '';
       const rawDate = dateHeader ? row[dateHeader].trim() : '';
       const desc = descHeader ? row[descHeader].trim() : '';
 
@@ -110,9 +102,7 @@ export default function ImportSalesModal({ isOpen, onClose, onImported }: Import
       const member = members.find((m) => m.name === rawName);
       if (rawName && !member) errors.push(`メンバー「${rawName}」が見つかりません`);
 
-      const amount = parseAmount(rawAmount);
-      if (!rawAmount) errors.push('金額が未入力');
-      else if (amount === null) errors.push(`金額「${rawAmount}」が不正`);
+      if (!rawValue) errors.push('値が未入力');
 
       const date = parseDate(rawDate);
       if (!rawDate) errors.push('受注日が未入力');
@@ -131,7 +121,7 @@ export default function ImportSalesModal({ isOpen, onClose, onImported }: Import
       return {
         memberName: rawName,
         memberId: member ? String(member.id) : undefined,
-        amount: amount !== null ? String(amount) : undefined,
+        value: rawValue || undefined,
         recordDate: date ? date.toISOString() : undefined,
         description: desc || undefined,
         ...cfValues,
@@ -150,7 +140,7 @@ export default function ImportSalesModal({ isOpen, onClose, onImported }: Import
 
       return {
         memberId: Number(row.memberId),
-        amount: Number(row.amount),
+        value: Number(row.value) || 0,
         recordDate: row.recordDate!,
         description: row.description || undefined,
         ...(Object.keys(customFields).length > 0 ? { customFields } : {}),

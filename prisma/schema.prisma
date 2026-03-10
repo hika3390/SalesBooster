@@ -79,6 +79,9 @@ enum AuditAction {
   TENANT_CREATE
   TENANT_UPDATE
   TENANT_DELETE
+  DATA_TYPE_CREATE
+  DATA_TYPE_UPDATE
+  DATA_TYPE_DELETE
 }
 
 // ─── Tenant Model ───
@@ -104,6 +107,7 @@ model Tenant {
   customSlides   CustomSlide[]
   customFields   CustomField[]
   auditLogs      AuditLog[]
+  dataTypes      DataType[]
 }
 
 // ─── Auth Model ───
@@ -194,34 +198,60 @@ model GroupMember {
 }
 
 model SalesRecord {
-  id           Int      @id @default(autoincrement())
+  id           Int       @id @default(autoincrement())
   memberId     Int
-  amount       Int
+  value        Int       @default(0)
   description  String?
   recordDate   DateTime
   customFields Json?
+  dataTypeId   Int?
   tenantId     Int
-  tenant       Tenant   @relation(fields: [tenantId], references: [id])
-  member       Member   @relation(fields: [memberId], references: [id])
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  tenant       Tenant    @relation(fields: [tenantId], references: [id])
+  member       Member    @relation(fields: [memberId], references: [id])
+  dataType     DataType? @relation(fields: [dataTypeId], references: [id])
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
   @@index([tenantId])
+  @@index([dataTypeId])
 }
 
 model Target {
-  id        Int    @id @default(autoincrement())
-  memberId  Int
-  monthly   Int
-  quarterly Int
-  annual    Int
-  year      Int
-  month     Int
-  tenantId  Int
-  tenant    Tenant @relation(fields: [tenantId], references: [id])
-  member    Member @relation(fields: [memberId], references: [id])
+  id         Int       @id @default(autoincrement())
+  memberId   Int
+  monthly    Int
+  quarterly  Int
+  annual     Int
+  year       Int
+  month      Int
+  dataTypeId Int?
+  tenantId   Int
+  tenant     Tenant    @relation(fields: [tenantId], references: [id])
+  member     Member    @relation(fields: [memberId], references: [id])
+  dataType   DataType? @relation(fields: [dataTypeId], references: [id])
 
-  @@unique([tenantId, memberId, year, month])
+  @@unique([tenantId, memberId, year, month, dataTypeId])
+  @@index([tenantId])
+  @@index([dataTypeId])
+}
+
+// ─── Data Types ───
+
+model DataType {
+  id        Int           @id @default(autoincrement())
+  name      String
+  unit      String        @default("")
+  color     String?
+  sortOrder Int           @default(0)
+  isActive  Boolean       @default(true)
+  isDefault Boolean       @default(false)
+  tenantId  Int
+  tenant    Tenant        @relation(fields: [tenantId], references: [id])
+  records   SalesRecord[]
+  targets   Target[]
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
   @@index([tenantId])
 }
 

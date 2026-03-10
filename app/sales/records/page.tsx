@@ -17,7 +17,7 @@ interface SalesRecord {
   memberId: number;
   memberName: string;
   department: string | null;
-  amount: number;
+  value: number;
   description: string | null;
   customFields: Record<string, string> | null;
   recordDate: string;
@@ -60,9 +60,6 @@ const formatDateShort = (isoDate: string) => {
   return `${yyyy}/${mm}/${dd}`;
 };
 
-const formatAmount = (amount: number) => {
-  return amount.toLocaleString();
-};
 
 const escapeCsvField = (value: string): string => {
   if (value.includes(',') || value.includes('"') || value.includes('\n')) {
@@ -170,7 +167,7 @@ export default function SalesRecordsPage() {
           formatDateShort(r.recordDate),
           r.memberName,
           r.department || '',
-          String(r.amount),
+          String(r.value),
           r.description || '',
           ...cfValues,
           formatDate(r.createdAt),
@@ -199,7 +196,7 @@ export default function SalesRecordsPage() {
   };
 
   const handleDelete = async (record: SalesRecord) => {
-    const confirmed = await Dialog.confirm(`${record.memberName}の売上データ（${formatAmount(record.amount)}円）を削除しますか？`);
+    const confirmed = await Dialog.confirm(`${record.memberName}のデータ（値: ${record.value}）を削除しますか？`);
     if (!confirmed) return;
     try {
       const res = await fetch(`/api/sales/${record.id}`, { method: 'DELETE' });
@@ -232,10 +229,10 @@ export default function SalesRecordsPage() {
         render: (r) => <span className="text-sm text-gray-600">{r.department || '-'}</span>,
       },
       {
-        key: 'amount',
-        label: '金額',
+        key: 'value',
+        label: '値',
         align: 'right',
-        render: (r) => <span className="text-sm font-medium text-gray-800">{formatAmount(r.amount)}円</span>,
+        render: (r) => <span className="text-sm font-medium text-gray-800">{r.value}</span>,
       },
       {
         key: 'description',
@@ -352,7 +349,7 @@ export default function SalesRecordsPage() {
                 <span className="text-xs text-gray-400">{formatDate(r.recordDate)}</span>
               </div>
               {r.department && <div className="text-xs text-gray-500 mb-1">{r.department}</div>}
-              <div className="text-sm font-bold text-gray-800 mb-1">{formatAmount(r.amount)}円</div>
+              <div className="text-sm font-bold text-gray-800 mb-1">{r.value}</div>
               {r.description && <div className="text-xs text-gray-500 mb-1">{r.description}</div>}
               {customFieldDefs.length > 0 && r.customFields && (
                 <div className="text-xs text-gray-500 mb-1 space-y-0.5">

@@ -1,0 +1,4 @@
+-- AlterEnum: AuditActionにグループメンバー管理用アクションを追加
+ALTER TYPE "AuditAction" ADD VALUE 'GROUP_ADD_MEMBER';
+ALTER TYPE "AuditAction" ADD VALUE 'GROUP_END_MEMBERSHIP';
+ALTER TYPE "AuditAction" ADD VALUE 'GROUP_REMOVE_MEMBERSHIP';

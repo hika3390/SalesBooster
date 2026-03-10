@@ -79,14 +79,15 @@ export const groupController = {
     try {
       const tenantId = await getTenantId(request);
       const body = await request.json();
-      const { memberIds } = body;
+      const { memberIds, startMonth } = body;
 
       if (!Array.isArray(memberIds)) {
         return ApiResponse.badRequest('memberIds must be an array');
       }
 
       const userIds = memberIds.map((id: string | number) => String(id));
-      await groupService.syncMembers(tenantId, groupId, userIds);
+      const month = startMonth ? new Date(startMonth) : undefined;
+      await groupService.syncMembers(tenantId, groupId, userIds, month);
 
       auditLogService.create(tenantId, {
         request,
@@ -97,6 +98,92 @@ export const groupController = {
       return ApiResponse.success({ success: true });
     } catch (error) {
       return ApiResponse.fromError(error, 'Failed to sync group members');
+    }
+  },
+
+  /** メンバー履歴取得 */
+  async getMemberHistory(request: NextRequest, groupId: number) {
+    try {
+      const tenantId = await getTenantId(request);
+      const history = await groupService.getMemberHistory(tenantId, groupId);
+      return ApiResponse.success(history);
+    } catch (error) {
+      return ApiResponse.fromError(error, 'Failed to fetch member history');
+    }
+  },
+
+  /** メンバー追加（開始月指定） */
+  async addMember(request: NextRequest, groupId: number) {
+    try {
+      const tenantId = await getTenantId(request);
+      const body = await request.json();
+      const { userId, startMonth } = body;
+
+      if (!userId || !startMonth) {
+        return ApiResponse.badRequest('userId and startMonth are required');
+      }
+
+      const result = await groupService.addMember(tenantId, groupId, String(userId), new Date(startMonth));
+
+      auditLogService.create(tenantId, {
+        request,
+        action: 'GROUP_ADD_MEMBER',
+        detail: `グループID:${groupId}にメンバー(${userId})を追加（開始:${startMonth}）`,
+      }).catch((err) => console.error('Audit log failed:', err));
+
+      return ApiResponse.created(result);
+    } catch (error) {
+      return ApiResponse.fromError(error, 'Failed to add member');
+    }
+  },
+
+  /** メンバー所属終了（異動） */
+  async endMembership(request: NextRequest, groupId: number) {
+    try {
+      const tenantId = await getTenantId(request);
+      const body = await request.json();
+      const { membershipId, endMonth } = body;
+
+      if (!membershipId || !endMonth) {
+        return ApiResponse.badRequest('membershipId and endMonth are required');
+      }
+
+      await groupService.endMembership(tenantId, Number(membershipId), new Date(endMonth));
+
+      auditLogService.create(tenantId, {
+        request,
+        action: 'GROUP_END_MEMBERSHIP',
+        detail: `グループID:${groupId}のメンバー所属(${membershipId})を終了（終了:${endMonth}）`,
+      }).catch((err) => console.error('Audit log failed:', err));
+
+      return ApiResponse.success({ success: true });
+    } catch (error) {
+      return ApiResponse.fromError(error, 'Failed to end membership');
+    }
+  },
+
+  /** メンバー所属レコード削除 */
+  async removeMembership(request: NextRequest, groupId: number) {
+    try {
+      const tenantId = await getTenantId(request);
+      const body = await request.json();
+      const { membershipId } = body;
+
+      if (!membershipId) {
+        return ApiResponse.badRequest('membershipId is required');
+      }
+
+      await groupService.removeMembership(tenantId, Number(membershipId));
+
+      auditLogService.create(tenantId, {
+        request,
+        action: 'GROUP_REMOVE_MEMBERSHIP',
+        detail: `グループID:${groupId}のメンバー所属(${membershipId})を削除`,
+      }).catch((err) => console.error('Audit log failed:', err));
+
+      return ApiResponse.success({ success: true });
+    } catch (error) {
+      return ApiResponse.fromError(error, 'Failed to remove membership');
     }
   },
 };

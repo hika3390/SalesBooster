@@ -59,6 +59,9 @@ enum AuditAction {
   GROUP_UPDATE
   GROUP_DELETE
   GROUP_SYNC_MEMBERS
+  GROUP_ADD_MEMBER
+  GROUP_END_MEMBERSHIP
+  GROUP_REMOVE_MEMBERSHIP
   SALES_RECORD_CREATE
   SALES_RECORD_UPDATE
   SALES_RECORD_DELETE
@@ -168,16 +171,19 @@ model Group {
 }
 
 model GroupMember {
-  id       Int    @id @default(autoincrement())
-  groupId  Int
-  userId   String
-  tenantId Int
-  tenant   Tenant @relation(fields: [tenantId], references: [id])
-  group    Group  @relation(fields: [groupId], references: [id])
-  user     User   @relation(fields: [userId], references: [id])
+  id         Int       @id @default(autoincrement())
+  groupId    Int
+  userId     String
+  tenantId   Int
+  startMonth DateTime  @default(now())
+  endMonth   DateTime?
+  tenant     Tenant    @relation(fields: [tenantId], references: [id])
+  group      Group     @relation(fields: [groupId], references: [id])
+  user       User      @relation(fields: [userId], references: [id])
 
-  @@unique([groupId, userId])
+  @@unique([groupId, userId, startMonth])
   @@index([tenantId])
+  @@index([userId, startMonth, endMonth])
 }
 
 model SalesRecord {

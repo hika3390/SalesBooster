@@ -8,7 +8,16 @@ import { memberRepository } from '../repositories/memberRepository';
 import { getTenantId } from '../lib/auth';
 import { ApiResponse } from '../lib/apiResponse';
 
-async function resolveUserIds(tenantId: number, searchParams: URLSearchParams): Promise<string[] | undefined> {
+/**
+ * グループフィルタ時は、指定期間内の各月に所属していたメンバーのユニオンを返す。
+ * startDate/endDateが渡されない場合は現在所属中のメンバーを返す。
+ */
+async function resolveUserIds(
+  tenantId: number,
+  searchParams: URLSearchParams,
+  startDate?: Date,
+  endDate?: Date,
+): Promise<string[] | undefined> {
   const memberId = searchParams.get('memberId');
   const groupId = searchParams.get('groupId');
 
@@ -17,11 +26,29 @@ async function resolveUserIds(tenantId: number, searchParams: URLSearchParams): 
   }
 
   if (groupId) {
-    const group = await groupService.getById(tenantId, Number(groupId));
-    if (group) {
-      return group.members.map((gm) => gm.userId);
+    const gid = Number(groupId);
+
+    if (startDate && endDate) {
+      // 期間内の各月の月初を列挙し、各月の所属メンバーを統合
+      const months: Date[] = [];
+      const cur = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
+      const endMonthDate = new Date(endDate.getFullYear(), endDate.getMonth(), 1);
+      while (cur <= endMonthDate) {
+        months.push(new Date(cur));
+        cur.setMonth(cur.getMonth() + 1);
+      }
+
+      const allIds = new Set<string>();
+      for (const month of months) {
+        const ids = await groupService.getMemberIdsByMonth(tenantId, gid, month);
+        ids.forEach((id) => allIds.add(id));
+      }
+      return allIds.size > 0 ? Array.from(allIds) : [];
     }
-    return [];
+
+    // 期間未指定の場合は現在所属中のメンバー
+    const ids = await groupService.getCurrentMemberIds(tenantId, gid);
+    return ids.length > 0 ? ids : [];
   }
 
   return undefined;
@@ -44,7 +71,7 @@ export const salesController = {
     const endDate = endDateParam ? new Date(endDateParam) : new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
 
     try {
-      const userIds = await resolveUserIds(tenantId, searchParams);
+      const userIds = await resolveUserIds(tenantId, searchParams, startDate, endDate);
       const dataTypeId = resolveDataTypeId(searchParams);
       const { salesPeople, recordCount } = await salesService.getSalesByDateRange(tenantId, startDate, endDate, userIds, dataTypeId);
       return ApiResponse.success({ data: salesPeople, recordCount });
@@ -124,7 +151,7 @@ export const salesController = {
     const endDate = endDateParam ? new Date(endDateParam) : new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
 
     try {
-      const userIds = await resolveUserIds(tenantId, searchParams);
+      const userIds = await resolveUserIds(tenantId, searchParams, startDate, endDate);
       const dataTypeId = resolveDataTypeId(searchParams);
       const data = await salesService.getCumulativeSales(tenantId, startDate, endDate, userIds, dataTypeId);
       return ApiResponse.success(data);
@@ -145,7 +172,7 @@ export const salesController = {
     const startDate = startDateParam ? new Date(startDateParam) : new Date(endDate.getFullYear(), endDate.getMonth() - 11, 1);
 
     try {
-      const userIds = await resolveUserIds(tenantId, searchParams);
+      const userIds = await resolveUserIds(tenantId, searchParams, startDate, endDate);
       const dataTypeId = resolveDataTypeId(searchParams);
       const data = await salesService.getReportData(tenantId, startDate, endDate, userIds, dataTypeId);
       return ApiResponse.success(data);
@@ -166,7 +193,7 @@ export const salesController = {
     const startDate = startDateParam ? new Date(startDateParam) : new Date(endDate.getFullYear(), endDate.getMonth() - 11, 1);
 
     try {
-      const userIds = await resolveUserIds(tenantId, searchParams);
+      const userIds = await resolveUserIds(tenantId, searchParams, startDate, endDate);
       const dataTypeId = resolveDataTypeId(searchParams);
       const data = await salesService.getTrendData(tenantId, startDate, endDate, userIds, dataTypeId);
       return ApiResponse.success(data);
@@ -185,7 +212,7 @@ export const salesController = {
     const startDate = new Date(now.getFullYear(), now.getMonth() - 2, 1);
 
     try {
-      const userIds = await resolveUserIds(tenantId, searchParams);
+      const userIds = await resolveUserIds(tenantId, searchParams, startDate, endDate);
       const dataTypeId = resolveDataTypeId(searchParams);
       const data = await salesService.getRankingBoardData(tenantId, startDate, endDate, userIds, dataTypeId);
       return ApiResponse.success(data);
@@ -211,7 +238,7 @@ export const salesController = {
     if (memberIdParam) {
       filters.userId = memberIdParam;
     } else if (groupIdParam) {
-      const userIds = await resolveUserIds(tenantId, searchParams);
+      const userIds = await resolveUserIds(tenantId, searchParams, filters.startDate, filters.endDate);
       if (userIds) filters.userIds = userIds;
     }
     const dataTypeId = resolveDataTypeId(searchParams);
@@ -299,7 +326,7 @@ export const salesController = {
     if (memberIdParam) {
       filters.userId = memberIdParam;
     } else if (groupIdParam) {
-      const userIds = await resolveUserIds(tenantId, searchParams);
+      const userIds = await resolveUserIds(tenantId, searchParams, filters.startDate, filters.endDate);
       if (userIds) filters.userIds = userIds;
     }
     const dataTypeId = resolveDataTypeId(searchParams);

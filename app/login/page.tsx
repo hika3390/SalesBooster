@@ -98,6 +98,17 @@ export default function LoginPage() {
           {/* フッター */}
           <div className="flex items-center justify-between">
             <span className="text-blue-200/60 text-sm">v0.1.0</span>
+            <span className="text-blue-200/60 text-sm">
+              Powered by{' '}
+              <a
+                href="https://www.insideheart.jp/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-200/80 hover:text-white transition-colors"
+              >
+                Inside Heart Co., Ltd.
+              </a>
+            </span>
           </div>
         </div>
       </div>

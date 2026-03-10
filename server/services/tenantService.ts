@@ -11,6 +11,10 @@ export const tenantService = {
     return tenantRepository.findById(id);
   },
 
+  async getByIdWithDetails(id: number) {
+    return tenantRepository.findByIdWithDetails(id);
+  },
+
   async create(data: { name: string; slug: string; adminEmail: string; adminPassword: string; adminName?: string }) {
     // slug重複チェック
     const existing = await tenantRepository.findBySlug(data.slug);
@@ -61,5 +65,30 @@ export const tenantService = {
 
   async deactivate(id: number) {
     return tenantRepository.update(id, { isActive: false });
+  },
+
+  async updateAdmin(
+    tenantId: number,
+    adminId: string,
+    data: { name?: string; email?: string; password?: string }
+  ) {
+    const admin = await tenantRepository.findAdminByIdAndTenant(adminId, tenantId);
+    if (!admin) {
+      throw new Error('ADMIN_NOT_FOUND');
+    }
+
+    if (data.email && data.email !== admin.email) {
+      const existing = await tenantRepository.findUserByEmailAndTenant(data.email, tenantId);
+      if (existing) {
+        throw new Error('DUPLICATE_EMAIL');
+      }
+    }
+
+    const updateData: { name?: string; email?: string; password?: string } = {};
+    if (data.name !== undefined) updateData.name = data.name;
+    if (data.email) updateData.email = data.email;
+    if (data.password) updateData.password = await hash(data.password, 12);
+
+    return tenantRepository.updateAdmin(adminId, updateData);
   },
 };

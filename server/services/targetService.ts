@@ -5,8 +5,8 @@ export const targetService = {
     const targets = await targetRepository.findAll(tenantId);
     return targets.map((t) => ({
       id: t.id,
-      memberId: t.memberId,
-      memberName: t.member.name,
+      userId: t.userId,
+      memberName: t.user.name,
       monthly: t.monthly,
       quarterly: t.quarterly,
       annual: t.annual,
@@ -16,7 +16,7 @@ export const targetService = {
     }));
   },
 
-  async upsert(tenantId: number, data: { memberId: number; monthly: number; quarterly: number; annual: number; year: number; month: number; dataTypeId?: number }) {
+  async upsert(tenantId: number, data: { userId: string; monthly: number; quarterly: number; annual: number; year: number; month: number; dataTypeId?: number }) {
     return targetRepository.upsert(tenantId, data);
   },
 };

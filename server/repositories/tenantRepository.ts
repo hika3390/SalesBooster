@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma';
 export const tenantRepository = {
   findAll() {
     return prisma.tenant.findMany({
-      include: { _count: { select: { users: true, members: true } } },
+      include: { _count: { select: { users: true } } },
       orderBy: { id: 'asc' },
     });
   },
@@ -11,7 +11,30 @@ export const tenantRepository = {
   findById(id: number) {
     return prisma.tenant.findUnique({
       where: { id },
-      include: { _count: { select: { users: true, members: true } } },
+      include: { _count: { select: { users: true } } },
+    });
+  },
+
+  findByIdWithDetails(id: number) {
+    return prisma.tenant.findUnique({
+      where: { id },
+      include: {
+        _count: {
+          select: {
+            users: true,
+            departments: true,
+            groups: true,
+            salesRecords: true,
+            targets: true,
+            integrations: true,
+          },
+        },
+        users: {
+          where: { role: 'ADMIN' },
+          select: { id: true, name: true, email: true, createdAt: true },
+          orderBy: { createdAt: 'asc' },
+        },
+      },
     });
   },
 
@@ -29,5 +52,25 @@ export const tenantRepository = {
 
   delete(id: number) {
     return prisma.tenant.delete({ where: { id } });
+  },
+
+  findAdminByIdAndTenant(adminId: string, tenantId: number) {
+    return prisma.user.findFirst({
+      where: { id: adminId, tenantId, role: 'ADMIN' },
+    });
+  },
+
+  findUserByEmailAndTenant(email: string, tenantId: number) {
+    return prisma.user.findFirst({
+      where: { email, tenantId },
+    });
+  },
+
+  updateAdmin(adminId: string, data: { name?: string; email?: string; password?: string }) {
+    return prisma.user.update({
+      where: { id: adminId },
+      data,
+      select: { id: true, name: true, email: true },
+    });
   },
 };

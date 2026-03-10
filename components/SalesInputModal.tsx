@@ -23,7 +23,7 @@ interface SalesInputData {
 }
 
 interface MemberOption {
-  id: number;
+  id: string;
   name: string;
   department: string | null;
 }
@@ -104,7 +104,7 @@ export default function SalesInputModal({ isOpen, onClose, onSubmit }: SalesInpu
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          memberId: Number(memberId),
+          memberId,
           value: submitValue,
           dataTypeId: Number(selectedDataTypeId),
           description: memo || undefined,
@@ -114,7 +114,7 @@ export default function SalesInputModal({ isOpen, onClose, onSubmit }: SalesInpu
       });
 
       if (res.ok) {
-        const selectedMember = members.find((m) => m.id === Number(memberId));
+        const selectedMember = members.find((m) => m.id === memberId);
         onSubmit({
           member: selectedMember?.name || '',
           value: submitValue,

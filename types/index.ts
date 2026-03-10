@@ -49,9 +49,9 @@ export interface TrendData {
 export const AUDIT_ACTION_LABELS: Record<string, string> = {
   USER_LOGIN: 'ログイン',
   USER_LOGOUT: 'ログアウト',
-  MEMBER_CREATE: 'メンバー追加',
-  MEMBER_UPDATE: 'メンバー更新',
-  MEMBER_DELETE: 'メンバー削除',
+  USER_CREATE: 'ユーザー追加',
+  USER_UPDATE: 'ユーザー更新',
+  USER_DELETE: 'ユーザー削除',
   GROUP_CREATE: 'グループ作成',
   GROUP_UPDATE: 'グループ更新',
   GROUP_DELETE: 'グループ削除',

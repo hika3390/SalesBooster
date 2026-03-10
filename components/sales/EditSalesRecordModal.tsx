@@ -10,7 +10,7 @@ import type { CustomFieldDefinition, CustomFieldValues } from '@/types/customFie
 
 interface SalesRecord {
   id: number;
-  memberId: number;
+  memberId: string;
   memberName: string;
   value: number;
   description: string | null;
@@ -19,7 +19,7 @@ interface SalesRecord {
 }
 
 interface MemberOption {
-  id: number;
+  id: string;
   name: string;
   department: string | null;
 }
@@ -87,7 +87,7 @@ export default function EditSalesRecordModal({ isOpen, onClose, onUpdated, recor
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          memberId: Number(memberId),
+          memberId,
           value: parseInt(editValue) || 0,
           description: memo || undefined,
           recordDate: new Date(orderDate).toISOString(),

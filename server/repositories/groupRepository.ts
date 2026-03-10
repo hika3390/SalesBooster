@@ -7,7 +7,7 @@ export const groupRepository = {
       include: {
         members: {
           include: {
-            member: { select: { id: true, name: true } },
+            user: { select: { id: true, name: true } },
           },
         },
       },
@@ -19,7 +19,7 @@ export const groupRepository = {
     return prisma.group.findFirst({
       where: { id, tenantId },
       include: {
-        members: { select: { memberId: true } },
+        members: { select: { userId: true } },
       },
     });
   },
@@ -36,12 +36,12 @@ export const groupRepository = {
     return prisma.group.deleteMany({ where: { id, tenantId } });
   },
 
-  async syncMembers(groupId: number, tenantId: number, memberIds: number[]) {
-    const uniqueIds = [...new Set(memberIds)];
+  async syncMembers(groupId: number, tenantId: number, userIds: string[]) {
+    const uniqueIds = [...new Set(userIds)];
     await prisma.$transaction([
       prisma.groupMember.deleteMany({ where: { groupId, tenantId } }),
       prisma.groupMember.createMany({
-        data: uniqueIds.map((memberId) => ({ groupId, memberId, tenantId })),
+        data: uniqueIds.map((userId) => ({ groupId, userId, tenantId })),
       }),
     ]);
   },

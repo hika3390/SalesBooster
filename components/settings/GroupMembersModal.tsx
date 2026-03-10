@@ -6,7 +6,7 @@ import Modal from '@/components/common/Modal';
 import Button from '@/components/common/Button';
 
 interface MemberOption {
-  id: number;
+  id: string;
   name: string;
   department: string | null;
 }
@@ -14,7 +14,7 @@ interface MemberOption {
 interface GroupData {
   id: number;
   name: string;
-  memberList: { id: number; name: string }[];
+  memberList: { id: string; name: string }[];
 }
 
 interface GroupMembersModalProps {
@@ -26,7 +26,7 @@ interface GroupMembersModalProps {
 
 export default function GroupMembersModal({ isOpen, onClose, onUpdated, group }: GroupMembersModalProps) {
   const [allMembers, setAllMembers] = useState<MemberOption[]>([]);
-  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [search, setSearch] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
@@ -49,7 +49,7 @@ export default function GroupMembersModal({ isOpen, onClose, onUpdated, group }:
     );
   }, [allMembers, search]);
 
-  const handleToggle = (id: number) => {
+  const handleToggle = (id: string) => {
     setSelectedIds((prev) => {
       const next = new Set(prev);
       if (next.has(id)) {

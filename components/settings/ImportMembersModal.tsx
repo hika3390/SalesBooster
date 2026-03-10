@@ -15,22 +15,23 @@ interface ImportMembersModalProps {
 }
 
 const ROLE_MAP: Record<string, string> = {
-  '営業': 'SALES',
-  'sales': 'SALES',
-  'SALES': 'SALES',
-  'マネージャー': 'MANAGER',
-  'manager': 'MANAGER',
-  'MANAGER': 'MANAGER',
+  'ユーザー': 'USER',
+  'user': 'USER',
+  'USER': 'USER',
+  '管理者': 'ADMIN',
+  'admin': 'ADMIN',
+  'ADMIN': 'ADMIN',
 };
 
 const ROLE_LABEL: Record<string, string> = {
-  SALES: '営業',
-  MANAGER: 'マネージャー',
+  USER: 'ユーザー',
+  ADMIN: '管理者',
 };
 
 const FIELDS: ImportField[] = [
   { value: 'name', label: '名前 *', required: true, autoMapKeywords: ['名前', 'name', '氏名'] },
   { value: 'email', label: 'メールアドレス *', required: true, autoMapKeywords: ['メール', 'email', 'mail'] },
+  { value: 'password', label: 'パスワード *', required: true, autoMapKeywords: ['パスワード', 'password', 'pw'] },
   { value: 'role', label: '役割', required: false, autoMapKeywords: ['役割', 'role', '権限'] },
   { value: 'department', label: '部署', required: false, autoMapKeywords: ['部署', 'department', '部門', '所属'] },
 ];
@@ -45,6 +46,11 @@ const PREVIEW_COLUMNS: PreviewColumn[] = [
     key: 'email',
     label: 'メール',
     render: (row) => row.email || <span className="text-red-400">-</span>,
+  },
+  {
+    key: 'password',
+    label: 'パスワード',
+    render: (row) => row.password ? '********' : <span className="text-red-400">-</span>,
   },
   {
     key: 'role',
@@ -67,27 +73,32 @@ export default function ImportMembersModal({ isOpen, onClose, onImported }: Impo
   const buildMappedData = (rows: ParsedRow[], mapping: Record<string, string>): MappedRow[] => {
     const nameHeader = Object.keys(mapping).find((k) => mapping[k] === 'name');
     const emailHeader = Object.keys(mapping).find((k) => mapping[k] === 'email');
+    const passwordHeader = Object.keys(mapping).find((k) => mapping[k] === 'password');
     const roleHeader = Object.keys(mapping).find((k) => mapping[k] === 'role');
     const deptHeader = Object.keys(mapping).find((k) => mapping[k] === 'department');
 
     return rows.map((row) => {
       const name = nameHeader ? row[nameHeader] : '';
       const email = emailHeader ? row[emailHeader] : '';
+      const password = passwordHeader ? row[passwordHeader] : '';
       const rawRole = roleHeader ? row[roleHeader] : '';
       const dept = deptHeader ? row[deptHeader] : '';
 
-      const role = ROLE_MAP[rawRole] || (rawRole ? rawRole : 'SALES');
+      const role = ROLE_MAP[rawRole] || (rawRole ? rawRole : 'USER');
 
       const errors: string[] = [];
       if (!name) errors.push('名前が未入力');
       if (!email) errors.push('メールが未入力');
       if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errors.push('メール形式が不正');
-      if (role && !['SALES', 'MANAGER'].includes(role)) errors.push(`役割「${rawRole}」は不明`);
+      if (!password) errors.push('パスワードが未入力');
+      if (password && password.length < 8) errors.push('パスワードは8文字以上');
+      if (role && !['USER', 'ADMIN'].includes(role)) errors.push(`役割「${rawRole}」は不明`);
 
       return {
         name,
         email,
-        role: ['SALES', 'MANAGER'].includes(role) ? role : 'SALES',
+        password,
+        role: ['USER', 'ADMIN'].includes(role) ? role : 'USER',
         department: dept,
         error: errors.length > 0 ? errors.join(', ') : undefined,
       } as MappedRow;
@@ -100,6 +111,7 @@ export default function ImportMembersModal({ isOpen, onClose, onImported }: Impo
       return {
         name: m.name,
         email: m.email,
+        password: m.password,
         role: m.role,
         departmentId: dept?.id || undefined,
       };

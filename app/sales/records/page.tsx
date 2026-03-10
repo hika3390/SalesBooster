@@ -14,7 +14,7 @@ import type { CustomFieldDefinition } from '@/types/customField';
 
 interface SalesRecord {
   id: number;
-  memberId: number;
+  memberId: string;
   memberName: string;
   department: string | null;
   value: number;
@@ -38,7 +38,7 @@ interface GroupOption {
 }
 
 interface MemberOption {
-  id: number;
+  id: string;
   name: string;
 }
 

@@ -7,7 +7,7 @@ import Button from '@/components/common/Button';
 import Select from '@/components/common/Select';
 
 interface MemberOption {
-  id: number;
+  id: string;
   name: string;
 }
 

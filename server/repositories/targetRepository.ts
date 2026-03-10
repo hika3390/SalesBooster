@@ -4,24 +4,24 @@ export const targetRepository = {
   findAll(tenantId: number) {
     return prisma.target.findMany({
       where: { tenantId },
-      include: { member: true },
-      orderBy: { memberId: 'asc' },
+      include: { user: true },
+      orderBy: { userId: 'asc' },
     });
   },
 
-  findByMemberAndPeriod(memberId: number, year: number, month: number, tenantId: number, dataTypeId?: number) {
+  findByUserAndPeriod(userId: string, year: number, month: number, tenantId: number, dataTypeId?: number) {
     return prisma.target.findFirst({
-      where: { tenantId, memberId, year, month, dataTypeId: dataTypeId ?? null },
+      where: { tenantId, userId, year, month, dataTypeId: dataTypeId ?? null },
     });
   },
 
-  findByMembersAndPeriod(memberIds: number[], year: number, month: number, tenantId: number) {
+  findByUsersAndPeriod(userIds: string[], year: number, month: number, tenantId: number) {
     return prisma.target.findMany({
-      where: { memberId: { in: memberIds }, year, month, tenantId },
+      where: { userId: { in: userIds }, year, month, tenantId },
     });
   },
 
-  findByMembersAndPeriodRange(memberIds: number[], startYear: number, startMonth: number, endYear: number, endMonth: number, tenantId: number) {
+  findByUsersAndPeriodRange(userIds: string[], startYear: number, startMonth: number, endYear: number, endMonth: number, tenantId: number) {
     const conditions: { year: number; month: number }[] = [];
     let y = startYear;
     let m = startMonth;
@@ -32,16 +32,16 @@ export const targetRepository = {
     }
     return prisma.target.findMany({
       where: {
-        memberId: { in: memberIds },
+        userId: { in: userIds },
         tenantId,
         OR: conditions,
       },
     });
   },
 
-  async upsert(tenantId: number, data: { memberId: number; monthly: number; quarterly: number; annual: number; year: number; month: number; dataTypeId?: number }) {
+  async upsert(tenantId: number, data: { userId: string; monthly: number; quarterly: number; annual: number; year: number; month: number; dataTypeId?: number }) {
     const existing = await prisma.target.findFirst({
-      where: { tenantId, memberId: data.memberId, year: data.year, month: data.month, dataTypeId: data.dataTypeId ?? null },
+      where: { tenantId, userId: data.userId, year: data.year, month: data.month, dataTypeId: data.dataTypeId ?? null },
     });
     if (existing) {
       return prisma.target.update({

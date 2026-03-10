@@ -10,20 +10,15 @@ datasource db {
 
 // ─── Enum ───
 
-enum MemberStatus {
-  ACTIVE
-  INACTIVE
-}
-
-enum MemberRole {
-  SALES
-  MANAGER
-}
-
 enum UserRole {
   SUPER_ADMIN
   ADMIN
   USER
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
 }
 
 enum IntegrationStatus {
@@ -56,9 +51,9 @@ enum CustomSlideType {
 enum AuditAction {
   USER_LOGIN
   USER_LOGOUT
-  MEMBER_CREATE
-  MEMBER_UPDATE
-  MEMBER_DELETE
+  USER_CREATE
+  USER_UPDATE
+  USER_DELETE
   GROUP_CREATE
   GROUP_UPDATE
   GROUP_DELETE
@@ -96,7 +91,6 @@ model Tenant {
 
   users          User[]
   departments    Department[]
-  members        Member[]
   groups         Group[]
   groupMembers   GroupMember[]
   salesRecords   SalesRecord[]
@@ -110,21 +104,29 @@ model Tenant {
   dataTypes      DataType[]
 }
 
-// ─── Auth Model ───
+// ─── User Model ───
 
 model User {
-  id        String     @id @default(cuid())
-  email     String     @unique
-  password  String
-  name      String?
-  role      UserRole   @default(USER)
-  tenantId  Int?
-  tenant    Tenant?    @relation(fields: [tenantId], references: [id])
-  sessions  Session[]
-  auditLogs AuditLog[]
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
+  id           String     @id @default(cuid())
+  email        String     @unique
+  password     String
+  name         String?
+  role         UserRole   @default(USER)
+  status       UserStatus @default(ACTIVE)
+  imageUrl     String?
+  departmentId Int?
+  tenantId     Int?
+  tenant       Tenant?    @relation(fields: [tenantId], references: [id])
+  department   Department? @relation(fields: [departmentId], references: [id])
+  sessions     Session[]
+  auditLogs    AuditLog[]
+  salesRecords SalesRecord[]
+  targets      Target[]
+  groupMembers GroupMember[]
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
 
+  @@unique([tenantId, email])
   @@index([tenantId])
 }
 
@@ -143,31 +145,10 @@ model Department {
   name      String
   tenantId  Int
   tenant    Tenant   @relation(fields: [tenantId], references: [id])
-  members   Member[]
+  users     User[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@index([tenantId])
-}
-
-model Member {
-  id           Int            @id @default(autoincrement())
-  name         String
-  email        String
-  role         MemberRole     @default(SALES)
-  status       MemberStatus   @default(ACTIVE)
-  imageUrl     String?
-  departmentId Int?
-  tenantId     Int
-  tenant       Tenant         @relation(fields: [tenantId], references: [id])
-  department   Department?    @relation(fields: [departmentId], references: [id])
-  salesRecords SalesRecord[]
-  targets      Target[]
-  groupMembers GroupMember[]
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
-
-  @@unique([tenantId, email])
   @@index([tenantId])
 }
 
@@ -187,19 +168,19 @@ model Group {
 model GroupMember {
   id       Int    @id @default(autoincrement())
   groupId  Int
-  memberId Int
+  userId   String
   tenantId Int
   tenant   Tenant @relation(fields: [tenantId], references: [id])
   group    Group  @relation(fields: [groupId], references: [id])
-  member   Member @relation(fields: [memberId], references: [id])
+  user     User   @relation(fields: [userId], references: [id])
 
-  @@unique([groupId, memberId])
+  @@unique([groupId, userId])
   @@index([tenantId])
 }
 
 model SalesRecord {
   id           Int       @id @default(autoincrement())
-  memberId     Int
+  userId       String
   value        Int       @default(0)
   description  String?
   recordDate   DateTime
@@ -207,7 +188,7 @@ model SalesRecord {
   dataTypeId   Int?
   tenantId     Int
   tenant       Tenant    @relation(fields: [tenantId], references: [id])
-  member       Member    @relation(fields: [memberId], references: [id])
+  user         User      @relation(fields: [userId], references: [id])
   dataType     DataType? @relation(fields: [dataTypeId], references: [id])
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
@@ -218,7 +199,7 @@ model SalesRecord {
 
 model Target {
   id         Int       @id @default(autoincrement())
-  memberId   Int
+  userId     String
   monthly    Int
   quarterly  Int
   annual     Int
@@ -227,10 +208,10 @@ model Target {
   dataTypeId Int?
   tenantId   Int
   tenant     Tenant    @relation(fields: [tenantId], references: [id])
-  member     Member    @relation(fields: [memberId], references: [id])
+  user       User      @relation(fields: [userId], references: [id])
   dataType   DataType? @relation(fields: [dataTypeId], references: [id])
 
-  @@unique([tenantId, memberId, year, month, dataTypeId])
+  @@unique([tenantId, userId, year, month, dataTypeId])
   @@index([tenantId])
   @@index([dataTypeId])
 }

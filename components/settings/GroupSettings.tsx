@@ -12,7 +12,7 @@ interface Group {
   name: string;
   members: number;
   managerId: number | null;
-  memberList: { id: number; name: string }[];
+  memberList: { id: string; name: string }[];
 }
 
 export default function GroupSettings() {

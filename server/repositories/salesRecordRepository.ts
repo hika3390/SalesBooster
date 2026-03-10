@@ -3,28 +3,28 @@ import { prisma } from '@/lib/prisma';
 interface PaginationFilters {
   startDate?: Date;
   endDate?: Date;
-  memberId?: number;
-  memberIds?: number[];
+  userId?: string;
+  userIds?: string[];
   dataTypeId?: number;
 }
 
 export const salesRecordRepository = {
-  findByPeriod(startDate: Date, endDate: Date, tenantId: number, memberIds?: number[], dataTypeId?: number) {
+  findByPeriod(startDate: Date, endDate: Date, tenantId: number, userIds?: string[], dataTypeId?: number) {
     return prisma.salesRecord.findMany({
       where: {
         tenantId,
         recordDate: { gte: startDate, lte: endDate },
-        ...(memberIds ? { memberId: { in: memberIds } } : {}),
+        ...(userIds ? { userId: { in: userIds } } : {}),
         ...(dataTypeId ? { dataTypeId } : {}),
       },
-      include: { member: { include: { department: true } }, dataType: true },
+      include: { user: { include: { department: true } }, dataType: true },
     });
   },
 
   findById(id: number, tenantId: number) {
     return prisma.salesRecord.findFirst({
       where: { id, tenantId },
-      include: { member: { include: { department: true } }, dataType: true },
+      include: { user: { include: { department: true } }, dataType: true },
     });
   },
 
@@ -36,10 +36,10 @@ export const salesRecordRepository = {
         ...(filters.endDate ? { lte: filters.endDate } : {}),
       };
     }
-    if (filters?.memberId) {
-      where.memberId = filters.memberId;
-    } else if (filters?.memberIds && filters.memberIds.length > 0) {
-      where.memberId = { in: filters.memberIds };
+    if (filters?.userId) {
+      where.userId = filters.userId;
+    } else if (filters?.userIds && filters.userIds.length > 0) {
+      where.userId = { in: filters.userIds };
     }
     if (filters?.dataTypeId) {
       where.dataTypeId = filters.dataTypeId;
@@ -48,7 +48,7 @@ export const salesRecordRepository = {
     const [records, total] = await Promise.all([
       prisma.salesRecord.findMany({
         where,
-        include: { member: { include: { department: true } }, dataType: true },
+        include: { user: { include: { department: true } }, dataType: true },
         orderBy: { recordDate: 'desc' },
         skip: (page - 1) * pageSize,
         take: pageSize,
@@ -67,10 +67,10 @@ export const salesRecordRepository = {
         ...(filters.endDate ? { lte: filters.endDate } : {}),
       };
     }
-    if (filters?.memberId) {
-      where.memberId = filters.memberId;
-    } else if (filters?.memberIds && filters.memberIds.length > 0) {
-      where.memberId = { in: filters.memberIds };
+    if (filters?.userId) {
+      where.userId = filters.userId;
+    } else if (filters?.userIds && filters.userIds.length > 0) {
+      where.userId = { in: filters.userIds };
     }
     if (filters?.dataTypeId) {
       where.dataTypeId = filters.dataTypeId;
@@ -78,12 +78,12 @@ export const salesRecordRepository = {
 
     return prisma.salesRecord.findMany({
       where,
-      include: { member: { include: { department: true } }, dataType: true },
+      include: { user: { include: { department: true } }, dataType: true },
       orderBy: { recordDate: 'desc' },
     });
   },
 
-  update(id: number, tenantId: number, data: { memberId?: number; value?: number; description?: string; recordDate?: Date; customFields?: Record<string, string>; dataTypeId?: number }) {
+  update(id: number, tenantId: number, data: { userId?: string; value?: number; description?: string; recordDate?: Date; customFields?: Record<string, string>; dataTypeId?: number }) {
     return prisma.salesRecord.updateMany({
       where: { id, tenantId },
       data,
@@ -102,11 +102,11 @@ export const salesRecordRepository = {
     return result._min.recordDate;
   },
 
-  create(tenantId: number, data: { memberId: number; value: number; description?: string; recordDate: Date; customFields?: Record<string, string>; dataTypeId?: number }) {
+  create(tenantId: number, data: { userId: string; value: number; description?: string; recordDate: Date; customFields?: Record<string, string>; dataTypeId?: number }) {
     return prisma.salesRecord.create({ data: { ...data, tenantId } });
   },
 
-  createMany(tenantId: number, data: { memberId: number; value: number; description?: string; recordDate: Date; customFields?: Record<string, string>; dataTypeId?: number }[]) {
+  createMany(tenantId: number, data: { userId: string; value: number; description?: string; recordDate: Date; customFields?: Record<string, string>; dataTypeId?: number }[]) {
     return prisma.salesRecord.createMany({
       data: data.map((d) => ({ ...d, tenantId })),
     });

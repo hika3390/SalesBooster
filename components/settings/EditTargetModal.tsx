@@ -7,13 +7,14 @@ import Button from '@/components/common/Button';
 
 interface TargetData {
   id: number;
-  memberId: number;
+  memberId: string;
   memberName: string;
   monthly: number;
   quarterly: number;
   annual: number;
   year: number;
   month: number;
+  dataTypeId: number | null;
 }
 
 interface EditTargetModalProps {

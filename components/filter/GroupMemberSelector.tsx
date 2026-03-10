@@ -6,11 +6,11 @@ import Select from '@/components/common/Select';
 interface GroupOption {
   id: number;
   name: string;
-  memberList: { id: number; name: string }[];
+  memberList: { id: string; name: string }[];
 }
 
 interface MemberOption {
-  id: number;
+  id: string;
   name: string;
 }
 

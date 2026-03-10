@@ -10,7 +10,7 @@ import EditMemberModal from './EditMemberModal';
 import ImportMembersModal from './ImportMembersModal';
 
 interface Member {
-  id: number;
+  id: string;
   name: string;
   email: string;
   role: string;
@@ -19,7 +19,7 @@ interface Member {
   departmentId?: number | null;
 }
 
-const roleLabel: Record<string, string> = { SALES: '営業', MANAGER: 'マネージャー' };
+const roleLabel: Record<string, string> = { ADMIN: '管理者', USER: 'ユーザー' };
 const statusLabel: Record<string, string> = { ACTIVE: '有効', INACTIVE: '無効' };
 
 export default function MemberSettings() {
@@ -46,7 +46,7 @@ export default function MemberSettings() {
     fetchMembers();
   }, []);
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id: string) => {
     const confirmed = await Dialog.confirm('このメンバーを削除しますか？');
     if (!confirmed) return;
     try {

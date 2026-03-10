@@ -28,6 +28,19 @@ export const tenantController = {
     }
   },
 
+  async getByIdWithDetails(request: NextRequest, id: number) {
+    try {
+      await requireSuperAdmin(request);
+      const tenant = await tenantService.getByIdWithDetails(id);
+      if (!tenant) {
+        return ApiResponse.notFound('テナントが見つかりません');
+      }
+      return ApiResponse.success(tenant);
+    } catch (error) {
+      return ApiResponse.fromError(error, 'Failed to fetch tenant details');
+    }
+  },
+
   async create(request: NextRequest) {
     try {
       await requireSuperAdmin(request);
@@ -85,6 +98,37 @@ export const tenantController = {
         return ApiResponse.conflict('このslugは既に使用されています');
       }
       return ApiResponse.fromError(error, 'Failed to update tenant');
+    }
+  },
+
+  async updateAdmin(request: NextRequest, tenantId: number, adminId: string) {
+    try {
+      await requireSuperAdmin(request);
+      const body = await request.json();
+      const { name, email, password } = body;
+
+      if (password && password.length < 8) {
+        return ApiResponse.badRequest('パスワードは8文字以上で設定してください');
+      }
+
+      const updated = await tenantService.updateAdmin(tenantId, adminId, { name, email, password });
+
+      auditLogService.createWithTenantId(
+        request, tenantId, 'TENANT_UPDATE',
+        `テナントID:${tenantId}の管理者(${adminId})を更新`,
+      ).catch((err) => console.error('Audit log failed:', err));
+
+      return ApiResponse.success(updated);
+    } catch (error) {
+      if (error instanceof Error) {
+        if (error.message === 'ADMIN_NOT_FOUND') {
+          return ApiResponse.notFound('管理者が見つかりません');
+        }
+        if (error.message === 'DUPLICATE_EMAIL') {
+          return ApiResponse.conflict('このメールアドレスは既に使用されています');
+        }
+      }
+      return ApiResponse.fromError(error, 'Failed to update admin');
     }
   },
 };

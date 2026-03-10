@@ -85,12 +85,13 @@ export const groupController = {
         return ApiResponse.badRequest('memberIds must be an array');
       }
 
-      await groupService.syncMembers(tenantId, groupId, memberIds);
+      const userIds = memberIds.map((id: string | number) => String(id));
+      await groupService.syncMembers(tenantId, groupId, userIds);
 
       auditLogService.create(tenantId, {
         request,
         action: 'GROUP_SYNC_MEMBERS',
-        detail: `グループID:${groupId}のメンバーを同期（${memberIds.length}名）`,
+        detail: `グループID:${groupId}のメンバーを同期（${userIds.length}名）`,
       }).catch((err) => console.error('Audit log failed:', err));
 
       return ApiResponse.success({ success: true });

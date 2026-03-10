@@ -23,14 +23,16 @@ export default function AddMemberModal({ isOpen, onClose, onAdded }: AddMemberMo
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
-  const [role, setRole] = useState('SALES');
+  const [password, setPassword] = useState('');
+  const [role, setRole] = useState('USER');
   const [departmentId, setDepartmentId] = useState('');
 
   useEffect(() => {
     if (isOpen) {
       setName('');
       setEmail('');
-      setRole('SALES');
+      setPassword('');
+      setRole('USER');
       setDepartmentId('');
       fetch('/api/departments')
         .then((res) => res.json())
@@ -40,7 +42,11 @@ export default function AddMemberModal({ isOpen, onClose, onAdded }: AddMemberMo
   }, [isOpen]);
 
   const handleSubmit = async () => {
-    if (!name || !email) return;
+    if (!name || !email || !password) return;
+    if (password.length < 8) {
+      await Dialog.error('パスワードは8文字以上で入力してください。');
+      return;
+    }
     setSubmitting(true);
     try {
       const res = await fetch('/api/members', {
@@ -49,6 +55,7 @@ export default function AddMemberModal({ isOpen, onClose, onAdded }: AddMemberMo
         body: JSON.stringify({
           name,
           email,
+          password,
           role,
           departmentId: departmentId ? Number(departmentId) : undefined,
         }),
@@ -72,7 +79,7 @@ export default function AddMemberModal({ isOpen, onClose, onAdded }: AddMemberMo
   const footer = (
     <>
       <Button label="キャンセル" variant="outline" color="gray" onClick={onClose} />
-      <Button label={submitting ? '追加中...' : '追加'} onClick={handleSubmit} disabled={submitting || !name || !email} />
+      <Button label={submitting ? '追加中...' : '追加'} onClick={handleSubmit} disabled={submitting || !name || !email || !password} />
     </>
   );
 
@@ -100,13 +107,24 @@ export default function AddMemberModal({ isOpen, onClose, onAdded }: AddMemberMo
           />
         </div>
         <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">パスワード <span className="text-red-500">*</span></label>
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder="8文字以上"
+          />
+          <p className="mt-1 text-xs text-gray-400">初期パスワードを設定してください（8文字以上）</p>
+        </div>
+        <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">役割</label>
           <Select
             value={role}
             onChange={setRole}
             options={[
-              { value: 'SALES', label: '営業' },
-              { value: 'MANAGER', label: 'マネージャー' },
+              { value: 'USER', label: 'ユーザー' },
+              { value: 'ADMIN', label: '管理者' },
             ]}
           />
         </div>

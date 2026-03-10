@@ -8,6 +8,8 @@ import Button from '@/components/common/Button';
 import DataTable, { Column } from '@/components/common/DataTable';
 import { Dialog } from '@/components/common/Dialog';
 import CreateTenantModal from '@/components/admin/CreateTenantModal';
+import TenantDetailModal from '@/components/admin/TenantDetailModal';
+import EditTenantModal from '@/components/admin/EditTenantModal';
 
 interface Tenant {
   id: number;
@@ -15,7 +17,7 @@ interface Tenant {
   slug: string;
   isActive: boolean;
   createdAt: string;
-  _count: { users: number; members: number };
+  _count: { users: number };
 }
 
 const formatDate = (isoDate: string) => {
@@ -29,6 +31,8 @@ export default function AdminPage() {
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [loading, setLoading] = useState(true);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [detailTenantId, setDetailTenantId] = useState<number | null>(null);
+  const [editTenantId, setEditTenantId] = useState<number | null>(null);
 
   useEffect(() => {
     if (status === 'authenticated' && session?.user?.role !== 'SUPER_ADMIN') {
@@ -86,7 +90,14 @@ export default function AdminPage() {
     {
       key: 'name',
       label: 'テナント名',
-      render: (t) => <span className="text-sm font-medium text-gray-800">{t.name}</span>,
+      render: (t) => (
+        <button
+          onClick={() => setDetailTenantId(t.id)}
+          className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline"
+        >
+          {t.name}
+        </button>
+      ),
     },
     {
       key: 'slug',
@@ -111,12 +122,6 @@ export default function AdminPage() {
       render: (t) => <span className="text-sm text-gray-600">{t._count.users}</span>,
     },
     {
-      key: 'members',
-      label: 'メンバー数',
-      align: 'right',
-      render: (t) => <span className="text-sm text-gray-600">{t._count.members}</span>,
-    },
-    {
       key: 'createdAt',
       label: '作成日',
       render: (t) => <span className="text-sm text-gray-500">{formatDate(t.createdAt)}</span>,
@@ -126,13 +131,22 @@ export default function AdminPage() {
       label: '操作',
       align: 'right',
       render: (t) => (
-        <Button
-          label={t.isActive ? '無効化' : '有効化'}
-          variant="outline"
-          color={t.isActive ? 'red' : 'green'}
-          onClick={() => handleToggleActive(t)}
-          className="px-3 py-1.5 text-xs"
-        />
+        <div className="flex items-center justify-end gap-2">
+          <Button
+            label="編集"
+            variant="outline"
+            color="blue"
+            onClick={() => setEditTenantId(t.id)}
+            className="px-3 py-1.5 text-xs"
+          />
+          <Button
+            label={t.isActive ? '無効化' : '有効化'}
+            variant="outline"
+            color={t.isActive ? 'red' : 'green'}
+            onClick={() => handleToggleActive(t)}
+            className="px-3 py-1.5 text-xs"
+          />
+        </div>
       ),
     },
   ];
@@ -166,7 +180,12 @@ export default function AdminPage() {
           mobileRender={(t) => (
             <div>
               <div className="flex items-center justify-between mb-1">
-                <span className="text-sm font-medium text-gray-800">{t.name}</span>
+                <button
+                  onClick={() => setDetailTenantId(t.id)}
+                  className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline"
+                >
+                  {t.name}
+                </button>
                 <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
                   t.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                 }`}>
@@ -175,15 +194,31 @@ export default function AdminPage() {
               </div>
               <div className="text-xs text-gray-500 font-mono mb-1">{t.slug}</div>
               <div className="text-xs text-gray-400 mb-2">
-                ユーザー: {t._count.users} / メンバー: {t._count.members} / 作成日: {formatDate(t.createdAt)}
+                ユーザー: {t._count.users} / 作成日: {formatDate(t.createdAt)}
               </div>
-              <Button
-                label={t.isActive ? '無効化' : '有効化'}
-                variant="outline"
-                color={t.isActive ? 'red' : 'green'}
-                onClick={() => handleToggleActive(t)}
-                className="px-3 py-1.5 text-xs"
-              />
+              <div className="flex items-center gap-2">
+                <Button
+                  label="詳細"
+                  variant="outline"
+                  color="blue"
+                  onClick={() => setDetailTenantId(t.id)}
+                  className="px-3 py-1.5 text-xs"
+                />
+                <Button
+                  label="編集"
+                  variant="outline"
+                  color="blue"
+                  onClick={() => setEditTenantId(t.id)}
+                  className="px-3 py-1.5 text-xs"
+                />
+                <Button
+                  label={t.isActive ? '無効化' : '有効化'}
+                  variant="outline"
+                  color={t.isActive ? 'red' : 'green'}
+                  onClick={() => handleToggleActive(t)}
+                  className="px-3 py-1.5 text-xs"
+                />
+              </div>
             </div>
           )}
         />
@@ -193,6 +228,19 @@ export default function AdminPage() {
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
         onCreated={fetchTenants}
+      />
+
+      <TenantDetailModal
+        isOpen={detailTenantId !== null}
+        onClose={() => setDetailTenantId(null)}
+        tenantId={detailTenantId}
+      />
+
+      <EditTenantModal
+        isOpen={editTenantId !== null}
+        onClose={() => setEditTenantId(null)}
+        onUpdated={fetchTenants}
+        tenantId={editTenantId}
       />
     </div>
   );

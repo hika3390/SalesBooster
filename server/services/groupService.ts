@@ -9,8 +9,8 @@ export const groupService = {
       managerId: g.managerId,
       members: g.members.length,
       memberList: g.members.map((gm) => ({
-        id: gm.member.id,
-        name: gm.member.name,
+        id: gm.user.id,
+        name: gm.user.name,
       })),
     }));
   },
@@ -35,7 +35,7 @@ export const groupService = {
     return existing;
   },
 
-  async syncMembers(tenantId: number, groupId: number, memberIds: number[]) {
-    return groupRepository.syncMembers(groupId, tenantId, memberIds);
+  async syncMembers(tenantId: number, groupId: number, userIds: string[]) {
+    return groupRepository.syncMembers(groupId, tenantId, userIds);
   },
 };

@@ -5,7 +5,7 @@ import ImportModal, { ImportField, MappedRow, PreviewColumn, ParsedRow } from '@
 import type { CustomFieldDefinition } from '@/types/customField';
 
 interface Member {
-  id: number;
+  id: string;
   name: string;
 }
 
@@ -139,7 +139,7 @@ export default function ImportSalesModal({ isOpen, onClose, onImported }: Import
       }
 
       return {
-        memberId: Number(row.memberId),
+        memberId: row.memberId,
         value: Number(row.value) || 0,
         recordDate: row.recordDate!,
         description: row.description || undefined,

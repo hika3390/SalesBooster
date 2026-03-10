@@ -15,7 +15,7 @@ interface GroupOption {
 }
 
 interface MemberOption {
-  id: number;
+  id: string;
   name: string;
 }
 

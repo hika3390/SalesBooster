@@ -12,7 +12,7 @@ interface Department {
 }
 
 interface MemberData {
-  id: number;
+  id: string;
   name: string;
   email: string;
   role: string;
@@ -34,7 +34,7 @@ export default function EditMemberModal({ isOpen, onClose, onUpdated, member }: 
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
-  const [role, setRole] = useState('SALES');
+  const [role, setRole] = useState('USER');
   const [status, setStatus] = useState('ACTIVE');
   const [departmentId, setDepartmentId] = useState('');
 
@@ -117,8 +117,8 @@ export default function EditMemberModal({ isOpen, onClose, onUpdated, member }: 
             value={role}
             onChange={setRole}
             options={[
-              { value: 'SALES', label: '営業' },
-              { value: 'MANAGER', label: 'マネージャー' },
+              { value: 'USER', label: 'ユーザー' },
+              { value: 'ADMIN', label: '管理者' },
             ]}
           />
         </div>

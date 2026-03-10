@@ -9,7 +9,7 @@ import type { DataTypeInfo } from '@/types';
 
 interface Target {
   id: number;
-  memberId: number;
+  memberId: string;
   memberName: string;
   monthly: number;
   quarterly: number;

@@ -20,18 +20,22 @@ export const memberController = {
     try {
       const tenantId = await getTenantId(request);
       const body = await request.json();
-      const { name, email, role, imageUrl, departmentId } = body;
+      const { name, email, password, role, imageUrl, departmentId } = body;
 
-      if (!name || !email) {
-        return ApiResponse.badRequest('name and email are required');
+      if (!name || !email || !password) {
+        return ApiResponse.badRequest('name, email and password are required');
       }
 
-      const member = await memberService.create(tenantId, { name, email, role, imageUrl, departmentId });
+      if (password.length < 8) {
+        return ApiResponse.badRequest('パスワードは8文字以上で入力してください');
+      }
+
+      const member = await memberService.create(tenantId, { name, email, password, role, imageUrl, departmentId });
 
       auditLogService.create(tenantId, {
         request,
-        action: 'MEMBER_CREATE',
-        detail: `メンバー「${name}」(${email})を作成`,
+        action: 'USER_CREATE',
+        detail: `ユーザー「${name}」(${email})を作成`,
       }).catch((err) => console.error('Audit log failed:', err));
 
       return ApiResponse.created(member);
@@ -40,7 +44,7 @@ export const memberController = {
     }
   },
 
-  async update(request: NextRequest, id: number) {
+  async update(request: NextRequest, id: string) {
     try {
       const tenantId = await getTenantId(request);
       const body = await request.json();
@@ -48,8 +52,8 @@ export const memberController = {
 
       auditLogService.create(tenantId, {
         request,
-        action: 'MEMBER_UPDATE',
-        detail: `メンバーID:${id}の情報を更新`,
+        action: 'USER_UPDATE',
+        detail: `ユーザーID:${id}の情報を更新`,
       }).catch((err) => console.error('Audit log failed:', err));
 
       return ApiResponse.success(member);
@@ -58,15 +62,15 @@ export const memberController = {
     }
   },
 
-  async delete(request: NextRequest, id: number) {
+  async delete(request: NextRequest, id: string) {
     try {
       const tenantId = await getTenantId(request);
       await memberService.delete(tenantId, id);
 
       auditLogService.create(tenantId, {
         request,
-        action: 'MEMBER_DELETE',
-        detail: `メンバーID:${id}を削除`,
+        action: 'USER_DELETE',
+        detail: `ユーザーID:${id}を削除`,
       }).catch((err) => console.error('Audit log failed:', err));
 
       return ApiResponse.success({ success: true });
@@ -89,8 +93,8 @@ export const memberController = {
 
       auditLogService.create(tenantId, {
         request,
-        action: 'MEMBER_CREATE',
-        detail: `メンバー一括インポート: ${results.created}件追加, ${results.errors.length}件エラー`,
+        action: 'USER_CREATE',
+        detail: `ユーザー一括インポート: ${results.created}件追加, ${results.errors.length}件エラー`,
       }).catch((err) => console.error('Audit log failed:', err));
 
       return ApiResponse.success(results);

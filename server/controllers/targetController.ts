@@ -26,12 +26,12 @@ export const targetController = {
         return ApiResponse.badRequest('memberId, monthly, year, month are required');
       }
 
-      const numMemberId = Number(memberId);
+      const userId = String(memberId);
       const numYear = Number(year);
       const numMonth = Number(month);
 
       const target = await targetService.upsert(tenantId, {
-        memberId: numMemberId,
+        userId,
         monthly: Number(monthly),
         quarterly: Number(quarterly || 0),
         annual: Number(annual || 0),
@@ -43,7 +43,7 @@ export const targetController = {
       auditLogService.create(tenantId, {
         request,
         action: 'TARGET_UPSERT',
-        detail: `メンバーID:${numMemberId}の${numYear}/${numMonth}月目標を設定`,
+        detail: `ユーザーID:${userId}の${numYear}/${numMonth}月目標を設定`,
       }).catch((err) => console.error('Audit log failed:', err));
 
       return ApiResponse.success(target);

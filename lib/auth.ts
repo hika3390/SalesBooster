@@ -85,6 +85,7 @@ export const authOptions: NextAuthOptions = {
                   name: superAdmin.name,
                   role: 'ADMIN',
                   tenantId: tenant.id,
+                  isSuperAdminImpersonating: true,
                 };
               }
             }
@@ -127,6 +128,7 @@ export const authOptions: NextAuthOptions = {
         token.id = user.id;
         token.role = (user as { role?: string }).role || 'USER';
         token.tenantId = (user as { tenantId?: number | null }).tenantId ?? null;
+        token.isSuperAdminImpersonating = (user as { isSuperAdminImpersonating?: boolean }).isSuperAdminImpersonating ?? false;
       }
       return token;
     },
@@ -135,6 +137,7 @@ export const authOptions: NextAuthOptions = {
         session.user.id = token.id as string;
         session.user.role = token.role as string;
         session.user.tenantId = token.tenantId as number | null;
+        session.user.isSuperAdminImpersonating = token.isSuperAdminImpersonating ?? false;
       }
       return session;
     },

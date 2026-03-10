@@ -8,9 +8,10 @@ interface UserDropdownProps {
   userName: string;
   isAdmin?: boolean;
   isSuperAdmin?: boolean;
+  isSuperAdminImpersonating?: boolean;
 }
 
-export default function UserDropdown({ userName, isAdmin, isSuperAdmin }: UserDropdownProps) {
+export default function UserDropdown({ userName, isAdmin, isSuperAdmin, isSuperAdminImpersonating }: UserDropdownProps) {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -31,7 +32,7 @@ export default function UserDropdown({ userName, isAdmin, isSuperAdmin }: UserDr
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors"
       >
-        <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center">
+        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${isSuperAdminImpersonating ? 'bg-amber-500 ring-2 ring-amber-300' : 'bg-blue-600'}`}>
           <span className="text-white text-sm font-bold">{userName.charAt(0)}</span>
         </div>
         <span className="text-sm font-medium text-gray-700">{userName}</span>

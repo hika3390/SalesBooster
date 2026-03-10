@@ -23,6 +23,7 @@ export default function Header({ onAddSalesClick, subtitle, rightContent, active
   const userRole = session?.user?.role;
   const isAdmin = userRole === 'ADMIN' || userRole === 'SUPER_ADMIN';
   const isSuperAdmin = userRole === 'SUPER_ADMIN';
+  const isSuperAdminImpersonating = session?.user?.isSuperAdminImpersonating ?? false;
   const router = useRouter();
   const pathname = usePathname();
   const isSettingsPage = pathname.startsWith('/settings');
@@ -39,8 +40,13 @@ export default function Header({ onAddSalesClick, subtitle, rightContent, active
   }, []);
 
   return (
-    <header className="bg-white border-b border-gray-200 p-3 md:p-5">
-      <div className="flex items-center justify-between min-h-10">
+    <header className="bg-white border-b border-gray-200">
+      {isSuperAdminImpersonating && (
+        <div className="bg-amber-500 text-white text-center text-xs font-medium py-1.5 px-4">
+          SUPER_ADMIN としてこのテナントにアクセス中
+        </div>
+      )}
+      <div className="flex items-center justify-between min-h-10 p-3 md:p-5">
         <Logo subtitle={subtitle} />
 
         <div className="flex items-center space-x-3">
@@ -61,7 +67,7 @@ export default function Header({ onAddSalesClick, subtitle, rightContent, active
           {/* PC: UserDropdown */}
           {(rightContent || onAddSalesClick) && <div className="hidden md:block h-8 w-px bg-gray-300"></div>}
           <div className="hidden md:block">
-            <UserDropdown userName={userName} isAdmin={isAdmin} isSuperAdmin={isSuperAdmin} />
+            <UserDropdown userName={userName} isAdmin={isAdmin} isSuperAdmin={isSuperAdmin} isSuperAdminImpersonating={isSuperAdminImpersonating} />
           </div>
 
           {/* モバイル: ハンバーガーメニュー */}

@@ -45,9 +45,9 @@ export default function SalesPersonCard({ person, index, top20Index, low20Index,
       {/* メンバー */}
       <div className={`flex flex-col items-center py-2 border-b ${darkMode ? 'border-gray-600' : 'border-gray-200'}`}>
         <div className={`text-[9px] mb-1 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>メンバー</div>
-        <div className="relative mb-1.5">
+        <div className="relative mb-1.5 w-full px-2">
           {/* プロフィール画像 */}
-          <div className={`w-20 h-20 rounded-full bg-gray-300 overflow-hidden border border-white shadow-sm${changed ? ' animate-ring-glow' : ''}`}>
+          <div className={`relative w-full aspect-square rounded-sm bg-gray-300 overflow-hidden border border-white shadow-sm${changed ? ' animate-ring-glow' : ''}`}>
             {person.imageUrl ? (
               <img
                 src={person.imageUrl}

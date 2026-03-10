@@ -221,8 +221,8 @@ export default function SalesPerformance({ salesData, recordCount, darkMode = fa
                 <div key={person.name} className="flex-1 flex flex-col items-center py-2"
                   style={{ minWidth: `${columnWidth}px` }}
                 >
-                  <div className="relative mb-1.5">
-                    <div className={`relative w-20 h-20 rounded-full bg-gray-300 overflow-hidden border border-white shadow-sm${isChanged ? ' animate-ring-glow' : ''}`}>
+                  <div className="relative mb-1.5 w-full px-2">
+                    <div className={`relative w-full aspect-square rounded-sm bg-gray-300 overflow-hidden border border-white shadow-sm${isChanged ? ' animate-ring-glow' : ''}`}>
                       {person.imageUrl ? (
                         <Image src={person.imageUrl} alt={person.name} fill className="object-cover" />
                       ) : (

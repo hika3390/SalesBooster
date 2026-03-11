@@ -22,6 +22,12 @@ interface MemberOption {
   name: string;
 }
 
+interface DataTypeOption {
+  id: number;
+  name: string;
+  unit: string;
+}
+
 const SLIDE_TYPE_LABELS: Record<string, string> = {
   IMAGE: '画像',
   YOUTUBE: 'YouTube',
@@ -32,6 +38,7 @@ export default function DisplaySettings() {
   const [config, setConfig] = useState<DisplayConfig>(DEFAULT_DISPLAY_CONFIG);
   const [groups, setGroups] = useState<GroupOption[]>([]);
   const [members, setMembers] = useState<MemberOption[]>([]);
+  const [dataTypes, setDataTypes] = useState<DataTypeOption[]>([]);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [customSlides, setCustomSlides] = useState<CustomSlideData[]>([]);
@@ -122,6 +129,11 @@ export default function DisplaySettings() {
     fetch('/api/members')
       .then((res) => res.json())
       .then((data) => setMembers(data.map((m: { id: number; name: string }) => ({ id: m.id, name: m.name }))))
+      .catch(() => {});
+
+    fetch('/api/data-types')
+      .then((res) => res.json())
+      .then((data: { id: number; name: string; unit: string }[]) => setDataTypes(data.map((dt) => ({ id: dt.id, name: dt.name, unit: dt.unit }))))
       .catch(() => {});
   }, [loadCustomSlides]);
 
@@ -266,6 +278,7 @@ export default function DisplaySettings() {
           config={config}
           customSlides={customSlides}
           deletingSlideId={deletingSlideId}
+          dataTypes={dataTypes}
           onUpdateView={updateView}
           onMoveView={moveView}
           onDeleteSlide={handleDeleteSlide}

@@ -18,7 +18,7 @@ interface ImportSalesModalProps {
 const FIXED_FIELDS: ImportField[] = [
   { value: 'memberName', label: 'メンバー名 *', required: true, autoMapKeywords: ['メンバー', '名前', 'name', '担当', '営業'] },
   { value: 'value', label: '値 *', required: true, autoMapKeywords: ['金額', '売上', 'amount', '粗利', '値', 'value'] },
-  { value: 'recordDate', label: '受注日 *', required: true, autoMapKeywords: ['受注日', '日付', 'date', '契約日'] },
+  { value: 'recordDate', label: '入力日 *', required: true, autoMapKeywords: ['入力日', '日付', 'date', '契約日'] },
   { value: 'description', label: '備考', required: false, autoMapKeywords: ['備考', 'memo', 'description', 'メモ', '説明'] },
 ];
 
@@ -35,7 +35,7 @@ const FIXED_PREVIEW_COLUMNS: PreviewColumn[] = [
   },
   {
     key: 'recordDate',
-    label: '受注日',
+    label: '入力日',
     render: (row) => row.recordDate || <span className="text-red-400">-</span>,
   },
   { key: 'description', label: '備考', render: (row) => row.description || '-' },
@@ -105,8 +105,8 @@ export default function ImportSalesModal({ isOpen, onClose, onImported }: Import
       if (!rawValue) errors.push('値が未入力');
 
       const date = parseDate(rawDate);
-      if (!rawDate) errors.push('受注日が未入力');
-      else if (!date) errors.push(`受注日「${rawDate}」が不正`);
+      if (!rawDate) errors.push('入力日が未入力');
+      else if (!date) errors.push(`入力日「${rawDate}」が不正`);
 
       // カスタムフィールド値を収集
       const cfValues: Record<string, string> = {};
@@ -160,7 +160,7 @@ export default function ImportSalesModal({ isOpen, onClose, onImported }: Import
 
     const result = await res.json();
     return {
-      message: `インポート完了: ${result.created}件の売上データを追加しました。`,
+      message: `インポート完了: ${result.created}件のデータを追加しました。`,
     };
   };
 
@@ -169,7 +169,7 @@ export default function ImportSalesModal({ isOpen, onClose, onImported }: Import
       isOpen={isOpen}
       onClose={onClose}
       onImported={onImported}
-      titlePrefix="売上データ"
+      titlePrefix="データ"
       fields={fields}
       previewColumns={previewColumns}
       buildMappedData={buildMappedData}

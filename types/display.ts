@@ -24,6 +24,12 @@ export interface CustomSlideData {
   imageUrl: string;
 }
 
+/** NumberBoardメトリクスごとのデータ種類紐付け */
+export interface NumberBoardMetricConfig {
+  metric: NumberBoardMetric;
+  dataTypeId?: string;  // 空文字 or undefined = デフォルト
+}
+
 export interface DisplayViewConfig {
   viewType: ViewType;
   enabled: boolean;
@@ -32,7 +38,9 @@ export interface DisplayViewConfig {
   title: string;
   customSlideId?: number | null;
   customSlide?: CustomSlideData | null;
+  dataTypeId?: string;  // ビューごとのデータ種類（空文字 = デフォルト）
   numberBoardMetrics?: NumberBoardMetric[];
+  numberBoardMetricConfigs?: NumberBoardMetricConfig[];  // メトリクスごとのDT紐付け
   periodMode?: PeriodMode | null;       // 期間プリセット（null = デフォルト YTD）
   periodStartMonth?: string | null;     // YYYY-MM 形式（CUSTOM時のみ使用）
   periodEndMonth?: string | null;       // YYYY-MM 形式（CUSTOM時のみ使用）

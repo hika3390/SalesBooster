@@ -10,9 +10,11 @@ import type { CustomFieldDefinition, CustomFieldValues } from '@/types/customFie
 
 interface SalesRecord {
   id: number;
-  memberId: string;
+  userId: string;
   memberName: string;
   value: number;
+  dataTypeId: number | null;
+  dataType: { id: number; name: string; unit: string } | null;
   description: string | null;
   customFields: Record<string, string> | null;
   recordDate: string;
@@ -22,6 +24,12 @@ interface MemberOption {
   id: string;
   name: string;
   department: string | null;
+}
+
+interface DataTypeOption {
+  id: number;
+  name: string;
+  unit: string;
 }
 
 interface EditSalesRecordModalProps {
@@ -38,6 +46,8 @@ export default function EditSalesRecordModal({ isOpen, onClose, onUpdated, recor
   const [memo, setMemo] = useState('');
   const [members, setMembers] = useState<MemberOption[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  const [dataTypeId, setDataTypeId] = useState('');
+  const [dataTypes, setDataTypes] = useState<DataTypeOption[]>([]);
   const [customFieldDefs, setCustomFieldDefs] = useState<CustomFieldDefinition[]>([]);
   const [customFieldValues, setCustomFieldValues] = useState<CustomFieldValues>({});
 
@@ -51,17 +61,22 @@ export default function EditSalesRecordModal({ isOpen, onClose, onUpdated, recor
         .then((res) => res.json())
         .then((data) => setCustomFieldDefs(data))
         .catch(console.error);
+      fetch('/api/data-types')
+        .then((res) => res.json())
+        .then((data) => setDataTypes(Array.isArray(data) ? data : data?.data ?? []))
+        .catch(console.error);
     }
   }, [isOpen]);
 
   useEffect(() => {
     if (record) {
-      setMemberId(String(record.memberId));
+      setMemberId(String(record.userId));
       setEditValue(String(record.value));
       setMemo(record.description || '');
       const d = new Date(record.recordDate);
       setOrderDate(d.toISOString().slice(0, 16));
       setCustomFieldValues(record.customFields || {});
+      setDataTypeId(record.dataTypeId ? String(record.dataTypeId) : '');
     }
   }, [record]);
 
@@ -92,6 +107,7 @@ export default function EditSalesRecordModal({ isOpen, onClose, onUpdated, recor
           description: memo || undefined,
           recordDate: new Date(orderDate).toISOString(),
           customFields: filteredCustomFields,
+          dataTypeId: dataTypeId ? Number(dataTypeId) : undefined,
         }),
       });
 
@@ -100,10 +116,10 @@ export default function EditSalesRecordModal({ isOpen, onClose, onUpdated, recor
         onClose();
       } else {
         const data = await res.json().catch(() => null);
-        await Dialog.error(data?.error || '売上データの更新に失敗しました。');
+        await Dialog.error(data?.error || 'データの更新に失敗しました。');
       }
     } catch {
-      await Dialog.error('売上データの更新に失敗しました。ネットワーク接続を確認してください。');
+      await Dialog.error('データの更新に失敗しました。ネットワーク接続を確認してください。');
     } finally {
       setSubmitting(false);
     }
@@ -117,7 +133,7 @@ export default function EditSalesRecordModal({ isOpen, onClose, onUpdated, recor
   );
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="売上データ編集" footer={footer}>
+    <Modal isOpen={isOpen} onClose={onClose} title="データ編集" footer={footer}>
       <div className="space-y-4">
         {/* メンバー */}
         <div className="flex items-center">
@@ -149,9 +165,27 @@ export default function EditSalesRecordModal({ isOpen, onClose, onUpdated, recor
           </div>
         </div>
 
-        {/* 受注日 */}
+        {/* データ種別 */}
+        {dataTypes.length > 0 && (
+          <div className="flex items-center">
+            <label className="w-24 text-sm text-gray-700 text-right pr-4">データ種別</label>
+            <div className="flex-1">
+              <Select
+                value={dataTypeId}
+                onChange={setDataTypeId}
+                options={[
+                  { value: '', label: '未指定' },
+                  ...dataTypes.map((dt) => ({ value: String(dt.id), label: dt.name })),
+                ]}
+                placeholder="未指定"
+              />
+            </div>
+          </div>
+        )}
+
+        {/* 入力日 */}
         <div className="flex items-center">
-          <label className="w-24 text-sm text-gray-700 text-right pr-4">受注日</label>
+          <label className="w-24 text-sm text-gray-700 text-right pr-4">入力日</label>
           <div className="flex items-center space-x-2">
             <input
               type="datetime-local"

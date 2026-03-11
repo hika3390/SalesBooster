@@ -225,10 +225,9 @@ export const salesController = {
       const userIds = await resolveUserIds(tenantId, searchParams, startDate, endDate);
       const dataTypeId = resolveDataTypeId(searchParams);
 
-      const [prevMonthAvg, prevYearAvg] = await Promise.all([
-        salesService.getPreviousPeriodAverage(tenantId, startDate, endDate, 'prev_month', userIds, dataTypeId),
-        salesService.getPreviousPeriodAverage(tenantId, startDate, endDate, 'prev_year', userIds, dataTypeId),
-      ]);
+      // 逐次実行でDB接続プール枯渇を防止
+      const prevMonthAvg = await salesService.getPreviousPeriodAverage(tenantId, startDate, endDate, 'prev_month', userIds, dataTypeId);
+      const prevYearAvg = await salesService.getPreviousPeriodAverage(tenantId, startDate, endDate, 'prev_year', userIds, dataTypeId);
 
       return ApiResponse.success({ prevMonthAvg, prevYearAvg });
     } catch (error) {

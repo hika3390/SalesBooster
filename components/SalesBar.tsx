@@ -2,6 +2,7 @@
 
 import { SalesPerson } from '@/types';
 import { formatNumber } from '@/lib/currency';
+import { DEFAULT_UNIT } from '@/constants/units';
 
 interface SalesBarProps {
   person: SalesPerson;
@@ -11,9 +12,10 @@ interface SalesBarProps {
   low20Index: number;
   columnWidth: number;
   changed?: boolean;
+  unit?: string;
 }
 
-export default function SalesBar({ person, index, maxSales, top20Index, low20Index, columnWidth, changed }: SalesBarProps) {
+export default function SalesBar({ person, index, maxSales, top20Index, low20Index, columnWidth, changed, unit = DEFAULT_UNIT }: SalesBarProps) {
   const barHeight = maxSales > 0 ? (person.sales / maxSales) * 100 : 0;
 
   // 色分け関数 - エネルギッシュで勝利感のあるデザイン
@@ -79,7 +81,7 @@ export default function SalesBar({ person, index, maxSales, top20Index, low20Ind
                 transition: 'box-shadow 0.5s ease',
               }}
             >
-              {formatNumber(person.sales)}万円
+              {formatNumber(person.sales)}{unit}
             </div>
           </div>
 

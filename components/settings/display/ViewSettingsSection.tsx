@@ -1,12 +1,17 @@
 'use client';
 
 import Image from 'next/image';
-import { DisplayConfig, DisplayViewConfig, CustomSlideData, PERIOD_MODES, PERIOD_MODE_LABELS, PeriodMode } from '@/types/display';
+import { DisplayConfig, DisplayViewConfig, CustomSlideData, NumberBoardMetricConfig, PERIOD_MODES, PERIOD_MODE_LABELS, PeriodMode } from '@/types/display';
 import { VIEW_TYPE_LABELS, NumberBoardMetric, NUMBER_BOARD_METRIC_LABELS } from '@/types';
 import Button from '@/components/common/Button';
 import { extractYouTubeId } from '@/lib/youtube';
 
 const ALL_METRICS: NumberBoardMetric[] = ['TOTAL_SALES', 'TOTAL_COUNT', 'AVG_ACHIEVEMENT', 'TEAM_TARGET'];
+
+/** データ種類セレクタを表示するビュータイプ */
+const DATA_TYPE_VIEW_TYPES: Set<string> = new Set([
+  'PERIOD_GRAPH', 'CUMULATIVE_GRAPH', 'TREND_GRAPH', 'REPORT', 'RECORD', 'NUMBER_BOARD',
+]);
 
 const SLIDE_TYPE_LABELS: Record<string, string> = {
   IMAGE: '画像',
@@ -14,10 +19,17 @@ const SLIDE_TYPE_LABELS: Record<string, string> = {
   TEXT: 'テキスト',
 };
 
+interface DataTypeOption {
+  id: number;
+  name: string;
+  unit: string;
+}
+
 interface ViewSettingsSectionProps {
   config: DisplayConfig;
   customSlides: CustomSlideData[];
   deletingSlideId: number | null;
+  dataTypes: DataTypeOption[];
   onUpdateView: (index: number, updates: Partial<DisplayViewConfig>) => void;
   onMoveView: (index: number, direction: 'up' | 'down') => void;
   onDeleteSlide: (slideId: number) => void;
@@ -28,6 +40,7 @@ export default function ViewSettingsSection({
   config,
   customSlides,
   deletingSlideId,
+  dataTypes,
   onUpdateView,
   onMoveView,
   onDeleteSlide,
@@ -84,7 +97,32 @@ export default function ViewSettingsSection({
       ? current.filter((m) => m !== metric)
       : [...current, metric];
     if (next.length === 0) return; // 最低1つは必要
-    onUpdateView(index, { numberBoardMetrics: next });
+
+    // metricConfigsからも削除されたメトリクスを除外
+    const currentConfigs = view.numberBoardMetricConfigs ?? [];
+    const nextConfigs = currentConfigs.filter((c) => next.includes(c.metric));
+    // 新規追加されたメトリクスがあればconfigに追加
+    for (const m of next) {
+      if (!nextConfigs.find((c) => c.metric === m)) {
+        nextConfigs.push({ metric: m });
+      }
+    }
+
+    onUpdateView(index, { numberBoardMetrics: next, numberBoardMetricConfigs: nextConfigs });
+  };
+
+  const updateMetricDataType = (index: number, metric: NumberBoardMetric, dataTypeId: string) => {
+    const view = config.views[index];
+    const metrics = view.numberBoardMetrics ?? ['TOTAL_SALES', 'TOTAL_COUNT'];
+    const currentConfigs = view.numberBoardMetricConfigs ?? metrics.map((m) => ({ metric: m }));
+    const nextConfigs: NumberBoardMetricConfig[] = currentConfigs.map((c) =>
+      c.metric === metric ? { ...c, dataTypeId: dataTypeId || undefined } : c,
+    );
+    // 対象メトリクスが見つからなければ追加
+    if (!nextConfigs.find((c) => c.metric === metric)) {
+      nextConfigs.push({ metric, dataTypeId: dataTypeId || undefined });
+    }
+    onUpdateView(index, { numberBoardMetricConfigs: nextConfigs });
   };
 
   const renderPeriodSelector = (view: DisplayViewConfig, index: number) => {
@@ -129,22 +167,66 @@ export default function ViewSettingsSection({
     );
   };
 
+  /** ビューごとのデータ種類セレクタ（NumberBoard以外） */
+  const renderDataTypeSelector = (view: DisplayViewConfig, index: number) => {
+    if (!DATA_TYPE_VIEW_TYPES.has(view.viewType)) return null;
+    if (view.viewType === 'NUMBER_BOARD') return null; // NumberBoardはメトリクスごと
+    if (dataTypes.length <= 1) return null;
+
+    return (
+      <div className="flex flex-wrap items-center gap-2 mt-1">
+        <span className="text-xs text-gray-500">データ種類:</span>
+        <select
+          value={view.dataTypeId ?? ''}
+          onChange={(e) => onUpdateView(index, { dataTypeId: e.target.value })}
+          className="border border-gray-300 rounded px-1.5 py-0.5 text-xs"
+        >
+          <option value="">デフォルト</option>
+          {dataTypes.map((dt) => (
+            <option key={dt.id} value={String(dt.id)}>{dt.name}（{dt.unit}）</option>
+          ))}
+        </select>
+      </div>
+    );
+  };
+
   const renderMetricSelector = (view: DisplayViewConfig, index: number) => {
     if (view.viewType !== 'NUMBER_BOARD') return null;
     const selected = view.numberBoardMetrics ?? ['TOTAL_SALES', 'TOTAL_COUNT'];
+    const metricConfigs = view.numberBoardMetricConfigs ?? [];
+    const showDataTypes = dataTypes.length > 1;
+
     return (
-      <div className="flex flex-wrap gap-2 mt-1">
-        {ALL_METRICS.map((metric) => (
-          <label key={metric} className="flex items-center gap-1.5 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={selected.includes(metric)}
-              onChange={() => toggleMetric(index, metric)}
-              className="w-3.5 h-3.5 text-blue-600 rounded"
-            />
-            <span className="text-xs text-gray-600">{NUMBER_BOARD_METRIC_LABELS[metric]}</span>
-          </label>
-        ))}
+      <div className="mt-1 space-y-1">
+        {ALL_METRICS.map((metric) => {
+          const isSelected = selected.includes(metric);
+          const conf = metricConfigs.find((c) => c.metric === metric);
+          return (
+            <div key={metric} className="flex flex-wrap items-center gap-2">
+              <label className="flex items-center gap-1.5 cursor-pointer min-w-[120px]">
+                <input
+                  type="checkbox"
+                  checked={isSelected}
+                  onChange={() => toggleMetric(index, metric)}
+                  className="w-3.5 h-3.5 text-blue-600 rounded"
+                />
+                <span className="text-xs text-gray-600">{NUMBER_BOARD_METRIC_LABELS[metric]}</span>
+              </label>
+              {showDataTypes && isSelected && (
+                <select
+                  value={conf?.dataTypeId ?? ''}
+                  onChange={(e) => updateMetricDataType(index, metric, e.target.value)}
+                  className="border border-gray-300 rounded px-1.5 py-0.5 text-xs"
+                >
+                  <option value="">デフォルト</option>
+                  {dataTypes.map((dt) => (
+                    <option key={dt.id} value={String(dt.id)}>{dt.name}（{dt.unit}）</option>
+                  ))}
+                </select>
+              )}
+            </div>
+          );
+        })}
       </div>
     );
   };
@@ -185,6 +267,7 @@ export default function ViewSettingsSection({
                     className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
                   />
                   {renderPeriodSelector(view, index)}
+                  {renderDataTypeSelector(view, index)}
                   {renderMetricSelector(view, index)}
                 </td>
                 <td className="px-4 py-3 text-center">
@@ -280,6 +363,7 @@ export default function ViewSettingsSection({
                 placeholder={VIEW_TYPE_LABELS[view.viewType]}
                 className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm"
               />
+              {renderDataTypeSelector(view, index)}
               {renderMetricSelector(view, index)}
             </div>
             <div className="flex items-center justify-between">

@@ -1,7 +1,7 @@
 'use client';
 
-import { ViewType, SalesPerson, ReportData, RankingBoardData, TrendData, NumberBoardMetric } from '@/types';
-import { CustomSlideData } from '@/types/display';
+import { ViewType, SalesPerson, ReportData, RankingBoardData, TrendData, NumberBoardMetric, DataTypeInfo } from '@/types';
+import { CustomSlideData, NumberBoardMetricConfig } from '@/types/display';
 import SalesPerformance from '@/components/SalesPerformance';
 import CumulativeChart from '@/components/CumulativeChart';
 import TrendChart from '@/components/TrendChart';
@@ -22,6 +22,10 @@ interface DisplayViewRendererProps {
   rankingData: RankingBoardData | null;
   customSlide?: CustomSlideData | null;
   numberBoardMetrics?: NumberBoardMetric[];
+  numberBoardMetricConfigs?: NumberBoardMetricConfig[];
+  unit?: string;
+  dataTypes?: DataTypeInfo[];
+  filter?: { groupId: string; memberId: string };
   onVideoEnd?: () => void;
 }
 
@@ -37,6 +41,10 @@ export default function DisplayViewRenderer({
   rankingData,
   customSlide,
   numberBoardMetrics,
+  numberBoardMetricConfigs,
+  unit,
+  dataTypes,
+  filter,
   onVideoEnd,
 }: DisplayViewRendererProps) {
   if (loading) {
@@ -50,9 +58,9 @@ export default function DisplayViewRenderer({
 
   switch (view) {
     case 'PERIOD_GRAPH':
-      return <SalesPerformance salesData={salesData} recordCount={recordCount} darkMode={darkMode} isDisplayMode />;
+      return <SalesPerformance salesData={salesData} recordCount={recordCount} darkMode={darkMode} isDisplayMode unit={unit} />;
     case 'CUMULATIVE_GRAPH':
-      return <CumulativeChart salesData={cumulativeSalesData} darkMode={darkMode} />;
+      return <CumulativeChart salesData={cumulativeSalesData} darkMode={darkMode} unit={unit} />;
     case 'TREND_GRAPH':
       return <TrendChart monthlyData={trendData} darkMode={darkMode} />;
     case 'REPORT':
@@ -62,7 +70,7 @@ export default function DisplayViewRenderer({
     case 'CUSTOM_SLIDE':
       return customSlide ? <CustomSlideView slide={customSlide} darkMode={darkMode} onVideoEnd={onVideoEnd} /> : null;
     case 'NUMBER_BOARD':
-      return <NumberBoard salesData={salesData} recordCount={recordCount} metrics={numberBoardMetrics ?? ['TOTAL_SALES', 'TOTAL_COUNT']} darkMode={darkMode} />;
+      return <NumberBoard salesData={salesData} recordCount={recordCount} metrics={numberBoardMetrics ?? ['TOTAL_SALES', 'TOTAL_COUNT']} metricConfigs={numberBoardMetricConfigs} darkMode={darkMode} unit={unit} dataTypes={dataTypes} filter={filter} />;
     default:
       return (
         <div className="h-full flex items-center justify-center" style={{ color: 'var(--display-text-secondary)' }}>

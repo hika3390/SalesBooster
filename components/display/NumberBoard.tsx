@@ -1,14 +1,20 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { SalesPerson, NumberBoardMetric, NUMBER_BOARD_METRIC_LABELS } from '@/types';
+import { SalesPerson, NumberBoardMetric, NUMBER_BOARD_METRIC_LABELS, DataTypeInfo } from '@/types';
+import { NumberBoardMetricConfig } from '@/types/display';
 import { formatNumber } from '@/lib/currency';
+import { DEFAULT_UNIT } from '@/constants/units';
 
 interface NumberBoardProps {
   salesData: SalesPerson[];
   recordCount: number;
   metrics: NumberBoardMetric[];
+  metricConfigs?: NumberBoardMetricConfig[];
   darkMode?: boolean;
+  unit?: string;
+  dataTypes?: DataTypeInfo[];
+  filter?: { groupId: string; memberId: string };
 }
 
 interface MetricValue {
@@ -16,6 +22,16 @@ interface MetricValue {
   value: number;
   suffix: string;
   format: (n: number) => string;
+}
+
+/** メトリクスごとに異なるdataTypeIdが設定されているかチェック */
+function getUniqueDataTypeIds(metricConfigs: NumberBoardMetricConfig[] | undefined): string[] {
+  if (!metricConfigs) return [];
+  const ids = new Set<string>();
+  for (const c of metricConfigs) {
+    if (c.dataTypeId) ids.add(c.dataTypeId);
+  }
+  return Array.from(ids);
 }
 
 function useCountUp(target: number, duration: number = 1500): number {
@@ -78,14 +94,29 @@ function CountUpValue({ value, suffix, format, darkMode }: { value: number; suff
   );
 }
 
-function computeMetric(metric: NumberBoardMetric, salesData: SalesPerson[], recordCount: number): MetricValue {
+/** メトリクスごとのunitを解決 */
+function resolveMetricUnit(
+  metric: NumberBoardMetric,
+  metricConfigs: NumberBoardMetricConfig[] | undefined,
+  dataTypes: DataTypeInfo[] | undefined,
+  defaultUnit: string,
+): string {
+  const conf = metricConfigs?.find((c) => c.metric === metric);
+  if (conf?.dataTypeId && dataTypes) {
+    const dt = dataTypes.find((d) => String(d.id) === conf.dataTypeId);
+    if (dt) return dt.unit;
+  }
+  return defaultUnit;
+}
+
+function computeMetric(metric: NumberBoardMetric, salesData: SalesPerson[], recordCount: number, unit: string): MetricValue {
   switch (metric) {
     case 'TOTAL_SALES': {
       const total = salesData.reduce((sum, p) => sum + p.sales, 0);
       return {
         label: NUMBER_BOARD_METRIC_LABELS.TOTAL_SALES,
         value: total,
-        suffix: '万円',
+        suffix: unit,
         format: (n: number) => formatNumber(Math.round(n)),
       };
     }
@@ -112,16 +143,84 @@ function computeMetric(metric: NumberBoardMetric, salesData: SalesPerson[], reco
       return {
         label: NUMBER_BOARD_METRIC_LABELS.TEAM_TARGET,
         value: totalTarget,
-        suffix: '万円',
+        suffix: unit,
         format: (n: number) => formatNumber(Math.round(n)),
       };
     }
   }
 }
 
-export default function NumberBoard({ salesData, recordCount, metrics, darkMode = false }: NumberBoardProps) {
+/** メトリクスごとに異なるdataTypeIdのデータを個別取得するhook */
+function usePerMetricData(
+  metricConfigs: NumberBoardMetricConfig[] | undefined,
+  filter: { groupId: string; memberId: string } | undefined,
+) {
+  const [dataMap, setDataMap] = useState<Record<string, { salesData: SalesPerson[]; recordCount: number }>>({});
+
+  const dtIds = getUniqueDataTypeIds(metricConfigs);
+  const dtIdsKey = dtIds.join(',');
+  const filterKey = `${filter?.groupId ?? ''}_${filter?.memberId ?? ''}`;
+
+  useEffect(() => {
+    if (dtIds.length === 0) return;
+
+    const now = new Date();
+    const startDate = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+    const endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59).toISOString();
+
+    const fetchAll = async () => {
+      const results: Record<string, { salesData: SalesPerson[]; recordCount: number }> = {};
+
+      await Promise.all(
+        dtIds.map(async (dtId) => {
+          const params = new URLSearchParams();
+          params.set('startDate', startDate);
+          params.set('endDate', endDate);
+          params.set('dataTypeId', dtId);
+          if (filter?.memberId) params.set('memberId', filter.memberId);
+          else if (filter?.groupId) params.set('groupId', filter.groupId);
+
+          try {
+            const res = await fetch(`/api/sales?${params.toString()}`);
+            if (res.ok) {
+              const json = await res.json();
+              results[dtId] = { salesData: json.data, recordCount: json.recordCount };
+            }
+          } catch {
+            // ignore
+          }
+        }),
+      );
+
+      setDataMap(results);
+    };
+
+    fetchAll();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dtIdsKey, filterKey]);
+
+  return dataMap;
+}
+
+export default function NumberBoard({ salesData, recordCount, metrics, metricConfigs, darkMode = false, unit = DEFAULT_UNIT, dataTypes, filter }: NumberBoardProps) {
   const displayMetrics = metrics.length > 0 ? metrics : ['TOTAL_SALES', 'TOTAL_COUNT'] as NumberBoardMetric[];
-  const metricValues = displayMetrics.map((m) => computeMetric(m, salesData, recordCount));
+
+  // メトリクスごとに個別dataTypeIdが設定されている場合、そのデータを個別取得
+  const perMetricData = usePerMetricData(metricConfigs, filter);
+
+  const metricValues = displayMetrics.map((m) => {
+    const metricUnit = resolveMetricUnit(m, metricConfigs, dataTypes, unit);
+    const conf = metricConfigs?.find((c) => c.metric === m);
+
+    // 個別dataTypeIdのデータがあればそちらを使う
+    if (conf?.dataTypeId && perMetricData[conf.dataTypeId]) {
+      const data = perMetricData[conf.dataTypeId];
+      return computeMetric(m, data.salesData, data.recordCount, metricUnit);
+    }
+
+    // デフォルト: 親から渡されたsalesDataを使う
+    return computeMetric(m, salesData, recordCount, metricUnit);
+  });
 
   // Single metric: use maximum size, multiple: scale down
   const isSingle = metricValues.length === 1;

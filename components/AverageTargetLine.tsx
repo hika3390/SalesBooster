@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { DEFAULT_UNIT } from '@/constants/units';
 
 export interface OverlayLine {
   value: number;
@@ -13,6 +14,7 @@ interface AverageTargetLineProps {
   averageTarget: number;
   maxSales: number;
   overlayLines?: OverlayLine[];
+  unit?: string;
 }
 
 const COLOR_MAP: Record<string, { border: string; text: string; bg: string }> = {
@@ -21,7 +23,7 @@ const COLOR_MAP: Record<string, { border: string; text: string; bg: string }> = 
   'purple-500': { border: 'border-purple-500', text: 'text-purple-600', bg: 'bg-white' },
 };
 
-export default function AverageTargetLine({ averageTarget, maxSales, overlayLines = [] }: AverageTargetLineProps) {
+export default function AverageTargetLine({ averageTarget, maxSales, overlayLines = [], unit = DEFAULT_UNIT }: AverageTargetLineProps) {
   if (maxSales <= 0) return null;
 
   const lines: OverlayLine[] = [];
@@ -57,13 +59,13 @@ export default function AverageTargetLine({ averageTarget, maxSales, overlayLine
               {line.label}
             </div>
             <div className={`absolute left-2 top-1 text-xs font-bold ${colors.text} ${colors.bg} px-1`}>
-              {line.value}
+              {line.value}{unit}
             </div>
             <div className={`absolute right-2 -top-3 text-xs ${colors.text} ${colors.bg} px-1 whitespace-nowrap`}>
               {line.label}
             </div>
             <div className={`absolute right-2 top-1 text-xs font-bold ${colors.text} ${colors.bg} px-1`}>
-              {line.value}
+              {line.value}{unit}
             </div>
           </div>
         );

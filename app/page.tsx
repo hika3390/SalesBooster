@@ -17,6 +17,7 @@ import MobileRankingList from '@/components/mobile/MobileRankingList';
 import SetupWizard from '@/components/setup/SetupWizard';
 import type { OverlayLineType } from '@/components/FilterBar';
 import type { OverlayLine } from '@/components/AverageTargetLine';
+import { DEFAULT_UNIT } from '@/constants/units';
 
 const FETCH_DEBOUNCE_MS = 100;
 
@@ -34,6 +35,7 @@ export default function Home() {
   const [filter, setFilter] = useState<{ groupId: string; memberId: string }>({ groupId: '', memberId: '' });
   const [period, setPeriod] = useState<PeriodSelection | null>(null);
   const [dataTypeId, setDataTypeId] = useState('');
+  const [dataTypeUnit, setDataTypeUnit] = useState<string>(DEFAULT_UNIT);
   const [overlayLines, setOverlayLines] = useState<OverlayLineType[]>(['norma']);
   const [prevAvg, setPrevAvg] = useState<{ prevMonthAvg: number; prevYearAvg: number }>({ prevMonthAvg: 0, prevYearAvg: 0 });
   const [showSetupWizard, setShowSetupWizard] = useState(false);
@@ -215,7 +217,7 @@ export default function Home() {
         onViewChange={handleViewChange}
         onFilterChange={setFilter}
         onPeriodChange={setPeriod}
-        onDataTypeChange={setDataTypeId}
+        onDataTypeChange={(id, unit) => { setDataTypeId(id); setDataTypeUnit(unit); }}
         onOverlayLinesChange={setOverlayLines}
       />
 
@@ -240,9 +242,9 @@ export default function Home() {
         ) : isDataEmpty ? (
           emptyMessage
         ) : currentView === 'CUMULATIVE_GRAPH' ? (
-          <CumulativeChart salesData={cumulativeSalesData} showNormaLine={showNormaLine} overlayLines={chartOverlayLines} />
+          <CumulativeChart salesData={cumulativeSalesData} showNormaLine={showNormaLine} overlayLines={chartOverlayLines} unit={dataTypeUnit} />
         ) : currentView === 'PERIOD_GRAPH' ? (
-          <SalesPerformance salesData={salesData} recordCount={recordCount} showNormaLine={showNormaLine} overlayLines={chartOverlayLines} />
+          <SalesPerformance salesData={salesData} recordCount={recordCount} showNormaLine={showNormaLine} overlayLines={chartOverlayLines} unit={dataTypeUnit} />
         ) : currentView === 'TREND_GRAPH' ? (
           <TrendChart monthlyData={trendData} />
         ) : currentView === 'REPORT' && reportData ? (

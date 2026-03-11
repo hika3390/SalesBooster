@@ -18,7 +18,20 @@ export const displayConfigRepository = {
     companyLogoUrl: string;
     teamName: string;
     darkMode: boolean;
-    views: { viewType: DisplayViewType; enabled: boolean; duration: number; order: number; title: string; customSlideId?: number | null; numberBoardMetrics?: string; periodMode?: DisplayPeriodMode | string | null; periodStartMonth?: string | null; periodEndMonth?: string | null }[];
+    views: {
+      viewType: DisplayViewType;
+      enabled: boolean;
+      duration: number;
+      order: number;
+      title: string;
+      customSlideId?: number | null;
+      dataTypeId?: string;
+      numberBoardMetrics?: string;
+      numberBoardMetricConfigs?: string;
+      periodMode?: DisplayPeriodMode | string | null;
+      periodStartMonth?: string | null;
+      periodEndMonth?: string | null
+    }[];
   }) {
     const existing = await prisma.displayConfig.findFirst({ where: { tenantId } });
 
@@ -44,7 +57,9 @@ export const displayConfigRepository = {
                 order: v.order,
                 title: v.title,
                 ...(v.customSlideId ? { customSlideId: v.customSlideId } : {}),
+                dataTypeId: v.dataTypeId ?? '',
                 numberBoardMetrics: v.numberBoardMetrics ?? '',
+                numberBoardMetricConfigs: v.numberBoardMetricConfigs ?? '',
                 periodMode: (v.periodMode as DisplayPeriodMode) ?? null,
                 periodStartMonth: v.periodStartMonth ?? null,
                 periodEndMonth: v.periodEndMonth ?? null,

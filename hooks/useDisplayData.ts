@@ -2,8 +2,9 @@
 
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { DisplayConfig, DisplayViewConfig, PeriodMode } from '@/types/display';
-import { SalesPerson, ReportData, RankingBoardData, TrendData } from '@/types';
+import { SalesPerson, ReportData, RankingBoardData, TrendData, DataTypeInfo } from '@/types';
 import { useSalesPolling } from './useSalesPolling';
+import { DEFAULT_UNIT } from '@/constants/units';
 
 interface UseDisplayDataReturn {
   salesData: SalesPerson[];
@@ -14,6 +15,7 @@ interface UseDisplayDataReturn {
   rankingData: RankingBoardData | null;
   loading: boolean;
   error: string | null;
+  dataTypes: DataTypeInfo[];
 }
 
 function getCurrentMonthPeriod() {
@@ -41,7 +43,6 @@ function resolvePeriod(
       return { startDate: start.toISOString(), endDate: endDate.toISOString() };
     }
     case 'FISCAL_YEAR': {
-      // 4月始まり: 現在月が4月以降なら今年の4月、1-3月なら前年の4月
       const fiscalStart = now.getMonth() >= 3
         ? new Date(now.getFullYear(), 3, 1)
         : new Date(now.getFullYear() - 1, 3, 1);
@@ -61,14 +62,20 @@ function resolvePeriod(
     }
     case 'YTD':
     default: {
-      // 年初〜当月
       const start = new Date(now.getFullYear(), 0, 1);
       return { startDate: start.toISOString(), endDate: endDate.toISOString() };
     }
   }
 }
 
-export function useDisplayData(config: DisplayConfig): UseDisplayDataReturn {
+/** dataTypeIdからunitを解決するヘルパー */
+export function resolveUnit(dataTypeId: string | undefined, dataTypes: DataTypeInfo[]): string {
+  if (!dataTypeId) return DEFAULT_UNIT;
+  const dt = dataTypes.find((d) => String(d.id) === dataTypeId);
+  return dt?.unit || DEFAULT_UNIT;
+}
+
+export function useDisplayData(config: DisplayConfig, currentDataTypeId?: string): UseDisplayDataReturn {
   const [salesData, setSalesData] = useState<SalesPerson[]>([]);
   const [recordCount, setRecordCount] = useState(0);
   const [cumulativeSalesData, setCumulativeSalesData] = useState<SalesPerson[]>([]);
@@ -77,7 +84,10 @@ export function useDisplayData(config: DisplayConfig): UseDisplayDataReturn {
   const [rankingData, setRankingData] = useState<RankingBoardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [dataTypes, setDataTypes] = useState<DataTypeInfo[]>([]);
   const periodRef = useRef(getCurrentMonthPeriod());
+  // dataTypeIdが変わった際の再取得で loading フラッシュを抑制するフラグ
+  const initialLoadDoneRef = useRef(false);
 
   const fetchAllData = useCallback(async () => {
     try {
@@ -85,25 +95,34 @@ export function useDisplayData(config: DisplayConfig): UseDisplayDataReturn {
       const period = getCurrentMonthPeriod();
       periodRef.current = period;
 
+      // データ種類一覧を取得（ビューごとのunit解決に使用）
+      fetch(`/api/data-types`)
+        .then((res) => res.ok ? res.json() : [])
+        .then((data: DataTypeInfo[]) => setDataTypes(data))
+        .catch(() => {});
+
+      const addCommonFilters = (params: URLSearchParams) => {
+        if (config.filter.memberId) params.set('memberId', config.filter.memberId);
+        else if (config.filter.groupId) params.set('groupId', config.filter.groupId);
+        if (currentDataTypeId) params.set('dataTypeId', currentDataTypeId);
+      };
+
       const filterParams = new URLSearchParams();
       filterParams.set('startDate', period.startDate);
       filterParams.set('endDate', period.endDate);
-      if (config.filter.memberId) filterParams.set('memberId', config.filter.memberId);
-      else if (config.filter.groupId) filterParams.set('groupId', config.filter.groupId);
+      addCommonFilters(filterParams);
       const query = filterParams.toString();
 
       const rankingParams = new URLSearchParams();
-      if (config.filter.memberId) rankingParams.set('memberId', config.filter.memberId);
-      else if (config.filter.groupId) rankingParams.set('groupId', config.filter.groupId);
+      addCommonFilters(rankingParams);
 
-      // 累計グラフ用の期間パラメータ（ビューのperiodModeに応じて計算）
+      // 累計グラフ用の期間パラメータ
       const cumulativeView = config.views.find((v) => v.viewType === 'CUMULATIVE_GRAPH');
       const cumulativePeriod = resolvePeriod(cumulativeView?.periodMode ?? null, cumulativeView);
       const cumulativeParams = new URLSearchParams();
       cumulativeParams.set('startDate', cumulativePeriod.startDate);
       cumulativeParams.set('endDate', cumulativePeriod.endDate);
-      if (config.filter.memberId) cumulativeParams.set('memberId', config.filter.memberId);
-      else if (config.filter.groupId) cumulativeParams.set('groupId', config.filter.groupId);
+      addCommonFilters(cumulativeParams);
       const cumulativeQuery = cumulativeParams.toString();
 
       const [salesRes, cumulativeRes, trendRes, reportRes, rankingRes] = await Promise.all([
@@ -127,10 +146,11 @@ export function useDisplayData(config: DisplayConfig): UseDisplayDataReturn {
       setError('データの取得に失敗しました。ネットワーク接続を確認してください。');
     } finally {
       setLoading(false);
+      initialLoadDoneRef.current = true;
     }
-  }, [config.filter, config.views]);
+  }, [config.filter, config.views, currentDataTypeId]);
 
-  // 初回データ取得
+  // 初回データ取得 + dataTypeId変更時の再取得
   useEffect(() => {
     fetchAllData();
   }, [fetchAllData]);
@@ -147,5 +167,6 @@ export function useDisplayData(config: DisplayConfig): UseDisplayDataReturn {
     rankingData,
     loading,
     error,
+    dataTypes,
   };
 }

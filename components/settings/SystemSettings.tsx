@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Select from '@/components/common/Select';
 import SetupWizard from '@/components/setup/SetupWizard';
+import { UNIT_OPTIONS, DEFAULT_UNIT } from '@/constants/units';
 
 export default function SystemSettings() {
   const [showWizard, setShowWizard] = useState(false);
@@ -61,13 +62,9 @@ export default function SystemSettings() {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">通貨単位</label>
               <Select
-                value="万円"
+                value={DEFAULT_UNIT}
                 onChange={() => {}}
-                options={[
-                  { value: '万円', label: '万円' },
-                  { value: '千円', label: '千円' },
-                  { value: '円', label: '円' },
-                ]}
+                options={[...UNIT_OPTIONS]}
               />
             </div>
           </div>

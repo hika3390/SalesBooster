@@ -14,10 +14,12 @@ import type { CustomFieldDefinition } from '@/types/customField';
 
 interface SalesRecord {
   id: number;
-  memberId: string;
+  userId: string;
   memberName: string;
   department: string | null;
   value: number;
+  dataTypeId: number | null;
+  dataType: { id: number; name: string; unit: string } | null;
   description: string | null;
   customFields: Record<string, string> | null;
   recordDate: string;
@@ -107,9 +109,9 @@ export default function SalesRecordsPage() {
       params.set('pageSize', String(pageSize));
       const res = await fetch(`/api/sales/records?${params}`);
       if (res.ok) setData(await res.json());
-      else setFetchError('売上データの取得に失敗しました。');
+      else setFetchError('データの取得に失敗しました。');
     } catch {
-      setFetchError('売上データの取得に失敗しました。ネットワーク接続を確認してください。');
+      setFetchError('データの取得に失敗しました。ネットワーク接続を確認してください。');
     } finally {
       setLoading(false);
     }
@@ -157,7 +159,7 @@ export default function SalesRecordsPage() {
       // カスタムフィールドのヘッダーを収集
       const cfHeaders = customFieldDefs.map((f) => f.name);
 
-      const headerRow = ['売上ID', '日付', 'メンバー名', '部署', '金額', '備考', ...cfHeaders, '入力日時'];
+      const headerRow = ['ID', '日付', 'メンバー名', '部署', '金額', '備考', ...cfHeaders, '入力日時'];
       const csvRows = [headerRow.map(escapeCsvField).join(',')];
 
       for (const r of records) {
@@ -182,7 +184,7 @@ export default function SalesRecordsPage() {
       const link = document.createElement('a');
       link.href = url;
       const now = new Date();
-      const fileName = `売上データ_${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}.csv`;
+      const fileName = `データ_${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}.csv`;
       link.download = fileName;
       document.body.appendChild(link);
       link.click();
@@ -204,10 +206,10 @@ export default function SalesRecordsPage() {
         fetchRecords(currentPage);
       } else {
         const d = await res.json().catch(() => null);
-        await Dialog.error(d?.error || '売上データの削除に失敗しました。');
+        await Dialog.error(d?.error || 'データの削除に失敗しました。');
       }
     } catch {
-      await Dialog.error('売上データの削除に失敗しました。ネットワーク接続を確認してください。');
+      await Dialog.error('データの削除に失敗しました。ネットワーク接続を確認してください。');
     }
   };
 
@@ -215,7 +217,7 @@ export default function SalesRecordsPage() {
     const fixedColumns: Column<SalesRecord>[] = [
       {
         key: 'recordDate',
-        label: '受注日',
+        label: '入力日',
         render: (r) => <span className="text-sm text-gray-600 whitespace-nowrap">{formatDate(r.recordDate)}</span>,
       },
       {
@@ -233,6 +235,11 @@ export default function SalesRecordsPage() {
         label: '値',
         align: 'right',
         render: (r) => <span className="text-sm font-medium text-gray-800">{r.value}</span>,
+      },
+      {
+        key: 'dataType',
+        label: 'データ種別',
+        render: (r) => <span className="text-sm text-gray-600">{r.dataType?.name || '-'}</span>,
       },
       {
         key: 'description',
@@ -267,7 +274,7 @@ export default function SalesRecordsPage() {
   if (loading && !data) {
     return (
       <div className="h-screen flex flex-col bg-gray-100">
-        <Header subtitle="売上データ管理" />
+        <Header subtitle="データ管理" />
         <div className="flex-1 flex items-center justify-center">
           <div className="text-gray-500">読み込み中...</div>
         </div>
@@ -278,7 +285,7 @@ export default function SalesRecordsPage() {
   if (fetchError && !data) {
     return (
       <div className="h-screen flex flex-col bg-gray-100">
-        <Header subtitle="売上データ管理" />
+        <Header subtitle="データ管理" />
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
             <div className="text-red-500 mb-3">{fetchError}</div>
@@ -298,14 +305,14 @@ export default function SalesRecordsPage() {
 
   return (
     <div className="h-screen flex flex-col bg-gray-100">
-      <Header subtitle="売上データ管理" />
+      <Header subtitle="データ管理" />
 
       <main className="flex-1 p-4 md:p-8 overflow-y-auto">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold text-gray-800">売上データ管理</h2>
+          <h2 className="text-xl font-bold text-gray-800">データ管理</h2>
           <DropdownMenu items={[
             {
-              label: '売上入力',
+              label: 'データ入力',
               icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>,
               onClick: () => setIsSalesModalOpen(true),
             },
@@ -334,7 +341,7 @@ export default function SalesRecordsPage() {
           data={records}
           columns={columns}
           keyField="id"
-          emptyMessage="売上データがありません"
+          emptyMessage="データがありません"
           serverPagination={{
             currentPage,
             totalPages,

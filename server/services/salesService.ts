@@ -1,11 +1,26 @@
 import { salesRecordRepository } from '../repositories/salesRecordRepository';
 import { memberRepository } from '../repositories/memberRepository';
 import { targetRepository } from '../repositories/targetRepository';
+import { dataTypeRepository } from '../repositories/dataTypeRepository';
 import { SalesPerson, ReportData, RankingBoardData, RankingColumn, RankingMember } from '@/types';
-import { toManyen } from '@/lib/currency';
+import { convertByUnit } from '@/lib/currency';
 
 type UserWithDepartment = Awaited<ReturnType<typeof memberRepository.findAll>>[number];
 type SalesRecordWithUser = Awaited<ReturnType<typeof salesRecordRepository.findByPeriod>>[number];
+
+/** dataTypeIdからunitを取得（未指定や見つからない場合は'万円'）- 同一IDは1度だけDB問い合わせ */
+const unitCache = new Map<string, Promise<string>>();
+function resolveUnit(tenantId: number, dataTypeId?: number): Promise<string> {
+  if (!dataTypeId) return Promise.resolve('万円');
+  const key = `${tenantId}:${dataTypeId}`;
+  const cached = unitCache.get(key);
+  if (cached) return cached;
+  const promise = dataTypeRepository.findById(dataTypeId, tenantId)
+    .then((dt) => dt?.unit || '万円')
+    .finally(() => { unitCache.delete(key); });
+  unitCache.set(key, promise);
+  return promise;
+}
 
 /** userIds指定時はDB側で絞り込み、未指定(undefined)時は全件取得、空配列時は0件 */
 async function fetchUsers(tenantId: number, userIds?: string[]): Promise<UserWithDepartment[]> {
@@ -56,13 +71,13 @@ function buildSalesPeople(
   users: UserWithDepartment[],
   salesMap: Map<string, number>,
   targetMap: Map<string, number>,
-  useManyen: boolean = true,
+  unit: string = '万円',
 ): SalesPerson[] {
   const salesPeople: SalesPerson[] = users.map((user) => {
     const salesRaw = salesMap.get(user.id) || 0;
     const targetRaw = targetMap.get(user.id) || 0;
-    const sales = useManyen ? toManyen(salesRaw) : salesRaw;
-    const target = useManyen ? toManyen(targetRaw) : targetRaw;
+    const sales = convertByUnit(salesRaw, unit);
+    const target = convertByUnit(targetRaw, unit);
     const achievement = targetRaw > 0 ? Math.round((salesRaw / targetRaw) * 100) : 0;
 
     return {
@@ -102,6 +117,7 @@ function buildMonthlyMap(startDate: Date, endDate: Date, records: SalesRecordWit
 
 export const salesService = {
   async getSalesByDateRange(tenantId: number, startDate: Date, endDate: Date, userIds?: string[], dataTypeId?: number): Promise<{ salesPeople: SalesPerson[]; recordCount: number }> {
+    const unit = await resolveUnit(tenantId, dataTypeId);
     const [records, users] = await Promise.all([
       salesRecordRepository.findByPeriod(startDate, endDate, tenantId, userIds, dataTypeId),
       fetchUsers(tenantId, userIds),
@@ -110,12 +126,13 @@ export const salesService = {
     const salesMap = buildSalesMap(records);
     const ids = users.map((m) => m.id);
     const targetMap = await buildTargetMap(tenantId, ids, startDate, endDate, dataTypeId);
-    const salesPeople = buildSalesPeople(users, salesMap, targetMap);
+    const salesPeople = buildSalesPeople(users, salesMap, targetMap, unit);
 
     return { salesPeople, recordCount: records.length };
   },
 
   async getCumulativeSales(tenantId: number, startDate: Date, endDate: Date, userIds?: string[], dataTypeId?: number): Promise<SalesPerson[]> {
+    const unit = await resolveUnit(tenantId, dataTypeId);
     const [records, users] = await Promise.all([
       salesRecordRepository.findByPeriod(startDate, endDate, tenantId, userIds, dataTypeId),
       fetchUsers(tenantId, userIds),
@@ -125,12 +142,13 @@ export const salesService = {
     const ids = users.map((m) => m.id);
     const targetMap = await buildTargetMap(tenantId, ids, startDate, endDate, dataTypeId);
 
-    return buildSalesPeople(users, salesMap, targetMap);
+    return buildSalesPeople(users, salesMap, targetMap, unit);
   },
 
   async getTrendData(tenantId: number, startDate: Date, endDate: Date, userIds?: string[], dataTypeId?: number) {
     const periodStart = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
     const periodEnd = new Date(endDate.getFullYear(), endDate.getMonth() + 1, 0, 23, 59, 59);
+    const unit = await resolveUnit(tenantId, dataTypeId);
     const records = await salesRecordRepository.findByPeriod(periodStart, periodEnd, tenantId, userIds, dataTypeId);
 
     const monthlyMap = buildMonthlyMap(startDate, endDate, records);
@@ -141,7 +159,7 @@ export const salesService = {
         const m = parseInt(month.split('-')[1]);
         return {
           month,
-          sales: toManyen(totalValue),
+          sales: convertByUnit(totalValue, unit),
           displayMonth: `${m}月`,
         };
       });
@@ -154,12 +172,14 @@ export const salesService = {
   },
 
   async getReportData(tenantId: number, startDate: Date, endDate: Date, userIds?: string[], dataTypeId?: number): Promise<ReportData> {
+    const unit = await resolveUnit(tenantId, dataTypeId);
     const records = await salesRecordRepository.findByPeriod(startDate, endDate, tenantId, userIds, dataTypeId);
+    const conv = (v: number) => convertByUnit(v, unit);
 
     const monthlyMap = buildMonthlyMap(startDate, endDate, records);
 
     const sortedMonths = Array.from(monthlyMap.entries()).sort((a, b) => a[0].localeCompare(b[0]));
-    const salesValues = sortedMonths.map(([, v]) => toManyen(v));
+    const salesValues = sortedMonths.map(([, v]) => conv(v));
 
     const monthlyTrend = sortedMonths.map(([month, amount], i) => {
       const [y, m] = month.split('-');
@@ -170,14 +190,14 @@ export const salesService = {
       return {
         month,
         displayMonth: `${y.slice(2)}/${m}`,
-        sales: toManyen(amount),
+        sales: conv(amount),
         movingAvg,
       };
     });
 
     let cumulative = 0;
     const cumulativeTrend = sortedMonths.map(([month, amount]) => {
-      cumulative += toManyen(amount);
+      cumulative += conv(amount);
       const [y, m] = month.split('-');
       return {
         month,
@@ -195,7 +215,7 @@ export const salesService = {
     const dayTotal = dayAmounts.reduce((a: number, b: number) => a + b, 0) || 1;
     const dayOfWeekRatio = dayNames.map((day, i) => ({
       day,
-      amount: toManyen(dayAmounts[i]),
+      amount: conv(dayAmounts[i]),
       ratio: Math.round((dayAmounts[i] / dayTotal) * 100),
     }));
 
@@ -211,13 +231,13 @@ export const salesService = {
     const periodLabels = ['前半10日間', '中盤10日間', '後半10日間'];
     const periodRatio = periodLabels.map((period, i) => ({
       period,
-      amount: toManyen(periodAmounts[i]),
+      amount: conv(periodAmounts[i]),
       ratio: Math.round((periodAmounts[i] / periodTotal) * 100),
     }));
 
     const now = new Date();
     const recentMonths = sortedMonths.slice(-3);
-    const recentSales = recentMonths.map(([, v]) => toManyen(v));
+    const recentSales = recentMonths.map(([, v]) => conv(v));
     const monthlyAvg = recentSales.length > 0 ? Math.round(recentSales.reduce((a, b) => a + b, 0) / recentSales.length) : 0;
 
     const totalDays = recentMonths.length * 30;
@@ -231,13 +251,13 @@ export const salesService = {
     const filteredTargets = dataTypeId
       ? targets.filter((t: { dataTypeId: number | null }) => t.dataTypeId === dataTypeId)
       : targets;
-    const monthlyTarget = toManyen(filteredTargets.reduce((sum: number, t: { value: number }) => sum + (t.value || 0), 0));
+    const monthlyTarget = conv(filteredTargets.reduce((sum: number, t: { value: number }) => sum + (t.value || 0), 0));
 
     const targetDays = dailyAvg > 0 ? Math.round((monthlyTarget / dailyAvg) * 10) / 10 : 0;
     const targetMonths = monthlyAvg > 0 ? Math.round((monthlyTarget / monthlyAvg) * 10) / 10 : 0;
 
     const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-    const currentMonthSales = toManyen(monthlyMap.get(currentMonthKey) || 0);
+    const currentMonthSales = conv(monthlyMap.get(currentMonthKey) || 0);
     const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
     const remainingDays = daysInMonth - now.getDate();
     const landingPrediction = Math.round((currentMonthSales + remainingDays * dailyAvg) * 10) / 10;
@@ -396,6 +416,7 @@ export const salesService = {
       prevEnd = new Date(endDate.getFullYear() - 1, endDate.getMonth() + 1, 0, 23, 59, 59);
     }
 
+    const unit = await resolveUnit(tenantId, dataTypeId);
     const [records, users] = await Promise.all([
       salesRecordRepository.findByPeriod(prevStart, prevEnd, tenantId, userIds, dataTypeId),
       fetchUsers(tenantId, userIds),
@@ -404,7 +425,7 @@ export const salesService = {
     if (users.length === 0) return 0;
 
     const totalSales = records.reduce((sum, r) => sum + getNumericValue(r), 0);
-    return toManyen(Math.round(totalSales / users.length));
+    return convertByUnit(Math.round(totalSales / users.length), unit);
   },
 
   async importSalesRecords(tenantId: number, records: { userId: string; value: number; recordDate: string; description?: string; customFields?: Record<string, string>; dataTypeId?: number }[]) {

@@ -9,6 +9,7 @@ import ContractBanner from './ContractBanner';
 import { COLUMN_WIDTH } from '../constants/chart';
 import { SalesPerson } from '@/types';
 import { formatNumber } from '@/lib/currency';
+import { DEFAULT_UNIT } from '@/constants/units';
 
 interface SalesPerformanceProps {
   salesData: SalesPerson[];
@@ -17,9 +18,10 @@ interface SalesPerformanceProps {
   isDisplayMode?: boolean;
   showNormaLine?: boolean;
   overlayLines?: OverlayLine[];
+  unit?: string;
 }
 
-export default function SalesPerformance({ salesData, recordCount, darkMode = false, isDisplayMode = false, showNormaLine = true, overlayLines = [] }: SalesPerformanceProps) {
+export default function SalesPerformance({ salesData, recordCount, darkMode = false, isDisplayMode = false, showNormaLine = true, overlayLines = [], unit = DEFAULT_UNIT }: SalesPerformanceProps) {
   const prevDataRef = useRef<SalesPerson[]>([]);
   const [changedNames, setChangedNames] = useState<Set<string>>(new Set());
   const [bannerNames, setBannerNames] = useState<string[]>([]);
@@ -107,13 +109,13 @@ export default function SalesPerformance({ salesData, recordCount, darkMode = fa
                   <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>■ 月間売上</div>
                   <div className={`text-lg font-bold mt-1 ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>
                     {formatNumber(maxSales)}
-                    <span className={`text-sm font-normal ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>万円</span>
+                    <span className={`text-sm font-normal ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>{unit}</span>
                   </div>
                   <div className={`mt-3 pt-3 border-t ${darkMode ? 'border-gray-600' : 'border-gray-200'}`}>
                     <div className="text-xs text-blue-600">■ チーム計</div>
                     <div className="text-lg font-bold text-blue-700 mt-1">
                       {formatNumber(totalSales)}
-                      <span className="text-sm font-normal text-blue-500">万円</span>
+                      <span className="text-sm font-normal text-blue-500">{unit}</span>
                     </div>
                   </div>
                   <div className={`mt-3 pt-3 border-t ${darkMode ? 'border-gray-600' : 'border-gray-200'}`}>
@@ -129,7 +131,7 @@ export default function SalesPerformance({ salesData, recordCount, darkMode = fa
                     <div className="text-xs text-orange-600">ノルマライン</div>
                     <div className="text-lg font-bold text-orange-600 mt-1">
                       {formatNumber(averageTarget)}
-                      <span className="text-sm font-normal text-orange-500">万円</span>
+                      <span className="text-sm font-normal text-orange-500">{unit}</span>
                     </div>
                   </div>
                 )}
@@ -138,7 +140,7 @@ export default function SalesPerformance({ salesData, recordCount, darkMode = fa
           )}
           <div className="relative py-6 flex-1 min-h-0">
             <PerformanceLabels />
-            <AverageTargetLine averageTarget={showNormaLine ? averageTarget : 0} maxSales={maxSales} overlayLines={overlayLines} />
+            <AverageTargetLine averageTarget={showNormaLine ? averageTarget : 0} maxSales={maxSales} overlayLines={overlayLines} unit={unit} />
             <div className="absolute bottom-0 left-0 right-0 top-20 px-1">
               {/* ゾーン背景エリア */}
               {salesData.length > 0 && (
@@ -190,6 +192,7 @@ export default function SalesPerformance({ salesData, recordCount, darkMode = fa
                     low20Index={low20Index}
                     columnWidth={columnWidth}
                     changed={changedNames.has(person.name)}
+                    unit={unit}
                   />
                 ))}
               </div>
@@ -269,7 +272,7 @@ export default function SalesPerformance({ salesData, recordCount, darkMode = fa
               return (
                 <div key={person.name} className={`flex-1 text-center py-2${isChanged ? ' animate-card-flash' : ''}`} style={{ minWidth: `${columnWidth}px`, maxWidth: `${columnWidth}px` }}>
                   <div className={`text-base font-bold ${darkMode ? 'text-gray-100' : 'text-gray-800'}${isChanged ? ' animate-amount-flash' : ''}`}>
-                    {formatNumber(person.sales)}万円
+                    {formatNumber(person.sales)}{unit}
                   </div>
                   <div className={`text-sm font-bold mt-1 ${person.achievement >= 100 ? 'text-red-600' : person.achievement >= 80 ? 'text-blue-600' : 'text-gray-600'}${isChanged ? ' animate-achievement-flash' : ''}`}>
                     {person.achievement}%
@@ -290,7 +293,7 @@ export default function SalesPerformance({ salesData, recordCount, darkMode = fa
           <div className="flex-1 flex px-1 gap-1">
             {salesData.map((person) => (
               <div key={person.name} className="flex-1 text-center py-2" style={{ minWidth: `${columnWidth}px`, maxWidth: `${columnWidth}px` }}>
-                <div className={`text-[11px] font-semibold ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>{formatNumber(person.target)}万円</div>
+                <div className={`text-[11px] font-semibold ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>{formatNumber(person.target)}{unit}</div>
               </div>
             ))}
           </div>

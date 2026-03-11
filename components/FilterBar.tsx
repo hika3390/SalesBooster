@@ -8,6 +8,7 @@ import PeriodUnitToggle from './filter/PeriodUnitToggle';
 import PeriodNavigator, { PeriodSelection } from './filter/PeriodNavigator';
 import { ViewType, PeriodUnit } from '@/types';
 import type { DataTypeInfo } from '@/types';
+import { DEFAULT_UNIT } from '@/constants/units';
 
 export type OverlayLineType = 'norma' | 'prev_month' | 'prev_year';
 
@@ -15,7 +16,7 @@ interface FilterBarProps {
   onViewChange?: (view: ViewType) => void;
   onFilterChange?: (filter: { groupId: string; memberId: string }) => void;
   onPeriodChange?: (period: PeriodSelection) => void;
-  onDataTypeChange?: (dataTypeId: string) => void;
+  onDataTypeChange?: (dataTypeId: string, unit: string) => void;
   onOverlayLinesChange?: (lines: OverlayLineType[]) => void;
 }
 
@@ -50,10 +51,11 @@ export default function FilterBar({ onViewChange, onFilterChange, onPeriodChange
       .then((data: DataTypeInfo[]) => {
         setDataTypes(data);
         const defaultType = data.find((dt) => dt.isDefault);
-        const initialId = defaultType ? String(defaultType.id) : data.length > 0 ? String(data[0].id) : '';
+        const initialType = defaultType ?? data[0];
+        const initialId = initialType ? String(initialType.id) : '';
         setSelectedDataTypeId(initialId);
-        if (onDataTypeChange && initialId) {
-          onDataTypeChange(initialId);
+        if (onDataTypeChange && initialType) {
+          onDataTypeChange(initialId, initialType.unit);
         }
       })
       .catch(() => setDataTypes([]));
@@ -70,7 +72,8 @@ export default function FilterBar({ onViewChange, onFilterChange, onPeriodChange
   const handleDataTypeChange = (dtId: string) => {
     setSelectedDataTypeId(dtId);
     if (onDataTypeChange) {
-      onDataTypeChange(dtId);
+      const dt = dataTypes.find((d) => String(d.id) === dtId);
+      onDataTypeChange(dtId, dt?.unit ?? DEFAULT_UNIT);
     }
   };
 

@@ -3,6 +3,18 @@ export function toManyen(yen: number): number {
   return Math.floor(yen / 10000);
 }
 
+/** 単位に応じて値を変換する */
+export function convertByUnit(value: number, unit: string): number {
+  switch (unit) {
+    case '万円':
+      return Math.floor(value / 10000);
+    case '千円':
+      return Math.floor(value / 1000);
+    default:
+      return value;
+  }
+}
+
 /** 数値を3桁区切り文字列に変換 */
 export function formatNumber(num: number): string {
   return num.toLocaleString('ja-JP');

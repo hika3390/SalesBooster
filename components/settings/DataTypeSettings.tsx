@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Dialog } from '@/components/common/Dialog';
+import { UNIT_OPTIONS } from '@/constants/units';
 import type { DataTypeInfo } from '@/types';
 
 const DEFAULT_COLORS = [
@@ -275,13 +276,15 @@ function DataTypeFormModal({ isOpen, onClose, onSaved, dataType }: DataTypeFormM
           {/* 単位 */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">単位</label>
-            <input
-              type="text"
+            <select
               value={unit}
               onChange={(e) => setUnit(e.target.value)}
-              className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
-              placeholder="例: 円、件、分"
-            />
+              className="w-full border border-gray-300 rounded px-3 py-2 text-sm bg-white"
+            >
+              {UNIT_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
           </div>
 
           {/* 色 */}

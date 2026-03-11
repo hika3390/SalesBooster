@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { UNIT_OPTIONS, DEFAULT_UNIT } from '@/constants/units';
 
 interface DataTypeInput {
   name: string;
@@ -15,7 +16,7 @@ const DEFAULT_SUGGESTIONS = [
 ];
 
 export default function StepDataTypes() {
-  const [dataTypes, setDataTypes] = useState<DataTypeInput[]>([{ name: '', unit: '', saved: false }]);
+  const [dataTypes, setDataTypes] = useState<DataTypeInput[]>([{ name: '', unit: DEFAULT_UNIT, saved: false }]);
   const [existingCount, setExistingCount] = useState(0);
   const [saving, setSaving] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -31,7 +32,7 @@ export default function StepDataTypes() {
             unit: dt.unit || '',
             saved: true,
           }));
-          setDataTypes([...existing, { name: '', unit: '', saved: false }]);
+          setDataTypes([...existing, { name: '', unit: DEFAULT_UNIT, saved: false }]);
         }
       })
       .catch(() => {});
@@ -65,7 +66,7 @@ export default function StepDataTypes() {
         const updated = [...prev];
         updated[index] = { ...dt, saved: true };
         if (updated[updated.length - 1].saved) {
-          updated.push({ name: '', unit: '', saved: false });
+          updated.push({ name: '', unit: DEFAULT_UNIT, saved: false });
         }
         return updated;
       });
@@ -95,7 +96,7 @@ export default function StepDataTypes() {
     setDataTypes((prev) => {
       const updated = prev.filter((_, i) => i !== index);
       if (updated.length === 0 || updated[updated.length - 1].saved) {
-        updated.push({ name: '', unit: '', saved: false });
+        updated.push({ name: '', unit: DEFAULT_UNIT, saved: false });
       }
       return updated;
     });
@@ -147,18 +148,20 @@ export default function StepDataTypes() {
                   : 'border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
               }`}
             />
-            <input
-              type="text"
+            <select
               value={dt.unit}
               onChange={(e) => handleChange(index, 'unit', e.target.value)}
-              placeholder="単位"
               disabled={dt.saved}
               className={`w-24 px-3 py-2 text-sm border rounded-lg transition-colors ${
                 dt.saved
                   ? 'bg-gray-50 border-gray-200 text-gray-600'
                   : 'border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
               }`}
-            />
+            >
+              {UNIT_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
             {dt.saved ? (
               <div className="flex items-center gap-1">
                 <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">

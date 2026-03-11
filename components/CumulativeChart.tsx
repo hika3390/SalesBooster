@@ -6,15 +6,17 @@ import SalesBar from './SalesBar';
 import SalesPersonCard from './SalesPersonCard';
 import { COLUMN_WIDTH } from '../constants/chart';
 import { SalesPerson } from '@/types';
+import { DEFAULT_UNIT } from '@/constants/units';
 
 interface CumulativeChartProps {
   salesData: SalesPerson[];
   darkMode?: boolean;
   showNormaLine?: boolean;
   overlayLines?: OverlayLine[];
+  unit?: string;
 }
 
-export default function CumulativeChart({ salesData, darkMode = false, showNormaLine = true, overlayLines = [] }: CumulativeChartProps) {
+export default function CumulativeChart({ salesData, darkMode = false, showNormaLine = true, overlayLines = [], unit = DEFAULT_UNIT }: CumulativeChartProps) {
   // 最大売上の取得（グラフの高さ調整用）
   const maxSales = salesData.length > 0 ? Math.max(...salesData.map(person => person.sales)) : 0;
 
@@ -35,7 +37,7 @@ export default function CumulativeChart({ salesData, darkMode = false, showNorma
       <div className="flex-1 min-h-0 flex flex-col" style={{ minWidth: 'fit-content' }}>
         {/* グラフエリア */}
         <div className="relative py-6 flex-1 min-h-0">
-          <AverageTargetLine averageTarget={showNormaLine ? averageTarget : 0} maxSales={maxSales} overlayLines={overlayLines} />
+          <AverageTargetLine averageTarget={showNormaLine ? averageTarget : 0} maxSales={maxSales} overlayLines={overlayLines} unit={unit} />
           {/* ラベル表示 */}
           <div className="absolute top-4 left-0 right-0 flex justify-between px-12">
             <div className="text-xs text-blue-600 bg-blue-50 border border-blue-400 px-3 py-1">
@@ -100,6 +102,7 @@ export default function CumulativeChart({ salesData, darkMode = false, showNorma
                   top20Index={top20Index}
                   low20Index={low20Index}
                   columnWidth={columnWidth}
+                  unit={unit}
                 />
               ))}
             </div>
@@ -118,6 +121,7 @@ export default function CumulativeChart({ salesData, darkMode = false, showNorma
                 low20Index={low20Index}
                 columnWidth={columnWidth}
                 darkMode={darkMode}
+                unit={unit}
               />
             ))}
           </div>

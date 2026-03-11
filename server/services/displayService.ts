@@ -1,5 +1,5 @@
 import { displayConfigRepository } from '../repositories/displayConfigRepository';
-import { DisplayConfig, DisplayViewConfig, DEFAULT_DISPLAY_CONFIG, TransitionType, PeriodMode } from '@/types/display';
+import { DisplayConfig, DisplayViewConfig, NumberBoardMetricConfig, DEFAULT_DISPLAY_CONFIG, TransitionType, PeriodMode } from '@/types/display';
 import { NumberBoardMetric, ViewType } from '@/types';
 import { DisplayTransition, DisplayViewType } from '@prisma/client';
 
@@ -29,27 +29,43 @@ export const displayService = {
     const record = await displayConfigRepository.find(tenantId);
     if (!record) return DEFAULT_DISPLAY_CONFIG;
 
-    const dbViews: DisplayViewConfig[] = record.views.map((v) => ({
-      viewType: v.viewType,
-      enabled: v.enabled,
-      duration: v.duration,
-      order: v.order,
-      title: v.title,
-      customSlideId: v.customSlideId ?? null,
-      customSlide: v.customSlide ? {
-        id: v.customSlide.id,
-        slideType: v.customSlide.slideType,
-        title: v.customSlide.title,
-        content: v.customSlide.content,
-        imageUrl: v.customSlide.imageUrl,
-      } : undefined,
-      numberBoardMetrics: v.numberBoardMetrics
+    const dbViews: DisplayViewConfig[] = record.views.map((v) => {
+      const metrics = v.numberBoardMetrics
         ? (v.numberBoardMetrics.split(',').filter(Boolean) as NumberBoardMetric[])
-        : undefined,
-      periodMode: (v.periodMode as PeriodMode) ?? null,
-      periodStartMonth: v.periodStartMonth ?? null,
-      periodEndMonth: v.periodEndMonth ?? null,
-    }));
+        : undefined;
+
+      // numberBoardMetricConfigs: JSON文字列からパース
+      let metricConfigs: NumberBoardMetricConfig[] | undefined;
+      if (v.numberBoardMetricConfigs) {
+        try {
+          metricConfigs = JSON.parse(v.numberBoardMetricConfigs);
+        } catch {
+          metricConfigs = undefined;
+        }
+      }
+
+      return {
+        viewType: v.viewType,
+        enabled: v.enabled,
+        duration: v.duration,
+        order: v.order,
+        title: v.title,
+        customSlideId: v.customSlideId ?? null,
+        customSlide: v.customSlide ? {
+          id: v.customSlide.id,
+          slideType: v.customSlide.slideType,
+          title: v.customSlide.title,
+          content: v.customSlide.content,
+          imageUrl: v.customSlide.imageUrl,
+        } : undefined,
+        dataTypeId: v.dataTypeId ?? '',
+        numberBoardMetrics: metrics,
+        numberBoardMetricConfigs: metricConfigs,
+        periodMode: (v.periodMode as PeriodMode) ?? null,
+        periodStartMonth: v.periodStartMonth ?? null,
+        periodEndMonth: v.periodEndMonth ?? null,
+      };
+    });
 
     const views = mergeDefaultViews(dbViews);
 
@@ -85,7 +101,9 @@ export const displayService = {
         order: v.order,
         title: v.title ?? '',
         customSlideId: v.customSlideId ?? null,
+        dataTypeId: v.dataTypeId ?? '',
         numberBoardMetrics: v.numberBoardMetrics ? v.numberBoardMetrics.join(',') : '',
+        numberBoardMetricConfigs: v.numberBoardMetricConfigs ? JSON.stringify(v.numberBoardMetricConfigs) : '',
         periodMode: v.periodMode ?? null,
         periodStartMonth: v.periodStartMonth ?? null,
         periodEndMonth: v.periodEndMonth ?? null,

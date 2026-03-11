@@ -358,6 +358,7 @@ model DisplayConfig {
   dataRefreshInterval Int                  @default(60000)
   filterGroupId       String               @default("")
   filterMemberId      String               @default("")
+  filterDataTypeId    String               @default("")
   transition          DisplayTransition    @default(NONE)
   companyLogoUrl      String               @default("")
   teamName            String               @default("")
@@ -396,20 +397,22 @@ model CustomField {
 }
 
 model DisplayConfigView {
-  id                  Int              @id @default(autoincrement())
-  displayConfigId     Int
-  viewType            DisplayViewType
-  enabled             Boolean          @default(true)
-  duration            Int              @default(30)
-  order               Int              @default(0)
-  title               String           @default("")
-  customSlideId       Int?
-  numberBoardMetrics  String           @default("")
-  periodMode          DisplayPeriodMode?
-  periodStartMonth    String?
-  periodEndMonth      String?
-  customSlide         CustomSlide?     @relation(fields: [customSlideId], references: [id], onDelete: SetNull)
-  displayConfig       DisplayConfig    @relation(fields: [displayConfigId], references: [id], onDelete: Cascade)
+  id                        Int              @id @default(autoincrement())
+  displayConfigId           Int
+  viewType                  DisplayViewType
+  enabled                   Boolean          @default(true)
+  duration                  Int              @default(30)
+  order                     Int              @default(0)
+  title                     String           @default("")
+  customSlideId             Int?
+  dataTypeId                String           @default("")
+  numberBoardMetrics        String           @default("")
+  numberBoardMetricConfigs  String           @default("")
+  periodMode                DisplayPeriodMode?
+  periodStartMonth          String?
+  periodEndMonth            String?
+  customSlide               CustomSlide?     @relation(fields: [customSlideId], references: [id], onDelete: SetNull)
+  displayConfig             DisplayConfig    @relation(fields: [displayConfigId], references: [id], onDelete: Cascade)
 }
 
 model CustomSlide {

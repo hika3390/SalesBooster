@@ -2,6 +2,7 @@
 
 import { SalesPerson } from '@/types';
 import { formatNumber } from '@/lib/currency';
+import { DEFAULT_UNIT } from '@/constants/units';
 
 interface SalesPersonCardProps {
   person: SalesPerson;
@@ -11,9 +12,10 @@ interface SalesPersonCardProps {
   columnWidth: number;
   changed?: boolean;
   darkMode?: boolean;
+  unit?: string;
 }
 
-export default function SalesPersonCard({ person, index, top20Index, low20Index, columnWidth, changed, darkMode = false }: SalesPersonCardProps) {
+export default function SalesPersonCard({ person, index, top20Index, low20Index, columnWidth, changed, darkMode = false, unit = DEFAULT_UNIT }: SalesPersonCardProps) {
   // バッジの取得（TOP 20%で達成率100%以上）
   const getBadge = (index: number, person: SalesPerson) => {
     if (index < top20Index && person.achievement >= 100) {
@@ -76,7 +78,7 @@ export default function SalesPersonCard({ person, index, top20Index, low20Index,
       {/* 実績金額・達成率 */}
       <div className={`text-center py-2 border-b ${darkMode ? 'border-gray-600' : 'border-gray-200'}${changed ? ' animate-card-flash' : ''}`}>
         <div className={`text-base font-bold ${darkMode ? 'text-gray-100' : 'text-gray-800'}${changed ? ' animate-amount-flash' : ''}`}>
-          {formatNumber(person.sales)}万円
+          {formatNumber(person.sales)}{unit}
         </div>
         <div
           className={`text-sm font-bold mt-1 ${
@@ -95,7 +97,7 @@ export default function SalesPersonCard({ person, index, top20Index, low20Index,
       <div className={`text-center py-2 border-b ${darkMode ? 'border-gray-600' : 'border-gray-200'}`}>
         <div className={`text-[9px] mb-1 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>目標</div>
         <div className={`text-[11px] font-semibold ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-          {formatNumber(person.target)}万円
+          {formatNumber(person.target)}{unit}
         </div>
       </div>
     </div>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
+import Image from 'next/image';
 import { CustomSlideType } from '@/types/display';
 import Modal from '@/components/common/Modal';
 import Button from '@/components/common/Button';
@@ -200,7 +201,7 @@ export default function AddCustomSlideModal({ open, onClose, onCreated }: AddCus
             >
               {imagePreview ? (
                 <div>
-                  <img src={imagePreview} alt="プレビュー" className="max-h-40 mx-auto rounded" />
+                  <Image src={imagePreview} alt="プレビュー" width={320} height={160} className="max-h-40 mx-auto rounded object-contain" unoptimized />
                   <p className="text-xs text-gray-500 mt-2">{imageFile?.name}</p>
                 </div>
               ) : (
@@ -235,9 +236,11 @@ export default function AddCustomSlideModal({ open, onClose, onCreated }: AddCus
             />
             {youtubeId && (
               <div className="mt-2">
-                <img
+                <Image
                   src={`https://img.youtube.com/vi/${youtubeId}/mqdefault.jpg`}
                   alt="サムネイル"
+                  width={320}
+                  height={180}
                   className="rounded w-full max-w-xs"
                 />
               </div>

@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { DisplayConfig, DisplayViewConfig, CustomSlideData, PERIOD_MODES, PERIOD_MODE_LABELS, PeriodMode } from '@/types/display';
 import { VIEW_TYPE_LABELS, NumberBoardMetric, NUMBER_BOARD_METRIC_LABELS } from '@/types';
 import Button from '@/components/common/Button';
@@ -52,10 +53,12 @@ export default function ViewSettingsSection({
 
     if (slide.slideType === 'IMAGE' && slide.imageUrl) {
       return (
-        <img
+        <Image
           src={slide.imageUrl}
           alt={slide.title || 'スライド画像'}
-          className="w-10 h-10 object-cover rounded border border-gray-200 shrink-0"
+          width={40}
+          height={40}
+          className="object-cover rounded border border-gray-200 shrink-0"
         />
       );
     }
@@ -64,10 +67,12 @@ export default function ViewSettingsSection({
       const videoId = getYouTubeId(slide.content);
       if (videoId) {
         return (
-          <img
+          <Image
             src={`https://img.youtube.com/vi/${videoId}/mqdefault.jpg`}
             alt={slide.title || 'YouTube'}
-            className="w-10 h-10 object-cover rounded border border-gray-200 shrink-0"
+            width={40}
+            height={40}
+            className="object-cover rounded border border-gray-200 shrink-0"
           />
         );
       }

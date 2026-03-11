@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { Dialog } from '@/components/common/Dialog';
 import Modal from '@/components/common/Modal';
 import Button from '@/components/common/Button';
@@ -124,9 +125,9 @@ export default function EditMemberModal({ isOpen, onClose, onUpdated, member }: 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">アイコン</label>
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-sm bg-gray-300 overflow-hidden border border-white shadow-sm shrink-0">
+            <div className="relative w-16 h-16 rounded-sm bg-gray-300 overflow-hidden border border-white shadow-sm shrink-0">
               {imageUrl ? (
-                <img src={imageUrl} alt="アイコン" className="w-full h-full object-cover" />
+                <Image src={imageUrl} alt="アイコン" fill className="object-cover" sizes="64px" />
               ) : (
                 <div className="w-full h-full flex items-center justify-center bg-linear-to-br from-blue-400 to-blue-600">
                   <span className="text-white text-xl font-bold">{name ? name.charAt(0) : '?'}</span>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { Dialog } from '@/components/common/Dialog';
 import DataTable, { Column } from '@/components/common/DataTable';
 import Button from '@/components/common/Button';
@@ -69,9 +70,9 @@ export default function MemberSettings() {
       label: '名前',
       render: (m) => (
         <div className="flex items-center gap-2.5">
-          <div className="w-10 h-10 rounded-sm bg-gray-300 overflow-hidden border border-white shadow-sm shrink-0">
+          <div className="relative w-10 h-10 rounded-sm bg-gray-300 overflow-hidden border border-white shadow-sm shrink-0">
             {m.imageUrl ? (
-              <img src={m.imageUrl} alt={m.name} className="w-full h-full object-cover" />
+              <Image src={m.imageUrl} alt={m.name} fill className="object-cover" sizes="40px" />
             ) : (
               <div className="w-full h-full flex items-center justify-center bg-linear-to-br from-blue-400 to-blue-600">
                 <span className="text-white text-sm font-bold">{m.name.charAt(0)}</span>
@@ -170,9 +171,9 @@ export default function MemberSettings() {
           <div>
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2.5">
-                <div className="w-10 h-10 rounded-sm bg-gray-300 overflow-hidden border border-white shadow-sm shrink-0">
+                <div className="relative w-10 h-10 rounded-sm bg-gray-300 overflow-hidden border border-white shadow-sm shrink-0">
                   {m.imageUrl ? (
-                    <img src={m.imageUrl} alt={m.name} className="w-full h-full object-cover" />
+                    <Image src={m.imageUrl} alt={m.name} fill className="object-cover" sizes="40px" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center bg-linear-to-br from-blue-400 to-blue-600">
                       <span className="text-white text-sm font-bold">{m.name.charAt(0)}</span>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useCallback } from 'react';
+import Image from 'next/image';
 import { CustomSlideData } from '@/types/display';
 
 interface CustomSlideViewProps {
@@ -125,11 +126,13 @@ export default function CustomSlideView({ slide, darkMode, onVideoEnd }: CustomS
   switch (slide.slideType) {
     case 'IMAGE':
       return (
-        <div className="h-full w-full flex items-center justify-center p-4">
-          <img
+        <div className="relative h-full w-full p-4">
+          <Image
             src={slide.imageUrl}
             alt={slide.title || 'カスタムスライド'}
-            className="max-h-full max-w-full object-contain"
+            fill
+            className="object-contain"
+            sizes="100vw"
           />
         </div>
       );

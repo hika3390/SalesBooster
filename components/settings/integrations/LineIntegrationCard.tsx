@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import Button from '@/components/common/Button';
 import { useIntegrationActions } from './useIntegrationActions';
 import type { CardProps } from './types';
@@ -57,7 +58,7 @@ export default function LineIntegrationCard({ integration, onRefresh, showMsg }:
     <div className="bg-white rounded-lg border border-gray-200 p-6">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center space-x-4">
-          <img src="/line-icon.svg" alt="LINE" className="w-12 h-12 rounded-lg" />
+          <Image src="/line-icon.svg" alt="LINE" width={48} height={48} className="rounded-lg" />
           <div>
             <div className="font-semibold text-gray-800">LINE Messaging API</div>
             <div className="text-sm text-gray-500">{integration.description}</div>

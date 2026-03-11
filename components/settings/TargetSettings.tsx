@@ -16,6 +16,7 @@ interface MemberInfo {
 interface GroupInfo {
   id: number;
   name: string;
+  imageUrl?: string | null;
   memberCount: number;
   memberList: string[];
 }

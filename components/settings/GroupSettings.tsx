@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { Dialog } from '@/components/common/Dialog';
 import Button from '@/components/common/Button';
 import AddGroupModal from './AddGroupModal';
@@ -10,6 +11,7 @@ import GroupMembersModal from './GroupMembersModal';
 interface Group {
   id: number;
   name: string;
+  imageUrl?: string | null;
   members: number;
   managerId: number | null;
   memberList: { id: string; name: string }[];
@@ -79,7 +81,16 @@ export default function GroupSettings() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {groups.map((group) => (
           <div key={group.id} className="bg-white rounded-lg border border-gray-200 p-5 hover:shadow-md transition-shadow">
-            <div className="mb-3">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="relative w-10 h-10 rounded-sm bg-gray-300 overflow-hidden border border-white shadow-sm shrink-0">
+                {group.imageUrl ? (
+                  <Image src={group.imageUrl} alt={group.name} fill className="object-cover" sizes="40px" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-linear-to-br from-blue-400 to-blue-600">
+                    <span className="text-white text-sm font-bold">{group.name.charAt(0)}</span>
+                  </div>
+                )}
+              </div>
               <h3 className="font-semibold text-gray-800">{group.name}</h3>
             </div>
             <div className="space-y-2 text-sm text-gray-600">

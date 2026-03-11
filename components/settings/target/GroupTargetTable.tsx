@@ -1,8 +1,11 @@
 'use client';
 
+import Image from 'next/image';
+
 interface GroupInfo {
   id: number;
   name: string;
+  imageUrl?: string | null;
   memberCount: number;
   memberList: string[];
 }
@@ -54,8 +57,19 @@ export default function GroupTargetTable({
               return (
                 <tr key={group.id} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}>
                   <td className="sticky left-0 z-10 px-3 py-1.5 text-sm font-medium text-gray-800 border-r border-gray-200" style={{ backgroundColor: idx % 2 === 0 ? 'white' : '#f9fafb' }}>
-                    <div>{group.name}</div>
-                    <div className="text-[10px] text-gray-400">{group.memberCount}名</div>
+                    <div className="flex items-center gap-2">
+                      <div className="relative w-6 h-6 rounded-sm bg-gray-300 overflow-hidden border border-white shadow-sm shrink-0">
+                        {group.imageUrl ? (
+                          <Image src={group.imageUrl} alt={group.name} fill className="object-cover" sizes="24px" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-linear-to-br from-blue-400 to-blue-600">
+                            <span className="text-white text-[10px] font-bold">{group.name.charAt(0)}</span>
+                          </div>
+                        )}
+                      </div>
+                      <span className="whitespace-nowrap">{group.name}</span>
+                      <span className="text-[10px] text-gray-400 whitespace-nowrap">{group.memberCount}名</span>
+                    </div>
                   </td>
                   {months.map((m) => {
                     const memberTotal = calcGroupMemberTotal(group, m);

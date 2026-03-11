@@ -9,6 +9,7 @@ export const groupService = {
       return {
         id: g.id,
         name: g.name,
+        imageUrl: g.imageUrl,
         managerId: g.managerId,
         members: currentMembers.length,
         memberList: currentMembers.map((gm) => ({
@@ -50,7 +51,7 @@ export const groupService = {
     return groupRepository.create(tenantId, data);
   },
 
-  async update(tenantId: number, id: number, data: { name?: string; managerId?: number }) {
+  async update(tenantId: number, id: number, data: { name?: string; managerId?: number; imageUrl?: string | null }) {
     await groupRepository.update(id, tenantId, data);
     return groupRepository.findById(id, tenantId);
   },

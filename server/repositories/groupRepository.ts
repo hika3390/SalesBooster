@@ -90,7 +90,7 @@ export const groupRepository = {
     return prisma.group.create({ data: { ...data, tenantId } });
   },
 
-  update(id: number, tenantId: number, data: { name?: string; managerId?: number }) {
+  update(id: number, tenantId: number, data: { name?: string; managerId?: number; imageUrl?: string | null }) {
     return prisma.group.updateMany({ where: { id, tenantId }, data });
   },
 

@@ -43,7 +43,7 @@ async function buildTargetMap(tenantId: number, userIds: string[], startDate: Da
     : targets;
   const map = new Map<string, number>();
   for (const t of filtered) {
-    map.set(t.userId, (map.get(t.userId) || 0) + (t.monthly || 0));
+    map.set(t.userId, (map.get(t.userId) || 0) + (t.value || 0));
   }
   return map;
 }
@@ -228,7 +228,7 @@ export const salesService = {
     const filteredTargets = dataTypeId
       ? targets.filter((t: { dataTypeId: number | null }) => t.dataTypeId === dataTypeId)
       : targets;
-    const monthlyTarget = toManyen(filteredTargets.reduce((sum: number, t: { monthly: number }) => sum + (t.monthly || 0), 0));
+    const monthlyTarget = toManyen(filteredTargets.reduce((sum: number, t: { value: number }) => sum + (t.value || 0), 0));
 
     const targetDays = dailyAvg > 0 ? Math.round((monthlyTarget / dailyAvg) * 10) / 10 : 0;
     const targetMonths = monthlyAvg > 0 ? Math.round((monthlyTarget / monthlyAvg) * 10) / 10 : 0;

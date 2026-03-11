@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma';
 export const targetRepository = {
   findAll(tenantId: number) {
     return prisma.target.findMany({
-      where: { tenantId },
+      where: { tenantId, periodType: 'MONTHLY' },
       include: { user: true },
       orderBy: { userId: 'asc' },
     });
@@ -11,13 +11,13 @@ export const targetRepository = {
 
   findByUserAndPeriod(userId: string, year: number, month: number, tenantId: number, dataTypeId?: number) {
     return prisma.target.findFirst({
-      where: { tenantId, userId, year, month, dataTypeId: dataTypeId ?? null },
+      where: { tenantId, userId, year, month, periodType: 'MONTHLY', dataTypeId: dataTypeId ?? null },
     });
   },
 
   findByUsersAndPeriod(userIds: string[], year: number, month: number, tenantId: number) {
     return prisma.target.findMany({
-      where: { userId: { in: userIds }, year, month, tenantId },
+      where: { userId: { in: userIds }, year, month, tenantId, periodType: 'MONTHLY' },
     });
   },
 
@@ -34,23 +34,51 @@ export const targetRepository = {
       where: {
         userId: { in: userIds },
         tenantId,
+        periodType: 'MONTHLY',
         OR: conditions,
       },
     });
   },
 
-  async upsert(tenantId: number, data: { userId: string; monthly: number; quarterly: number; annual: number; year: number; month: number; dataTypeId?: number }) {
+  async upsert(tenantId: number, data: { userId: string; value: number; year: number; month: number; dataTypeId?: number }) {
     const existing = await prisma.target.findFirst({
-      where: { tenantId, userId: data.userId, year: data.year, month: data.month, dataTypeId: data.dataTypeId ?? null },
+      where: { tenantId, userId: data.userId, year: data.year, month: data.month, periodType: 'MONTHLY', dataTypeId: data.dataTypeId ?? null },
     });
     if (existing) {
       return prisma.target.update({
         where: { id: existing.id },
-        data: { monthly: data.monthly, quarterly: data.quarterly, annual: data.annual },
+        data: { value: data.value },
       });
     }
     return prisma.target.create({
-      data: { ...data, tenantId },
+      data: { userId: data.userId, value: data.value, year: data.year, month: data.month, periodType: 'MONTHLY', tenantId, dataTypeId: data.dataTypeId ?? null },
+    });
+  },
+
+  async bulkUpsert(tenantId: number, targets: { userId: string; value: number; year: number; month: number; dataTypeId?: number }[]) {
+    return prisma.$transaction(async (tx) => {
+      const results = [];
+      for (const t of targets) {
+        const existing = await tx.target.findFirst({
+          where: { tenantId, userId: t.userId, year: t.year, month: t.month, periodType: 'MONTHLY', dataTypeId: t.dataTypeId ?? null },
+        });
+        if (existing) {
+          results.push(await tx.target.update({ where: { id: existing.id }, data: { value: t.value } }));
+        } else {
+          results.push(await tx.target.create({
+            data: { userId: t.userId, value: t.value, year: t.year, month: t.month, periodType: 'MONTHLY', tenantId, dataTypeId: t.dataTypeId ?? null },
+          }));
+        }
+      }
+      return results;
+    });
+  },
+
+  findByYearAndDataType(tenantId: number, year: number, dataTypeId?: number) {
+    return prisma.target.findMany({
+      where: { tenantId, year, periodType: 'MONTHLY', dataTypeId: dataTypeId ?? null },
+      include: { user: { select: { id: true, name: true } } },
+      orderBy: [{ userId: 'asc' }, { month: 'asc' }],
     });
   },
 };

@@ -66,8 +66,10 @@ export default function SalesPerformance({ salesData, recordCount, darkMode = fa
       };
     }
   }, [salesData]);
-  // 目標平均の計算
-  const averageTarget = 52;
+  // 目標平均の計算（メンバーの目標値の平均）
+  const averageTarget = salesData.length > 0
+    ? Math.round(salesData.reduce((sum, person) => sum + person.target, 0) / salesData.length)
+    : 0;
 
   // 最大売上の取得（グラフの高さ調整用）
   const maxSales = salesData.length > 0 ? Math.max(...salesData.map(person => person.sales)) : 0;
@@ -120,13 +122,15 @@ export default function SalesPerformance({ salesData, recordCount, darkMode = fa
                     </div>
                   </div>
                 </div>
-                <div className="px-2 text-center">
-                  <div className="text-xs text-orange-600">ノルマライン</div>
-                  <div className="text-lg font-bold text-orange-600 mt-1">
-                    {averageTarget}
-                    <span className="text-sm font-normal text-orange-500">万円</span>
+                {averageTarget > 0 && (
+                  <div className="px-2 text-center">
+                    <div className="text-xs text-orange-600">ノルマライン</div>
+                    <div className="text-lg font-bold text-orange-600 mt-1">
+                      {formatNumber(averageTarget)}
+                      <span className="text-sm font-normal text-orange-500">万円</span>
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
             </div>
           )}

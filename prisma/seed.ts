@@ -181,11 +181,10 @@ async function main() {
       await prisma.target.create({
         data: {
           userId: user.id,
-          monthly: 1000000,
-          quarterly: 3000000,
-          annual: 12000000,
+          value: 1000000,
           year: 2026,
           month: 1,
+          periodType: 'MONTHLY',
           tenantId: TENANT_ID,
           dataTypeId: DATA_TYPE_ID,
         },
@@ -281,11 +280,10 @@ async function main() {
       await prisma.target.create({
         data: {
           userId: user.id,
-          monthly: 1000000,
-          quarterly: 3000000,
-          annual: 12000000,
+          value: 1000000,
           year: 2026,
           month: 2,
+          periodType: 'MONTHLY',
           tenantId: TENANT_ID,
           dataTypeId: DATA_TYPE_ID,
         },
@@ -361,11 +359,10 @@ async function main() {
       await prisma.target.create({
         data: {
           userId: user.id,
-          monthly: 1000000,
-          quarterly: 3000000,
-          annual: 12000000,
+          value: 1000000,
           year: 2026,
           month: 3,
+          periodType: 'MONTHLY',
           tenantId: TENANT_ID,
           dataTypeId: DATA_TYPE_ID,
         },

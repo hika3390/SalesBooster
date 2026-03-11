@@ -57,6 +57,12 @@ enum DisplayPeriodMode {
   CUSTOM
 }
 
+enum TargetPeriodType {
+  MONTHLY
+  WEEKLY
+  DAILY
+}
+
 enum AuditAction {
   USER_LOGIN
   USER_LOGOUT
@@ -74,6 +80,8 @@ enum AuditAction {
   SALES_RECORD_UPDATE
   SALES_RECORD_DELETE
   TARGET_UPSERT
+  TARGET_BULK_UPSERT
+  GROUP_TARGET_UPSERT
   SETTINGS_UPDATE
   INTEGRATION_STATUS_UPDATE
   DISPLAY_CONFIG_UPDATE
@@ -107,6 +115,7 @@ model Tenant {
   groupMembers   GroupMember[]
   salesRecords   SalesRecord[]
   targets        Target[]
+  groupTargets   GroupTarget[]
   systemSettings SystemSetting[]
   integrations   Integration[]
   displayConfigs DisplayConfig[]
@@ -166,14 +175,15 @@ model Department {
 }
 
 model Group {
-  id        Int           @id @default(autoincrement())
-  name      String
-  managerId Int?
-  tenantId  Int
-  tenant    Tenant        @relation(fields: [tenantId], references: [id])
-  members   GroupMember[]
-  createdAt DateTime      @default(now())
-  updatedAt DateTime      @updatedAt
+  id           Int            @id @default(autoincrement())
+  name         String
+  managerId    Int?
+  tenantId     Int
+  tenant       Tenant         @relation(fields: [tenantId], references: [id])
+  members      GroupMember[]
+  groupTargets GroupTarget[]
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
 
   @@index([tenantId])
 }
@@ -214,20 +224,37 @@ model SalesRecord {
 }
 
 model Target {
-  id         Int       @id @default(autoincrement())
+  id         Int              @id @default(autoincrement())
   userId     String
-  monthly    Int
-  quarterly  Int
-  annual     Int
+  value      Int              @default(0)
   year       Int
   month      Int
+  periodType TargetPeriodType @default(MONTHLY)
   dataTypeId Int?
   tenantId   Int
-  tenant     Tenant    @relation(fields: [tenantId], references: [id])
-  user       User      @relation(fields: [userId], references: [id])
-  dataType   DataType? @relation(fields: [dataTypeId], references: [id])
+  tenant     Tenant           @relation(fields: [tenantId], references: [id])
+  user       User             @relation(fields: [userId], references: [id])
+  dataType   DataType?        @relation(fields: [dataTypeId], references: [id])
 
-  @@unique([tenantId, userId, year, month, dataTypeId])
+  @@unique([tenantId, userId, year, month, periodType, dataTypeId])
+  @@index([tenantId])
+  @@index([dataTypeId])
+}
+
+model GroupTarget {
+  id         Int              @id @default(autoincrement())
+  groupId    Int
+  value      Int              @default(0)
+  year       Int
+  month      Int
+  periodType TargetPeriodType @default(MONTHLY)
+  dataTypeId Int?
+  tenantId   Int
+  tenant     Tenant           @relation(fields: [tenantId], references: [id])
+  group      Group            @relation(fields: [groupId], references: [id])
+  dataType   DataType?        @relation(fields: [dataTypeId], references: [id])
+
+  @@unique([tenantId, groupId, year, month, periodType, dataTypeId])
   @@index([tenantId])
   @@index([dataTypeId])
 }
@@ -235,19 +262,20 @@ model Target {
 // ─── Data Types ───
 
 model DataType {
-  id        Int           @id @default(autoincrement())
-  name      String
-  unit      String        @default("")
-  color     String?
-  sortOrder Int           @default(0)
-  isActive  Boolean       @default(true)
-  isDefault Boolean       @default(false)
-  tenantId  Int
-  tenant    Tenant        @relation(fields: [tenantId], references: [id])
-  records   SalesRecord[]
-  targets   Target[]
-  createdAt DateTime      @default(now())
-  updatedAt DateTime      @updatedAt
+  id           Int            @id @default(autoincrement())
+  name         String
+  unit         String         @default("")
+  color        String?
+  sortOrder    Int            @default(0)
+  isActive     Boolean        @default(true)
+  isDefault    Boolean        @default(false)
+  tenantId     Int
+  tenant       Tenant         @relation(fields: [tenantId], references: [id])
+  records      SalesRecord[]
+  targets      Target[]
+  groupTargets GroupTarget[]
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
 
   @@index([tenantId])
 }

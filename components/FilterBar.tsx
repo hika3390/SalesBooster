@@ -9,11 +9,14 @@ import PeriodNavigator, { PeriodSelection } from './filter/PeriodNavigator';
 import { ViewType, PeriodUnit } from '@/types';
 import type { DataTypeInfo } from '@/types';
 
+export type OverlayLineType = 'norma' | 'prev_month' | 'prev_year';
+
 interface FilterBarProps {
   onViewChange?: (view: ViewType) => void;
   onFilterChange?: (filter: { groupId: string; memberId: string }) => void;
   onPeriodChange?: (period: PeriodSelection) => void;
   onDataTypeChange?: (dataTypeId: string) => void;
+  onOverlayLinesChange?: (lines: OverlayLineType[]) => void;
 }
 
 export interface DateRange {
@@ -21,12 +24,20 @@ export interface DateRange {
   maxDate: string;
 }
 
-export default function FilterBar({ onViewChange, onFilterChange, onPeriodChange, onDataTypeChange }: FilterBarProps = {}) {
+const OVERLAY_LINE_OPTIONS: { value: OverlayLineType; label: string }[] = [
+  { value: 'norma', label: 'ノルマ' },
+  { value: 'prev_month', label: '前月平均' },
+  { value: 'prev_year', label: '前年同月平均' },
+];
+
+export default function FilterBar({ onViewChange, onFilterChange, onPeriodChange, onDataTypeChange, onOverlayLinesChange }: FilterBarProps = {}) {
   const [selectedView, setSelectedView] = useState<ViewType>('PERIOD_GRAPH');
   const [periodUnit, setPeriodUnit] = useState<PeriodUnit>('月');
   const [dateRange, setDateRange] = useState<DateRange | null>(null);
   const [dataTypes, setDataTypes] = useState<DataTypeInfo[]>([]);
   const [selectedDataTypeId, setSelectedDataTypeId] = useState('');
+  const [overlayLines, setOverlayLines] = useState<OverlayLineType[]>(['norma']);
+  const [overlayDropdownOpen, setOverlayDropdownOpen] = useState(false);
 
   useEffect(() => {
     fetch('/api/sales/date-range')
@@ -63,8 +74,17 @@ export default function FilterBar({ onViewChange, onFilterChange, onPeriodChange
     }
   };
 
+  const handleOverlayToggle = (line: OverlayLineType) => {
+    const next = overlayLines.includes(line)
+      ? overlayLines.filter((l) => l !== line)
+      : [...overlayLines, line];
+    setOverlayLines(next);
+    onOverlayLinesChange?.(next);
+  };
+
   const showPeriodSelection = selectedView === 'CUMULATIVE_GRAPH' || selectedView === 'TREND_GRAPH';
   const hidePeriodControls = selectedView === 'RECORD';
+  const showOverlayLines = selectedView === 'PERIOD_GRAPH' || selectedView === 'CUMULATIVE_GRAPH';
 
   return (
     <div className="hidden md:block bg-gray-50 border-b border-gray-200">
@@ -117,16 +137,51 @@ export default function FilterBar({ onViewChange, onFilterChange, onPeriodChange
             )}
           </div>
 
-          {!hidePeriodControls && (
-            <div className="flex items-center space-x-4">
-              <label className="flex items-center space-x-2 text-sm">
-                <input type="checkbox" className="rounded" />
-                <span>前1年同期と表示</span>
-              </label>
-              <label className="flex items-center space-x-2 text-sm">
-                <input type="checkbox" className="rounded" />
-                <span>日別内訳グラフを表示</span>
-              </label>
+          {showOverlayLines && (
+            <div className="relative">
+              <button
+                onClick={() => setOverlayDropdownOpen(!overlayDropdownOpen)}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-sm border border-gray-300 rounded-lg bg-white hover:bg-gray-50 transition-colors"
+              >
+                <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16" />
+                </svg>
+                <span className="text-gray-700">ライン表示</span>
+                {overlayLines.length > 0 && (
+                  <span className="bg-blue-100 text-blue-700 text-xs font-medium px-1.5 py-0.5 rounded-full">{overlayLines.length}</span>
+                )}
+                <svg className={`w-3.5 h-3.5 text-gray-400 transition-transform ${overlayDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              {overlayDropdownOpen && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setOverlayDropdownOpen(false)} />
+                  <div className="absolute right-0 top-full mt-1 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50 py-1">
+                    {OVERLAY_LINE_OPTIONS.map((opt) => (
+                      <button
+                        key={opt.value}
+                        onClick={() => handleOverlayToggle(opt.value)}
+                        className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-50 transition-colors"
+                      >
+                        <div className={`w-4 h-4 rounded border flex items-center justify-center ${
+                          overlayLines.includes(opt.value) ? 'bg-blue-500 border-blue-500' : 'border-gray-300'
+                        }`}>
+                          {overlayLines.includes(opt.value) && (
+                            <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                            </svg>
+                          )}
+                        </div>
+                        <span className="text-gray-700">{opt.label}</span>
+                        <div className={`ml-auto w-6 h-0.5 ${
+                          opt.value === 'norma' ? 'bg-orange-500' : opt.value === 'prev_month' ? 'bg-emerald-500' : 'bg-purple-500'
+                        }`} />
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
             </div>
           )}
         </div>

@@ -14,6 +14,8 @@ import { useSalesPolling } from '@/hooks/useSalesPolling';
 import { PeriodSelection } from '@/components/filter/PeriodNavigator';
 import { useIsMobile } from '@/hooks/useIsMobile';
 import MobileRankingList from '@/components/mobile/MobileRankingList';
+import type { OverlayLineType } from '@/components/FilterBar';
+import type { OverlayLine } from '@/components/AverageTargetLine';
 
 const FETCH_DEBOUNCE_MS = 100;
 
@@ -31,6 +33,8 @@ export default function Home() {
   const [filter, setFilter] = useState<{ groupId: string; memberId: string }>({ groupId: '', memberId: '' });
   const [period, setPeriod] = useState<PeriodSelection | null>(null);
   const [dataTypeId, setDataTypeId] = useState('');
+  const [overlayLines, setOverlayLines] = useState<OverlayLineType[]>(['norma']);
+  const [prevAvg, setPrevAvg] = useState<{ prevMonthAvg: number; prevYearAvg: number }>({ prevMonthAvg: 0, prevYearAvg: 0 });
   const isMobile = useIsMobile();
 
   const fetchTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -65,11 +69,12 @@ export default function Home() {
 
       fetchRankingData();
 
-      const [salesRes, cumulativeRes, trendRes, reportRes] = await Promise.all([
+      const [salesRes, cumulativeRes, trendRes, reportRes, prevAvgRes] = await Promise.all([
         fetch(`/api/sales?${query}`),
         fetch(`/api/sales/cumulative?${query}`),
         fetch(`/api/sales/trend?${query}`),
         fetch(`/api/sales/report?${query}`),
+        fetch(`/api/sales/previous-avg?${query}`),
       ]);
 
       if (salesRes.ok) {
@@ -80,6 +85,10 @@ export default function Home() {
       if (cumulativeRes.ok) setCumulativeSalesData(await cumulativeRes.json());
       if (trendRes.ok) setTrendData(await trendRes.json());
       if (reportRes.ok) setReportData(await reportRes.json());
+      if (prevAvgRes.ok) {
+        const avgJson = await prevAvgRes.json();
+        setPrevAvg(avgJson.data ?? avgJson);
+      }
     } catch {
       setFetchError('データの取得に失敗しました。ネットワーク接続を確認してください。');
     } finally {
@@ -129,6 +138,21 @@ export default function Home() {
     fetchData();
   };
 
+  // オーバーレイライン構築
+  const buildOverlayLines = (): OverlayLine[] => {
+    const lines: OverlayLine[] = [];
+    if (overlayLines.includes('prev_month') && prevAvg.prevMonthAvg > 0) {
+      lines.push({ value: prevAvg.prevMonthAvg, label: '前月平均', color: 'emerald-500', borderStyle: 'dashed' });
+    }
+    if (overlayLines.includes('prev_year') && prevAvg.prevYearAvg > 0) {
+      lines.push({ value: prevAvg.prevYearAvg, label: '前年同月平均', color: 'purple-500', borderStyle: 'dashed' });
+    }
+    return lines;
+  };
+
+  const showNormaLine = overlayLines.includes('norma');
+  const chartOverlayLines = buildOverlayLines();
+
   const isDataEmpty =
     (currentView === 'PERIOD_GRAPH' && salesData.length === 0) ||
     (currentView === 'CUMULATIVE_GRAPH' && cumulativeSalesData.length === 0) ||
@@ -149,6 +173,7 @@ export default function Home() {
         onFilterChange={setFilter}
         onPeriodChange={setPeriod}
         onDataTypeChange={setDataTypeId}
+        onOverlayLinesChange={setOverlayLines}
       />
 
       <main className="w-full flex-1 min-h-0 overflow-auto">
@@ -172,9 +197,9 @@ export default function Home() {
         ) : isDataEmpty ? (
           emptyMessage
         ) : currentView === 'CUMULATIVE_GRAPH' ? (
-          <CumulativeChart salesData={cumulativeSalesData} />
+          <CumulativeChart salesData={cumulativeSalesData} showNormaLine={showNormaLine} overlayLines={chartOverlayLines} />
         ) : currentView === 'PERIOD_GRAPH' ? (
-          <SalesPerformance salesData={salesData} recordCount={recordCount} />
+          <SalesPerformance salesData={salesData} recordCount={recordCount} showNormaLine={showNormaLine} overlayLines={chartOverlayLines} />
         ) : currentView === 'TREND_GRAPH' ? (
           <TrendChart monthlyData={trendData} />
         ) : currentView === 'REPORT' && reportData ? (

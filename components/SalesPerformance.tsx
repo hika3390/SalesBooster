@@ -3,7 +3,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import Image from 'next/image';
 import PerformanceLabels from './PerformanceLabels';
-import AverageTargetLine from './AverageTargetLine';
+import AverageTargetLine, { OverlayLine } from './AverageTargetLine';
 import SalesBar from './SalesBar';
 import ContractBanner from './ContractBanner';
 import { COLUMN_WIDTH } from '../constants/chart';
@@ -15,9 +15,11 @@ interface SalesPerformanceProps {
   recordCount: number;
   darkMode?: boolean;
   isDisplayMode?: boolean;
+  showNormaLine?: boolean;
+  overlayLines?: OverlayLine[];
 }
 
-export default function SalesPerformance({ salesData, recordCount, darkMode = false, isDisplayMode = false }: SalesPerformanceProps) {
+export default function SalesPerformance({ salesData, recordCount, darkMode = false, isDisplayMode = false, showNormaLine = true, overlayLines = [] }: SalesPerformanceProps) {
   const prevDataRef = useRef<SalesPerson[]>([]);
   const [changedNames, setChangedNames] = useState<Set<string>>(new Set());
   const [bannerNames, setBannerNames] = useState<string[]>([]);
@@ -122,7 +124,7 @@ export default function SalesPerformance({ salesData, recordCount, darkMode = fa
                     </div>
                   </div>
                 </div>
-                {averageTarget > 0 && (
+                {showNormaLine && averageTarget > 0 && (
                   <div className="px-2 text-center">
                     <div className="text-xs text-orange-600">ノルマライン</div>
                     <div className="text-lg font-bold text-orange-600 mt-1">
@@ -136,7 +138,7 @@ export default function SalesPerformance({ salesData, recordCount, darkMode = fa
           )}
           <div className="relative py-6 flex-1 min-h-0">
             <PerformanceLabels />
-            <AverageTargetLine averageTarget={averageTarget} maxSales={maxSales} />
+            <AverageTargetLine averageTarget={showNormaLine ? averageTarget : 0} maxSales={maxSales} overlayLines={overlayLines} />
             <div className="absolute bottom-0 left-0 right-0 top-20 px-1">
               {/* ゾーン背景エリア */}
               {salesData.length > 0 && (

@@ -211,6 +211,32 @@ export const salesController = {
     }
   },
 
+  async getPreviousPeriodAverages(request: NextRequest) {
+    const tenantId = await getTenantId(request);
+    const { searchParams } = new URL(request.url);
+    const startDateParam = searchParams.get('startDate');
+    const endDateParam = searchParams.get('endDate');
+
+    const now = new Date();
+    const startDate = startDateParam ? new Date(startDateParam) : new Date(now.getFullYear(), now.getMonth(), 1);
+    const endDate = endDateParam ? new Date(endDateParam) : new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+
+    try {
+      const userIds = await resolveUserIds(tenantId, searchParams, startDate, endDate);
+      const dataTypeId = resolveDataTypeId(searchParams);
+
+      const [prevMonthAvg, prevYearAvg] = await Promise.all([
+        salesService.getPreviousPeriodAverage(tenantId, startDate, endDate, 'prev_month', userIds, dataTypeId),
+        salesService.getPreviousPeriodAverage(tenantId, startDate, endDate, 'prev_year', userIds, dataTypeId),
+      ]);
+
+      return ApiResponse.success({ prevMonthAvg, prevYearAvg });
+    } catch (error) {
+      console.error('Failed to fetch previous period averages:', error);
+      return ApiResponse.serverError();
+    }
+  },
+
   async getSalesRecords(request: NextRequest) {
     const tenantId = await getTenantId(request);
     const { searchParams } = new URL(request.url);

@@ -2,25 +2,72 @@
 
 import React from 'react';
 
+export interface OverlayLine {
+  value: number;
+  label: string;
+  color: string;        // border/text color class (e.g. 'orange-500')
+  borderStyle?: string; // 'solid' | 'dashed'
+}
+
 interface AverageTargetLineProps {
   averageTarget: number;
   maxSales: number;
+  overlayLines?: OverlayLine[];
 }
 
-export default function AverageTargetLine({ averageTarget, maxSales }: AverageTargetLineProps) {
-  if (averageTarget <= 0 || maxSales <= 0) return null;
+const COLOR_MAP: Record<string, { border: string; text: string; bg: string }> = {
+  'orange-500': { border: 'border-orange-500', text: 'text-orange-600', bg: 'bg-white' },
+  'emerald-500': { border: 'border-emerald-500', text: 'text-emerald-600', bg: 'bg-white' },
+  'purple-500': { border: 'border-purple-500', text: 'text-purple-600', bg: 'bg-white' },
+};
+
+export default function AverageTargetLine({ averageTarget, maxSales, overlayLines = [] }: AverageTargetLineProps) {
+  if (maxSales <= 0) return null;
+
+  const lines: OverlayLine[] = [];
+
+  // 既存のノルマライン（後方互換）
+  if (averageTarget > 0) {
+    lines.push({ value: averageTarget, label: '目標平均', color: 'orange-500', borderStyle: 'solid' });
+  }
+
+  // 追加のオーバーレイライン
+  lines.push(...overlayLines.filter((l) => l.value > 0));
+
+  if (lines.length === 0) return null;
 
   return (
-    <div
-      className="absolute left-0 right-0 border-t-2 border-orange-500 z-10"
-      style={{ top: `${55 + (1 - averageTarget / maxSales) * 35}%` }}
-    >
-      <div className="absolute left-2 -top-3 text-xs text-orange-600 bg-white px-1">
-        目標平均
-      </div>
-      <div className="absolute left-2 top-1 text-xs font-bold text-orange-600 bg-white px-1">
-        {averageTarget}
-      </div>
-    </div>
+    <>
+      {lines.map((line, i) => {
+        const colors = COLOR_MAP[line.color] || COLOR_MAP['orange-500'];
+        const topPercent = 55 + (1 - line.value / maxSales) * 35;
+        const isDashed = line.borderStyle === 'dashed';
+
+        return (
+          <div
+            key={`${line.label}-${i}`}
+            className={`absolute left-0 right-0 ${colors.border} z-10`}
+            style={{
+              top: `${topPercent}%`,
+              borderTopWidth: '2px',
+              borderTopStyle: isDashed ? 'dashed' : 'solid',
+            }}
+          >
+            <div className={`absolute left-2 -top-3 text-xs ${colors.text} ${colors.bg} px-1 whitespace-nowrap`}>
+              {line.label}
+            </div>
+            <div className={`absolute left-2 top-1 text-xs font-bold ${colors.text} ${colors.bg} px-1`}>
+              {line.value}
+            </div>
+            <div className={`absolute right-2 -top-3 text-xs ${colors.text} ${colors.bg} px-1 whitespace-nowrap`}>
+              {line.label}
+            </div>
+            <div className={`absolute right-2 top-1 text-xs font-bold ${colors.text} ${colors.bg} px-1`}>
+              {line.value}
+            </div>
+          </div>
+        );
+      })}
+    </>
   );
 }

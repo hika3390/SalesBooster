@@ -374,6 +374,39 @@ export const salesService = {
     return existing;
   },
 
+  /**
+   * 前期（前月 or 前年同月）のチーム1人あたり平均売上を返す
+   */
+  async getPreviousPeriodAverage(
+    tenantId: number,
+    startDate: Date,
+    endDate: Date,
+    type: 'prev_month' | 'prev_year',
+    userIds?: string[],
+    dataTypeId?: number,
+  ): Promise<number> {
+    let prevStart: Date;
+    let prevEnd: Date;
+
+    if (type === 'prev_month') {
+      prevStart = new Date(startDate.getFullYear(), startDate.getMonth() - 1, 1);
+      prevEnd = new Date(startDate.getFullYear(), startDate.getMonth(), 0, 23, 59, 59);
+    } else {
+      prevStart = new Date(startDate.getFullYear() - 1, startDate.getMonth(), 1);
+      prevEnd = new Date(endDate.getFullYear() - 1, endDate.getMonth() + 1, 0, 23, 59, 59);
+    }
+
+    const [records, users] = await Promise.all([
+      salesRecordRepository.findByPeriod(prevStart, prevEnd, tenantId, userIds, dataTypeId),
+      fetchUsers(tenantId, userIds),
+    ]);
+
+    if (users.length === 0) return 0;
+
+    const totalSales = records.reduce((sum, r) => sum + getNumericValue(r), 0);
+    return toManyen(Math.round(totalSales / users.length));
+  },
+
   async importSalesRecords(tenantId: number, records: { userId: string; value: number; recordDate: string; description?: string; customFields?: Record<string, string>; dataTypeId?: number }[]) {
     const data = records.map((r) => ({
       userId: r.userId,

@@ -64,7 +64,7 @@ export default function AdminSidebar() {
             </svg>
           </div>
           <div>
-            <div className="text-sm font-bold text-gray-900 font-display">Sales Booster</div>
+            <div className="text-sm font-bold text-gray-900 font-display">Miroku</div>
             <div className="text-xs text-gray-500">Admin Panel</div>
           </div>
         </div>

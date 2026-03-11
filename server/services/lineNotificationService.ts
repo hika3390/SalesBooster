@@ -66,7 +66,7 @@ export const lineNotificationService = {
           messages: [
             {
               type: 'text',
-              text: 'Sales Booster からのテスト通知です。接続に成功しました！',
+              text: 'Miroku からのテスト通知です。接続に成功しました！',
             },
           ],
         }),

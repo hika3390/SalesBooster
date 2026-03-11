@@ -28,7 +28,7 @@ const zenMaruGothic = Zen_Maru_Gothic({
 });
 
 export const metadata: Metadata = {
-  title: "Sales Booster - 営業支援システム",
+  title: "Miroku - 営業支援システム",
   description: "営業マンのための営業支援システム",
 };
 

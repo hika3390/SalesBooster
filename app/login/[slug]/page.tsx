@@ -74,7 +74,7 @@ export default function TenantLoginPage({ params }: { params: Promise<{ slug: st
                 <path d="M3 20h2v-6h-2v6zm5 0h2v-10h-2v10zm5 0h2v-14h-2v14zm5 0h2v-8h-2v8z" /><path d="M16 4l4 0m0 0l0 4m0-4l-5 5" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </div>
-            <span className="text-white font-bold text-xl font-display">Sales Booster</span>
+            <span className="text-white font-bold text-xl font-display">Miroku</span>
           </div>
 
           <div className="space-y-6">
@@ -114,7 +114,7 @@ export default function TenantLoginPage({ params }: { params: Promise<{ slug: st
                 <path d="M3 20h2v-6h-2v6zm5 0h2v-10h-2v10zm5 0h2v-14h-2v14zm5 0h2v-8h-2v8z" /><path d="M16 4l4 0m0 0l0 4m0-4l-5 5" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </div>
-            <h1 className="text-2xl font-bold text-gray-900 font-display">Sales Booster</h1>
+            <h1 className="text-2xl font-bold text-gray-900 font-display">Miroku</h1>
             <p className="text-gray-500 text-sm mt-1">アカウントにログイン</p>
           </div>
 

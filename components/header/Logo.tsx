@@ -21,7 +21,7 @@ export default function Logo({ subtitle }: LogoProps) {
             <path d="M16 4l4 0m0 0l0 4m0-4l-5 5" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </div>
-        <h1 className="text-xl font-bold text-blue-600 font-display">Sales Booster</h1>
+        <h1 className="text-xl font-bold text-blue-600 font-display">Miroku</h1>
       </button>
       {subtitle && (
         <>

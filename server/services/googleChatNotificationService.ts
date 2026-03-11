@@ -49,7 +49,7 @@ export const googleChatNotificationService = {
         method: 'POST',
         headers: { 'Content-Type': 'application/json; charset=UTF-8' },
         body: JSON.stringify({
-          text: 'Sales Booster からのテスト通知です。接続に成功しました！',
+          text: 'Miroku からのテスト通知です。接続に成功しました！',
         }),
       });
 

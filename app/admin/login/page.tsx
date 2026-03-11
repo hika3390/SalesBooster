@@ -59,7 +59,7 @@ export default function AdminLoginPage() {
                 <path d="M3 20h2v-6h-2v6zm5 0h2v-10h-2v10zm5 0h2v-14h-2v14zm5 0h2v-8h-2v8z" /><path d="M16 4l4 0m0 0l0 4m0-4l-5 5" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </div>
-            <span className="text-white font-bold text-xl font-display">Sales Booster</span>
+            <span className="text-white font-bold text-xl font-display">Miroku</span>
           </div>
 
           {/* メインメッセージ */}
@@ -97,7 +97,7 @@ export default function AdminLoginPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
               </svg>
             </div>
-            <h1 className="text-2xl font-bold text-gray-900 font-display">Sales Booster</h1>
+            <h1 className="text-2xl font-bold text-gray-900 font-display">Miroku</h1>
             <p className="text-gray-500 text-sm mt-1">管理者ログイン</p>
           </div>
 

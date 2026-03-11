@@ -8,6 +8,7 @@ import { Dialog } from './common/Dialog';
 import CustomFieldsRenderer from './sales/CustomFieldsRenderer';
 import type { CustomFieldDefinition, CustomFieldValues } from '@/types/customField';
 import type { DataTypeInfo } from '@/types';
+import { getValuePresets } from '@/lib/presets';
 
 interface SalesInputModalProps {
   isOpen: boolean;
@@ -148,23 +149,51 @@ export default function SalesInputModal({ isOpen, onClose, onSubmit }: SalesInpu
     </>
   );
 
+  const handlePresetClick = (presetValue: number) => {
+    const current = parseInt(value) || 0;
+    setValue(String(current + presetValue));
+  };
+
   const renderValueInput = () => {
     if (!selectedDataType) return null;
 
+    const presets = getValuePresets(selectedDataType.unit || '');
+
     return (
-      <div className="flex items-center">
-        <label className="w-24 text-sm text-gray-700 text-right pr-4">{selectedDataType.name}</label>
-        <div className="flex items-center space-x-2">
-          <input
-            type="number"
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
-            className="w-32 border border-gray-300 rounded px-3 py-2 text-sm"
-            placeholder=""
-          />
-          {selectedDataType.unit && (
-            <span className="text-sm text-blue-600">{selectedDataType.unit}</span>
-          )}
+      <div className="flex items-start">
+        <label className="w-24 text-sm text-gray-700 text-right pr-4 pt-2">{selectedDataType.name}</label>
+        <div className="flex-1">
+          <div className="flex items-center space-x-2">
+            <input
+              type="number"
+              value={value}
+              onChange={(e) => setValue(e.target.value)}
+              className="w-32 border border-gray-300 rounded px-3 py-2 text-sm"
+              placeholder=""
+            />
+            {selectedDataType.unit && (
+              <span className="text-sm text-blue-600">{selectedDataType.unit}</span>
+            )}
+          </div>
+          <div className="flex flex-wrap gap-1.5 mt-2">
+            {presets.map((p) => (
+              <button
+                key={p}
+                type="button"
+                onClick={() => handlePresetClick(p)}
+                className="px-2.5 py-1 text-xs font-medium rounded-md border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 hover:border-blue-300 transition-colors"
+              >
+                +{p}
+              </button>
+            ))}
+            <button
+              type="button"
+              onClick={() => setValue('')}
+              className="px-2.5 py-1 text-xs font-medium rounded-md border border-gray-200 bg-gray-50 text-gray-500 hover:bg-gray-100 hover:border-gray-300 transition-colors"
+            >
+              C
+            </button>
+          </div>
         </div>
       </div>
     );

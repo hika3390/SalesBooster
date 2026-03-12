@@ -46,7 +46,10 @@ export const tenantService = {
     return { name: tenant.name };
   },
 
-  async create(data: { name: string; slug: string; adminEmail: string; adminPassword: string; adminName?: string }) {
+  async create(data: {
+    name: string; slug: string; adminEmail: string; adminPassword: string; adminName?: string;
+    planType?: string; maxMembers?: number | null; licenseStartDate?: string | null; licenseEndDate?: string | null; isTrial?: boolean;
+  }) {
     const existing = await tenantRepository.findBySlug(data.slug);
     if (existing) {
       throw new Error('DUPLICATE_SLUG');
@@ -61,10 +64,11 @@ export const tenantService = {
         data: {
           name: data.name,
           slug: data.slug,
-          planType: 'TRIAL',
-          isTrial: true,
-          licenseStartDate: now,
-          licenseEndDate: trialEnd,
+          planType: (data.planType as PlanType) || 'TRIAL',
+          isTrial: data.isTrial ?? true,
+          maxMembers: data.maxMembers ?? null,
+          licenseStartDate: data.licenseStartDate ? new Date(data.licenseStartDate) : now,
+          licenseEndDate: data.licenseEndDate ? new Date(data.licenseEndDate) : trialEnd,
         },
       });
 

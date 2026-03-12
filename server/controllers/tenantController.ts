@@ -46,7 +46,7 @@ export const tenantController = {
     try {
       await requireSuperAdmin(request);
       const body = await request.json();
-      const { name, slug, adminEmail, adminPassword, adminName } = body;
+      const { name, slug, adminEmail, adminPassword, adminName, planType, maxMembers, licenseStartDate, licenseEndDate, isTrial } = body;
 
       if (!name || !slug || !adminEmail || !adminPassword) {
         return ApiResponse.badRequest('name, slug, adminEmail, adminPassword are required');
@@ -60,7 +60,14 @@ export const tenantController = {
         return ApiResponse.badRequest('パスワードは8文字以上で設定してください');
       }
 
-      const tenant = await tenantService.create({ name, slug, adminEmail, adminPassword, adminName });
+      const tenant = await tenantService.create({
+        name, slug, adminEmail, adminPassword, adminName,
+        planType,
+        maxMembers: maxMembers !== undefined && maxMembers !== '' ? Number(maxMembers) : null,
+        licenseStartDate: licenseStartDate || null,
+        licenseEndDate: licenseEndDate || null,
+        isTrial: isTrial ?? undefined,
+      });
 
       auditLogService.createWithTenantId(
         request, tenant.id, 'TENANT_CREATE',

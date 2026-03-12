@@ -49,11 +49,11 @@ export default function Modal({
 
       {/* モーダル */}
       <div
-        className={`relative bg-white rounded-2xl shadow-2xl w-full ${maxWidthClasses[maxWidth]} mx-4`}
+        className={`relative bg-white rounded-2xl shadow-2xl w-full ${maxWidthClasses[maxWidth]} mx-4 max-h-[90vh] flex flex-col`}
         style={{ animation: 'swalPopIn 0.3s ease-out' }}
       >
         {/* ヘッダー */}
-        <div className="relative px-6 py-4 border-b border-gray-200">
+        <div className="relative px-6 py-4 border-b border-gray-200 shrink-0">
           <h2 className="text-xl font-bold text-gray-800 text-center">{title}</h2>
           <button
             onClick={onClose}
@@ -66,13 +66,13 @@ export default function Modal({
         </div>
 
         {/* コンテンツ */}
-        <div className="px-6 py-5">
+        <div className="px-6 py-5 overflow-y-auto flex-1 min-h-0">
           {children}
         </div>
 
         {/* フッター */}
         {footer && (
-          <div className="px-6 py-4 border-t border-gray-200 flex justify-center gap-3">
+          <div className="px-6 py-4 border-t border-gray-200 flex justify-center gap-3 shrink-0">
             {footer}
           </div>
         )}

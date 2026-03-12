@@ -1,11 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import Select from '@/components/common/Select';
 
 interface GroupOption {
   id: number;
   name: string;
+  imageUrl?: string | null;
   memberList: { id: string; name: string }[];
 }
 
@@ -64,6 +66,17 @@ export default function GroupMemberSelector({ onFilterChange }: GroupMemberSelec
 
   return (
     <div className="flex items-center space-x-4">
+      {selectedGroup && (
+        <div className="relative w-8 h-8 rounded-sm overflow-hidden border border-gray-200 shadow-sm shrink-0">
+          {selectedGroup.imageUrl ? (
+            <Image src={selectedGroup.imageUrl} alt={selectedGroup.name} fill className="object-cover" sizes="32px" />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center bg-linear-to-br from-blue-400 to-blue-600">
+              <span className="text-white text-xs font-bold">{selectedGroup.name.charAt(0)}</span>
+            </div>
+          )}
+        </div>
+      )}
       <div className="flex items-center space-x-2">
         <label className="text-sm text-gray-600">グループ</label>
         <Select

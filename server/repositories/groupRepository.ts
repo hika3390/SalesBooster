@@ -46,7 +46,7 @@ export const groupRepository = {
   /** 指定期間内にグループに所属していたメンバーのuserIdを一括取得 */
   findMembersByDateRange(groupId: number, tenantId: number, startDate: Date, endDate: Date) {
     const rangeStart = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
-    const rangeEnd = new Date(endDate.getFullYear(), endDate.getMonth(), 1);
+    const rangeEnd = new Date(endDate.getFullYear(), endDate.getMonth() + 1, 0, 23, 59, 59);
     return prisma.groupMember.findMany({
       where: {
         groupId,

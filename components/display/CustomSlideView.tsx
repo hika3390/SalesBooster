@@ -60,7 +60,9 @@ function YouTubePlayer({ videoId, title, onVideoEnd }: { videoId: string; title:
   const containerRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<{ destroy: () => void } | null>(null);
   const onVideoEndRef = useRef(onVideoEnd);
-  onVideoEndRef.current = onVideoEnd;
+  useEffect(() => {
+    onVideoEndRef.current = onVideoEnd;
+  }, [onVideoEnd]);
 
   const createPlayer = useCallback(() => {
     if (!containerRef.current || !window.YT) return;

@@ -5,8 +5,6 @@ import { displayConfigRepository } from '../displayConfigRepository';
 describe('displayConfigRepository', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    // displayConfigViewはprismaMockに存在しないので手動で追加
-    (prismaMock as any).displayConfigView = { deleteMany: vi.fn() };
   });
 
   const tenantId = 1;
@@ -88,14 +86,14 @@ describe('displayConfigRepository', () => {
     it('既存設定がある場合はトランザクションで更新する', async () => {
       const existing = { id: 10, tenantId };
       prismaMock.displayConfig.findFirst.mockResolvedValue(existing);
-      (prismaMock as any).displayConfigView.deleteMany.mockResolvedValue({ count: 1 });
+      prismaMock.displayConfigView.deleteMany.mockResolvedValue({ count: 1 });
       const mockUpdated = { id: 10, tenantId, ...viewData };
       prismaMock.displayConfig.update.mockResolvedValue(mockUpdated);
 
       const result = await displayConfigRepository.upsert(tenantId, viewData);
 
       expect(prismaMock.$transaction).toHaveBeenCalledWith(expect.any(Function));
-      expect((prismaMock as any).displayConfigView.deleteMany).toHaveBeenCalledWith({
+      expect(prismaMock.displayConfigView.deleteMany).toHaveBeenCalledWith({
         where: { displayConfigId: 10 },
       });
       expect(prismaMock.displayConfig.update).toHaveBeenCalledWith({

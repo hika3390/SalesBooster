@@ -152,7 +152,7 @@ export function useDisplayData(config: DisplayConfig, currentDataTypeId?: string
       if (trendRes.ok) setTrendData(await trendRes.json());
       if (reportRes.ok) setReportData(await reportRes.json());
       if (rankingRes.ok) setRankingData(await rankingRes.json());
-    } catch (e) {
+    } catch {
       if (signal.aborted) return;
       setError('データの取得に失敗しました。ネットワーク接続を確認してください。');
     } finally {

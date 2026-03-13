@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Image from 'next/image';
-import { RankingBoardData, RankingColumn, RankingMember } from '@/types';
+import { RankingBoardData, RankingMember } from '@/types';
 
 interface RankingBoardProps {
   data: RankingBoardData;
@@ -68,10 +68,6 @@ const ZONE_LABELS: Record<string, { label: string; color: string; darkColor: str
 export default function RankingBoard({ data, darkMode = false }: RankingBoardProps) {
   // 最大順位数を算出
   const maxRank = Math.max(...data.columns.map((col) => col.members.length), 0);
-
-  // ゾーン境界インデックスを計算
-  const top20Index = Math.ceil(maxRank * 0.2);
-  const low20Index = Math.floor(maxRank * 0.8);
 
   const rankLabels: string[] = [];
   for (let i = 0; i < maxRank; i++) {

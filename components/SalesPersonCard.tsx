@@ -16,7 +16,7 @@ interface SalesPersonCardProps {
   unit?: string;
 }
 
-export default function SalesPersonCard({ person, index, top20Index, low20Index, columnWidth, changed, darkMode = false, unit = DEFAULT_UNIT }: SalesPersonCardProps) {
+export default function SalesPersonCard({ person, index, top20Index, columnWidth, changed, darkMode = false, unit = DEFAULT_UNIT }: SalesPersonCardProps) {
   // バッジの取得（TOP 20%で達成率100%以上）
   const getBadge = (index: number, person: SalesPerson) => {
     if (index < top20Index && person.achievement >= 100) {

@@ -10,7 +10,7 @@ vi.mock('../../repositories/memberRepository');
 vi.mock('../../repositories/targetRepository');
 vi.mock('../../repositories/dataTypeRepository');
 vi.mock('@/lib/currency', () => ({
-  convertByUnit: vi.fn((value: number, _unit: string) => value),
+  convertByUnit: vi.fn((value: number) => value),
 }));
 
 const mockedSalesRepo = vi.mocked(salesRecordRepository);

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, use } from 'react';
+import Link from 'next/link';
 import { signIn } from 'next-auth/react';
 
 export default function TenantLoginPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -130,12 +131,12 @@ export default function TenantLoginPage({ params }: { params: Promise<{ slug: st
               </svg>
               <p className="text-gray-600 font-medium mb-1">会社アカウントが見つかりません</p>
               <p className="text-gray-400 text-sm mb-4">URLを確認するか、会社アカウントを入力してログインしてください</p>
-              <a
+              <Link
                 href="/login"
                 className="text-blue-600 hover:text-blue-700 text-sm font-medium transition-colors"
               >
                 ログインページへ
-              </a>
+              </Link>
             </div>
           ) : (
             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">

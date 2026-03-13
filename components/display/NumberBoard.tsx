@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { SalesPerson, NumberBoardMetric, NUMBER_BOARD_METRIC_LABELS, DataTypeInfo } from '@/types';
 import { NumberBoardMetricConfig } from '@/types/display';
 import { formatNumber } from '@/lib/currency';
@@ -40,34 +40,37 @@ function useCountUp(target: number, duration: number = 1500): number {
   const startRef = useRef<number | null>(null);
   const startValueRef = useRef(0);
   const frameRef = useRef<number | null>(null);
+  const animateRef = useRef<((timestamp: number) => void) | undefined>(undefined);
 
-  const animate = useCallback((timestamp: number) => {
-    if (startRef.current === null) {
-      startRef.current = timestamp;
-    }
-    const elapsed = timestamp - startRef.current;
-    const progress = Math.min(elapsed / duration, 1);
-    // easeOutExpo for dramatic effect
-    const eased = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
-    const value = startValueRef.current + (target - startValueRef.current) * eased;
-    setCurrent(value);
+  useEffect(() => {
+    animateRef.current = (timestamp: number) => {
+      if (startRef.current === null) {
+        startRef.current = timestamp;
+      }
+      const elapsed = timestamp - startRef.current;
+      const progress = Math.min(elapsed / duration, 1);
+      // easeOutExpo for dramatic effect
+      const eased = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
+      const value = startValueRef.current + (target - startValueRef.current) * eased;
+      setCurrent(value);
 
-    if (progress < 1) {
-      frameRef.current = requestAnimationFrame(animate);
-    }
+      if (progress < 1) {
+        frameRef.current = requestAnimationFrame((ts) => animateRef.current?.(ts));
+      }
+    };
   }, [target, duration]);
 
   useEffect(() => {
     startRef.current = null;
     startValueRef.current = 0;
-    frameRef.current = requestAnimationFrame(animate);
+    frameRef.current = requestAnimationFrame((ts) => animateRef.current?.(ts));
 
     return () => {
       if (frameRef.current !== null) {
         cancelAnimationFrame(frameRef.current);
       }
     };
-  }, [target, animate]);
+  }, [target]);
 
   return current;
 }

@@ -27,6 +27,11 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // External requests: let the browser handle them directly
+  if (!event.request.url.startsWith(self.location.origin)) {
+    return;
+  }
+
   // Navigation and static assets: network first, fallback to cache
   event.respondWith(
     fetch(event.request)

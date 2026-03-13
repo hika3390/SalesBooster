@@ -80,6 +80,7 @@ export const displayService = {
       companyLogoUrl: record.companyLogoUrl,
       teamName: record.teamName,
       darkMode: record.darkMode,
+      breakingNewsMessage: record.breakingNewsMessage ?? '',
       views,
     };
   },
@@ -94,6 +95,7 @@ export const displayService = {
       companyLogoUrl: config.companyLogoUrl,
       teamName: config.teamName,
       darkMode: config.darkMode,
+      breakingNewsMessage: config.breakingNewsMessage ?? '',
       views: config.views.map((v) => ({
         viewType: v.viewType as DisplayViewType,
         enabled: v.enabled,

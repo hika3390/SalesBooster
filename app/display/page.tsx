@@ -10,6 +10,8 @@ import { useAutoHideCursor } from '@/hooks/useAutoHideCursor';
 import DisplayMiniHeader from '@/components/display/DisplayMiniHeader';
 import DisplayViewRenderer from '@/components/display/DisplayViewRenderer';
 import CompanyOverlay from '@/components/display/CompanyOverlay';
+import BreakingNewsOverlay from '@/components/display/BreakingNewsOverlay';
+import { useBreakingNews } from '@/hooks/useBreakingNews';
 
 export default function DisplayPage() {
   const router = useRouter();
@@ -64,6 +66,12 @@ function DisplayContent({
 }) {
   const { currentView, currentViewTitle, currentViewIndex, currentViewConfig, enabledViews, progress, isYouTubeView, goToNext, goToPrev } = useDisplayMode(config);
   const { salesData, recordCount, cumulativeSalesData, trendData, reportData, rankingData, loading, error, dataTypes } = useDisplayData(config, currentViewConfig?.dataTypeId);
+  const { current: breakingNewsEntry, dismiss: dismissBreakingNews } = useBreakingNews({
+    enabled: true,
+    pollingInterval: config.dataRefreshInterval,
+    memberId: config.filter?.memberId,
+    groupId: config.filter?.groupId,
+  });
 
   useAutoHideCursor(true, 3000);
 
@@ -199,6 +207,15 @@ function DisplayContent({
       </main>
 
       <CompanyOverlay companyLogoUrl={config.companyLogoUrl} teamName={config.teamName} />
+
+      {/* 速報オーバーレイ */}
+      {breakingNewsEntry && (
+        <BreakingNewsOverlay
+          entry={breakingNewsEntry}
+          message={config.breakingNewsMessage}
+          onDismiss={dismissBreakingNews}
+        />
+      )}
     </div>
   );
 }

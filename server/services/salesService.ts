@@ -428,6 +428,29 @@ export const salesService = {
     return convertByUnit(Math.round(totalSales / users.length), unit);
   },
 
+  /** 速報検出用: 今月のレコード総数 + 最新N件（dataType別unit変換済み）を返す */
+  async getBreakingNewsData(tenantId: number, startDate: Date, endDate: Date, limit: number, userIds?: string[]) {
+    const [recordCount, latestRecords] = await Promise.all([
+      salesRecordRepository.countByPeriod(startDate, endDate, tenantId, userIds),
+      salesRecordRepository.findLatest(tenantId, limit, startDate, endDate, userIds),
+    ]);
+
+    const latest = latestRecords.map((r) => {
+      const unit = r.dataType?.unit || 'MAN_YEN';
+      return {
+        id: r.id,
+        memberName: r.user.name || '',
+        memberImageUrl: r.user.imageUrl || undefined,
+        value: convertByUnit(r.value, unit),
+        unit,
+        dataTypeName: r.dataType?.name || '',
+        createdAt: r.createdAt.toISOString(),
+      };
+    });
+
+    return { recordCount, latest };
+  },
+
   async importSalesRecords(tenantId: number, records: { userId: string; value: number; recordDate: string; description?: string; customFields?: Record<string, string>; dataTypeId?: number }[]) {
     const data = records.map((r) => ({
       userId: r.userId,

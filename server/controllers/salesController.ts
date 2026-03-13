@@ -348,6 +348,27 @@ export const salesController = {
     }
   },
 
+  /** 速報検出用: 今月のレコード総数 + 最新N件を返す */
+  async getBreakingNewsData(request: NextRequest) {
+    const tenantId = await getTenantId(request);
+    const { searchParams } = new URL(request.url);
+
+    const now = new Date();
+    const startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+    const endDate = endOfCurrentMonth(now);
+
+    const limit = Math.min(Number(searchParams.get('limit')) || 10, 50);
+
+    try {
+      const userIds = await resolveUserIds(tenantId, searchParams, startDate, endDate);
+      const data = await salesService.getBreakingNewsData(tenantId, startDate, endDate, limit, userIds);
+      return ApiResponse.success(data);
+    } catch (error) {
+      console.error('Failed to fetch breaking news data:', error);
+      return ApiResponse.serverError();
+    }
+  },
+
   async deleteSalesRecord(request: NextRequest, id: number) {
     try {
       await requireActiveLicense(request);

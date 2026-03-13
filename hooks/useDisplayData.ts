@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { DisplayConfig, DisplayViewConfig, PeriodMode } from '@/types/display';
+import { DisplayConfig, DisplayViewConfig, PeriodMode, DATA_REFRESH_INTERVAL_MS } from '@/types/display';
 import { SalesPerson, ReportData, RankingBoardData, TrendData, DataTypeInfo } from '@/types';
 import { useSalesPolling } from './useSalesPolling';
 import { DEFAULT_UNIT } from '@/types/units';
@@ -170,7 +170,7 @@ export function useDisplayData(config: DisplayConfig, currentDataTypeId?: string
   }, [fetchAllData]);
 
   // ポーリング更新
-  useSalesPolling({ onUpdate: fetchAllData, intervalMs: config.dataRefreshInterval });
+  useSalesPolling({ onUpdate: fetchAllData, intervalMs: DATA_REFRESH_INTERVAL_MS[config.dataRefreshInterval] });
 
   return {
     salesData,

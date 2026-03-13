@@ -106,6 +106,38 @@ export const salesRecordRepository = {
     return prisma.salesRecord.create({ data: { ...data, tenantId } });
   },
 
+  /** 期間内のレコード総数を取得 */
+  countByPeriod(startDate: Date, endDate: Date, tenantId: number, userIds?: string[]) {
+    return prisma.salesRecord.count({
+      where: {
+        tenantId,
+        recordDate: { gte: startDate, lte: endDate },
+        ...(userIds ? { userId: { in: userIds } } : {}),
+      },
+    });
+  },
+
+  /** 最新N件のレコードを取得（createdAt降順） */
+  findLatest(tenantId: number, limit: number, startDate?: Date, endDate?: Date, userIds?: string[]) {
+    return prisma.salesRecord.findMany({
+      where: {
+        tenantId,
+        ...(startDate || endDate
+          ? {
+              recordDate: {
+                ...(startDate ? { gte: startDate } : {}),
+                ...(endDate ? { lte: endDate } : {}),
+              },
+            }
+          : {}),
+        ...(userIds ? { userId: { in: userIds } } : {}),
+      },
+      include: { user: { include: { department: true } }, dataType: true },
+      orderBy: { createdAt: 'desc' },
+      take: limit,
+    });
+  },
+
   createMany(tenantId: number, data: { userId: string; value: number; description?: string; recordDate: Date; customFields?: Record<string, string>; dataTypeId?: number }[]) {
     return prisma.salesRecord.createMany({
       data: data.map((d) => ({ ...d, tenantId })),

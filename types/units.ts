@@ -32,5 +32,18 @@ export const UNIT_OPTIONS = Object.entries(UNIT_LABELS).map(([value, label]) => 
   label,
 }));
 
+/** 単位ごとのDB保存時の乗数（入力値 × multiplier = DB保存値） */
+export const UNIT_MULTIPLIERS: Record<UnitValue, number> = {
+  MAN_YEN: 10_000,
+  SEN_YEN: 1_000,
+  YEN: 1,
+  KEN: 1,
+  HOUR: 1,
+  MIN: 1,
+  PIECE: 1,
+  TIME: 1,
+  PERSON: 1,
+};
+
 /** デフォルト単位 */
 export const DEFAULT_UNIT: UnitValue = 'MAN_YEN';

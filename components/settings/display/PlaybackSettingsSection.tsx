@@ -1,6 +1,6 @@
 'use client';
 
-import { DisplayConfig, TransitionType } from '@/types/display';
+import { DisplayConfig, TransitionType, DataRefreshInterval, DATA_REFRESH_INTERVAL_OPTIONS } from '@/types/display';
 import Select from '@/components/common/Select';
 
 interface PlaybackSettingsSectionProps {
@@ -34,14 +34,9 @@ export default function PlaybackSettingsSection({ config, onConfigChange }: Play
             <div className="text-xs text-gray-500">売上データの自動更新間隔</div>
           </div>
           <Select
-            value={String(config.dataRefreshInterval)}
-            onChange={(v) => onConfigChange((prev) => ({ ...prev, dataRefreshInterval: Number(v) }))}
-            options={[
-              { value: '60000', label: '1分' },
-              { value: '300000', label: '5分' },
-              { value: '900000', label: '15分' },
-              { value: '1800000', label: '30分' },
-            ]}
+            value={config.dataRefreshInterval}
+            onChange={(v) => onConfigChange((prev) => ({ ...prev, dataRefreshInterval: v as DataRefreshInterval }))}
+            options={DATA_REFRESH_INTERVAL_OPTIONS}
             className="w-full sm:w-auto sm:min-w-[200px]"
           />
         </div>
@@ -76,6 +71,19 @@ export default function PlaybackSettingsSection({ config, onConfigChange }: Play
             />
             <div className="w-11 h-6 bg-gray-200 peer-focus:ring-2 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
           </label>
+        </div>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <div className="text-sm font-medium text-gray-700">速報メッセージ</div>
+            <div className="text-xs text-gray-500">新規データ入力時に速報動画と一緒に表示するメッセージ</div>
+          </div>
+          <input
+            type="text"
+            value={config.breakingNewsMessage}
+            onChange={(e) => onConfigChange((prev) => ({ ...prev, breakingNewsMessage: e.target.value }))}
+            placeholder="おめでとう！"
+            className="w-full sm:w-auto sm:min-w-[200px] rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+          />
         </div>
       </div>
     </div>

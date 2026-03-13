@@ -10,6 +10,8 @@ import type { CustomFieldDefinition, CustomFieldValues } from '@/types/customFie
 import type { DataTypeInfo } from '@/types';
 import { getValuePresets } from '@/lib/presets';
 import { getUnitLabel } from '@/lib/units';
+import { UNIT_MULTIPLIERS } from '@/types/units';
+import type { UnitValue } from '@/types/units';
 
 interface SalesInputModalProps {
   isOpen: boolean;
@@ -74,7 +76,10 @@ export default function SalesInputModal({ isOpen, onClose, onSubmit }: SalesInpu
   }, [isOpen]);
 
   const getSubmitValue = (): number => {
-    return parseInt(value) || 0;
+    const raw = parseInt(value) || 0;
+    const unit = selectedDataType?.unit as UnitValue | undefined;
+    const multiplier = unit ? (UNIT_MULTIPLIERS[unit] ?? 1) : 1;
+    return raw * multiplier;
   };
 
   const isValueEmpty = (): boolean => {

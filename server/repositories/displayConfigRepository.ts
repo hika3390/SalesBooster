@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma';
-import { DisplayTransition, DisplayViewType, DisplayPeriodMode } from '@prisma/client';
+import { DisplayTransition, DisplayViewType, DisplayPeriodMode, DataRefreshInterval } from '@prisma/client';
 
 export const displayConfigRepository = {
   async find(tenantId: number) {
@@ -11,13 +11,14 @@ export const displayConfigRepository = {
 
   async upsert(tenantId: number, data: {
     loop: boolean;
-    dataRefreshInterval: number;
+    dataRefreshInterval: DataRefreshInterval;
     filterGroupId: string;
     filterMemberId: string;
     transition: DisplayTransition;
     companyLogoUrl: string;
     teamName: string;
     darkMode: boolean;
+    breakingNewsMessage: string;
     views: {
       viewType: DisplayViewType;
       enabled: boolean;
@@ -49,6 +50,7 @@ export const displayConfigRepository = {
             companyLogoUrl: data.companyLogoUrl,
             teamName: data.teamName,
             darkMode: data.darkMode,
+            breakingNewsMessage: data.breakingNewsMessage,
             views: {
               create: data.views.map((v) => ({
                 viewType: v.viewType,
@@ -82,6 +84,7 @@ export const displayConfigRepository = {
         companyLogoUrl: data.companyLogoUrl,
         teamName: data.teamName,
         darkMode: data.darkMode,
+        breakingNewsMessage: data.breakingNewsMessage,
         views: {
           create: data.views.map((v) => ({
             viewType: v.viewType,

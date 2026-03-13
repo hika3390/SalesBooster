@@ -49,6 +49,15 @@ enum CustomSlideType {
   TEXT
 }
 
+enum DataRefreshInterval {
+  SECONDS_10
+  SECONDS_30
+  MINUTES_1
+  MINUTES_5
+  MINUTES_15
+  MINUTES_30
+}
+
 enum DisplayPeriodMode {
   YTD
   LAST_3M
@@ -367,7 +376,7 @@ model AuditLog {
 model DisplayConfig {
   id                  Int                  @id @default(autoincrement())
   loop                Boolean              @default(true)
-  dataRefreshInterval Int                  @default(60000)
+  dataRefreshInterval DataRefreshInterval  @default(SECONDS_10)
   filterGroupId       String               @default("")
   filterMemberId      String               @default("")
   filterDataTypeId    String               @default("")
@@ -375,6 +384,7 @@ model DisplayConfig {
   companyLogoUrl      String               @default("")
   teamName            String               @default("")
   darkMode            Boolean              @default(false)
+  breakingNewsMessage String               @default("")
   tenantId            Int
   tenant              Tenant               @relation(fields: [tenantId], references: [id])
   views               DisplayConfigView[]

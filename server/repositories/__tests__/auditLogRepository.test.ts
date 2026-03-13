@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
+import { AuditAction } from '@prisma/client';
 import { prismaMock } from '../../__mocks__/prisma';
 import { auditLogRepository } from '../auditLogRepository';
 
@@ -11,7 +12,14 @@ describe('auditLogRepository', () => {
 
   describe('findAll', () => {
     it('テナントIDで監査ログを取得する', async () => {
-      const mockLogs = [{ id: 1, tenantId, action: 'LOGIN', user: { name: 'User1', email: 'u@test.com' } }];
+      const mockLogs = [
+        {
+          id: 1,
+          tenantId,
+          action: 'LOGIN',
+          user: { name: 'User1', email: 'u@test.com' },
+        },
+      ];
       prismaMock.auditLog.findMany.mockResolvedValue(mockLogs);
 
       const result = await auditLogRepository.findAll(tenantId);
@@ -31,7 +39,12 @@ describe('auditLogRepository', () => {
       const endDate = new Date('2025-12-31');
       prismaMock.auditLog.findMany.mockResolvedValue([]);
 
-      await auditLogRepository.findAll(tenantId, { skip: 0, take: 10, startDate, endDate });
+      await auditLogRepository.findAll(tenantId, {
+        skip: 0,
+        take: 10,
+        startDate,
+        endDate,
+      });
 
       expect(prismaMock.auditLog.findMany).toHaveBeenCalledWith({
         where: { tenantId, createdAt: { gte: startDate, lte: endDate } },
@@ -49,7 +62,9 @@ describe('auditLogRepository', () => {
 
       const result = await auditLogRepository.count(tenantId);
 
-      expect(prismaMock.auditLog.count).toHaveBeenCalledWith({ where: { tenantId } });
+      expect(prismaMock.auditLog.count).toHaveBeenCalledWith({
+        where: { tenantId },
+      });
       expect(result).toBe(5);
     });
 
@@ -68,7 +83,12 @@ describe('auditLogRepository', () => {
 
   describe('create', () => {
     it('監査ログを作成する', async () => {
-      const data = { userId: 'user1', action: 'LOGIN' as const, tenantId, detail: 'ログイン' };
+      const data = {
+        userId: 'user1',
+        action: AuditAction.USER_LOGIN,
+        tenantId,
+        detail: 'ログイン',
+      };
       const mockCreated = { id: 1, ...data, createdAt: new Date() };
       prismaMock.auditLog.create.mockResolvedValue(mockCreated);
 

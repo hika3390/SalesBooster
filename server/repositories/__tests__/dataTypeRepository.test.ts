@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
+import { Unit } from '@prisma/client';
 import { prismaMock } from '../../__mocks__/prisma';
 import { dataTypeRepository } from '../dataTypeRepository';
 
@@ -69,7 +70,7 @@ describe('dataTypeRepository', () => {
 
   describe('create', () => {
     it('データタイプを作成する', async () => {
-      const data = { name: '件数', unit: 'KENSU' as const };
+      const data = { name: '件数', unit: Unit.KEN };
       const mockCreated = { id: 2, ...data, tenantId };
       prismaMock.dataType.create.mockResolvedValue(mockCreated);
 
@@ -121,14 +122,22 @@ describe('dataTypeRepository', () => {
       await dataTypeRepository.updateSortOrders(tenantId, items);
 
       expect(prismaMock.$transaction).toHaveBeenCalledWith(
-        expect.arrayContaining([expect.anything(), expect.anything()])
+        expect.arrayContaining([expect.anything(), expect.anything()]),
       );
     });
   });
 
   describe('createDefaultForTenant', () => {
     it('テナント用のデフォルトデータタイプを作成する', async () => {
-      const mockCreated = { id: 1, name: '売上', unit: 'MAN_YEN', isDefault: true, isActive: true, sortOrder: 0, tenantId };
+      const mockCreated = {
+        id: 1,
+        name: '売上',
+        unit: 'MAN_YEN',
+        isDefault: true,
+        isActive: true,
+        sortOrder: 0,
+        tenantId,
+      };
       prismaMock.dataType.create.mockResolvedValue(mockCreated);
 
       const result = await dataTypeRepository.createDefaultForTenant(tenantId);

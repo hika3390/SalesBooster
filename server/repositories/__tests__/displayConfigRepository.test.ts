@@ -1,12 +1,15 @@
 import { describe, it, expect, beforeEach } from 'vitest';
+import {
+  DataRefreshInterval,
+  DisplayTransition,
+  DisplayViewType,
+} from '@prisma/client';
 import { prismaMock } from '../../__mocks__/prisma';
 import { displayConfigRepository } from '../displayConfigRepository';
 
 describe('displayConfigRepository', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    // displayConfigViewはprismaMockに存在しないので手動で追加
-    (prismaMock as any).displayConfigView = { deleteMany: vi.fn() };
   });
 
   const tenantId = 1;
@@ -25,7 +28,9 @@ describe('displayConfigRepository', () => {
 
       expect(prismaMock.displayConfig.findFirst).toHaveBeenCalledWith({
         where: { tenantId },
-        include: { views: { orderBy: { order: 'asc' }, include: { customSlide: true } } },
+        include: {
+          views: { orderBy: { order: 'asc' }, include: { customSlide: true } },
+        },
       });
       expect(result).toEqual(mockConfig);
     });
@@ -42,17 +47,17 @@ describe('displayConfigRepository', () => {
   describe('upsert', () => {
     const viewData = {
       loop: true,
-      dataRefreshInterval: 'MIN_5' as const,
+      dataRefreshInterval: DataRefreshInterval.MINUTES_5,
       filterGroupId: '',
       filterMemberId: '',
-      transition: 'SLIDE' as const,
+      transition: DisplayTransition.SLIDE_LEFT,
       companyLogoUrl: '',
       teamName: 'Team A',
       darkMode: false,
       breakingNewsMessage: '',
       views: [
         {
-          viewType: 'RANKING' as const,
+          viewType: DisplayViewType.RECORD,
           enabled: true,
           duration: 10,
           order: 0,
@@ -68,7 +73,9 @@ describe('displayConfigRepository', () => {
 
       const result = await displayConfigRepository.upsert(tenantId, viewData);
 
-      expect(prismaMock.displayConfig.findFirst).toHaveBeenCalledWith({ where: { tenantId } });
+      expect(prismaMock.displayConfig.findFirst).toHaveBeenCalledWith({
+        where: { tenantId },
+      });
       expect(prismaMock.displayConfig.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
           tenantId,
@@ -76,11 +83,16 @@ describe('displayConfigRepository', () => {
           teamName: 'Team A',
           views: {
             create: expect.arrayContaining([
-              expect.objectContaining({ viewType: 'RANKING', enabled: true }),
+              expect.objectContaining({
+                viewType: DisplayViewType.RECORD,
+                enabled: true,
+              }),
             ]),
           },
         }),
-        include: { views: { orderBy: { order: 'asc' }, include: { customSlide: true } } },
+        include: {
+          views: { orderBy: { order: 'asc' }, include: { customSlide: true } },
+        },
       });
       expect(result).toEqual(mockCreated);
     });
@@ -88,14 +100,16 @@ describe('displayConfigRepository', () => {
     it('既存設定がある場合はトランザクションで更新する', async () => {
       const existing = { id: 10, tenantId };
       prismaMock.displayConfig.findFirst.mockResolvedValue(existing);
-      (prismaMock as any).displayConfigView.deleteMany.mockResolvedValue({ count: 1 });
+      prismaMock.displayConfigView.deleteMany.mockResolvedValue({ count: 1 });
       const mockUpdated = { id: 10, tenantId, ...viewData };
       prismaMock.displayConfig.update.mockResolvedValue(mockUpdated);
 
       const result = await displayConfigRepository.upsert(tenantId, viewData);
 
-      expect(prismaMock.$transaction).toHaveBeenCalledWith(expect.any(Function));
-      expect((prismaMock as any).displayConfigView.deleteMany).toHaveBeenCalledWith({
+      expect(prismaMock.$transaction).toHaveBeenCalledWith(
+        expect.any(Function),
+      );
+      expect(prismaMock.displayConfigView.deleteMany).toHaveBeenCalledWith({
         where: { displayConfigId: 10 },
       });
       expect(prismaMock.displayConfig.update).toHaveBeenCalledWith({
@@ -105,11 +119,16 @@ describe('displayConfigRepository', () => {
           teamName: 'Team A',
           views: {
             create: expect.arrayContaining([
-              expect.objectContaining({ viewType: 'RANKING', enabled: true }),
+              expect.objectContaining({
+                viewType: DisplayViewType.RECORD,
+                enabled: true,
+              }),
             ]),
           },
         }),
-        include: { views: { orderBy: { order: 'asc' }, include: { customSlide: true } } },
+        include: {
+          views: { orderBy: { order: 'asc' }, include: { customSlide: true } },
+        },
       });
       expect(result).toEqual(mockUpdated);
     });

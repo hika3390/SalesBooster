@@ -3,6 +3,7 @@ import { dataTypeService } from '../services/dataTypeService';
 import { auditLogService } from '../services/auditLogService';
 import { getTenantId, requireAdmin, requireActiveLicense } from '../lib/auth';
 import { ApiResponse } from '../lib/apiResponse';
+import type { Unit } from '@prisma/client';
 
 export const dataTypeController = {
   async getAll(request: NextRequest) {
@@ -35,7 +36,7 @@ export const dataTypeController = {
 
       const dataType = await dataTypeService.create(tenantId, {
         name,
-        unit: unit || '',
+        unit: (unit as Unit) || undefined,
         color: color || undefined,
         sortOrder: sortOrder ?? 0,
       });

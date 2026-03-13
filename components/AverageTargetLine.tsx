@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { DEFAULT_UNIT } from '@/constants/units';
+import { DEFAULT_UNIT, getUnitLabel } from '@/constants/units';
 
 export interface OverlayLine {
   value: number;
@@ -59,13 +59,13 @@ export default function AverageTargetLine({ averageTarget, maxSales, overlayLine
               {line.label}
             </div>
             <div className={`absolute left-2 top-1 text-xs font-bold ${colors.text} ${colors.bg} px-1`}>
-              {line.value}{unit}
+              {line.value}{getUnitLabel(unit)}
             </div>
             <div className={`absolute right-2 -top-3 text-xs ${colors.text} ${colors.bg} px-1 whitespace-nowrap`}>
               {line.label}
             </div>
             <div className={`absolute right-2 top-1 text-xs font-bold ${colors.text} ${colors.bg} px-1`}>
-              {line.value}{unit}
+              {line.value}{getUnitLabel(unit)}
             </div>
           </div>
         );

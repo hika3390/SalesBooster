@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import Select from '@/components/common/Select';
 import type { DataTypeInfo } from '@/types';
 import { Dialog } from '@/components/common/Dialog';
+import { getUnitLabel } from '@/constants/units';
 import IndividualTargetTable from './target/IndividualTargetTable';
 import GroupTargetTable from './target/GroupTargetTable';
 
@@ -200,7 +201,7 @@ export default function TargetSettings() {
   };
 
   const selectedDataType = dataTypes.find((dt) => String(dt.id) === selectedDataTypeId);
-  const unitLabel = selectedDataType?.unit || '';
+  const unitLabel = selectedDataType ? getUnitLabel(selectedDataType.unit) : '';
 
   const yearOptions = [];
   const currentYear = new Date().getFullYear();

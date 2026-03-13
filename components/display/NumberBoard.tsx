@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { SalesPerson, NumberBoardMetric, NUMBER_BOARD_METRIC_LABELS, DataTypeInfo } from '@/types';
 import { NumberBoardMetricConfig } from '@/types/display';
 import { formatNumber } from '@/lib/currency';
-import { DEFAULT_UNIT } from '@/constants/units';
+import { DEFAULT_UNIT, getUnitLabel } from '@/constants/units';
 
 interface NumberBoardProps {
   salesData: SalesPerson[];
@@ -110,13 +110,14 @@ function resolveMetricUnit(
 }
 
 function computeMetric(metric: NumberBoardMetric, salesData: SalesPerson[], recordCount: number, unit: string): MetricValue {
+  const unitLabel = getUnitLabel(unit);
   switch (metric) {
     case 'TOTAL_SALES': {
       const total = salesData.reduce((sum, p) => sum + p.sales, 0);
       return {
         label: NUMBER_BOARD_METRIC_LABELS.TOTAL_SALES,
         value: total,
-        suffix: unit,
+        suffix: unitLabel,
         format: (n: number) => formatNumber(Math.round(n)),
       };
     }
@@ -143,7 +144,7 @@ function computeMetric(metric: NumberBoardMetric, salesData: SalesPerson[], reco
       return {
         label: NUMBER_BOARD_METRIC_LABELS.TEAM_TARGET,
         value: totalTarget,
-        suffix: unit,
+        suffix: unitLabel,
         format: (n: number) => formatNumber(Math.round(n)),
       };
     }

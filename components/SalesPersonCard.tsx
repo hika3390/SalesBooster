@@ -2,7 +2,7 @@
 
 import { SalesPerson } from '@/types';
 import { formatNumber } from '@/lib/currency';
-import { DEFAULT_UNIT } from '@/constants/units';
+import { DEFAULT_UNIT, getUnitLabel } from '@/constants/units';
 
 interface SalesPersonCardProps {
   person: SalesPerson;
@@ -78,7 +78,7 @@ export default function SalesPersonCard({ person, index, top20Index, low20Index,
       {/* 実績金額・達成率 */}
       <div className={`text-center py-2 border-b ${darkMode ? 'border-gray-600' : 'border-gray-200'}${changed ? ' animate-card-flash' : ''}`}>
         <div className={`text-base font-bold ${darkMode ? 'text-gray-100' : 'text-gray-800'}${changed ? ' animate-amount-flash' : ''}`}>
-          {formatNumber(person.sales)}{unit}
+          {formatNumber(person.sales)}{getUnitLabel(unit)}
         </div>
         <div
           className={`text-sm font-bold mt-1 ${
@@ -97,7 +97,7 @@ export default function SalesPersonCard({ person, index, top20Index, low20Index,
       <div className={`text-center py-2 border-b ${darkMode ? 'border-gray-600' : 'border-gray-200'}`}>
         <div className={`text-[9px] mb-1 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>目標</div>
         <div className={`text-[11px] font-semibold ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-          {formatNumber(person.target)}{unit}
+          {formatNumber(person.target)}{getUnitLabel(unit)}
         </div>
       </div>
     </div>

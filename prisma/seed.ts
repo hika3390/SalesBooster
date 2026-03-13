@@ -186,7 +186,7 @@ async function main() {
     create: {
       id: 1,
       name: '売上',
-      unit: '万円',
+      unit: 'MAN_YEN',
       color: '#3B82F6',
       sortOrder: 1,
       isActive: true,

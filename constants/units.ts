@@ -1,18 +1,41 @@
-/** データ種類で選択可能な単位の一覧 */
-export const UNIT_OPTIONS = [
-  { value: '万円', label: '万円' },
-  { value: '千円', label: '千円' },
-  { value: '円', label: '円' },
-  { value: '件', label: '件' },
-  { value: '時間', label: '時間' },
-  { value: '分', label: '分' },
-  { value: '個', label: '個' },
-  { value: '回', label: '回' },
-  { value: '人', label: '人' },
-] as const;
+/** Unit enum のキー（Prisma の Unit enum と一致） */
+export const Unit = {
+  MAN_YEN: 'MAN_YEN',
+  SEN_YEN: 'SEN_YEN',
+  YEN: 'YEN',
+  KEN: 'KEN',
+  HOUR: 'HOUR',
+  MIN: 'MIN',
+  PIECE: 'PIECE',
+  TIME: 'TIME',
+  PERSON: 'PERSON',
+} as const;
 
-/** 単位の値のみの型 */
-export type UnitValue = (typeof UNIT_OPTIONS)[number]['value'];
+export type UnitValue = (typeof Unit)[keyof typeof Unit];
+
+/** enum キー → 表示ラベル */
+export const UNIT_LABELS: Record<UnitValue, string> = {
+  MAN_YEN: '万円',
+  SEN_YEN: '千円',
+  YEN: '円',
+  KEN: '件',
+  HOUR: '時間',
+  MIN: '分',
+  PIECE: '個',
+  TIME: '回',
+  PERSON: '人',
+};
+
+/** データ種類で選択可能な単位の一覧 */
+export const UNIT_OPTIONS = Object.entries(UNIT_LABELS).map(([value, label]) => ({
+  value: value as UnitValue,
+  label,
+}));
 
 /** デフォルト単位 */
-export const DEFAULT_UNIT: UnitValue = '万円';
+export const DEFAULT_UNIT: UnitValue = 'MAN_YEN';
+
+/** enum キーから表示ラベルを取得 */
+export function getUnitLabel(unit: UnitValue | string): string {
+  return UNIT_LABELS[unit as UnitValue] ?? unit;
+}

@@ -1,3 +1,5 @@
+import type { UnitValue } from '@/constants/units';
+
 export interface SalesPerson {
   rank: number;
   name: string;
@@ -90,7 +92,7 @@ export const AUDIT_ACTION_LABELS: Record<string, string> = {
 export interface DataTypeInfo {
   id: number;
   name: string;
-  unit: string;
+  unit: UnitValue;
   color?: string | null;
   sortOrder: number;
   isActive: boolean;

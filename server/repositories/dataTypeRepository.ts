@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma';
+import type { Unit } from '@prisma/client';
 
 export const dataTypeRepository = {
   findAll(tenantId: number) {
@@ -27,13 +28,13 @@ export const dataTypeRepository = {
     });
   },
 
-  create(tenantId: number, data: { name: string; unit?: string; color?: string; sortOrder?: number; isDefault?: boolean }) {
+  create(tenantId: number, data: { name: string; unit?: Unit; color?: string; sortOrder?: number; isDefault?: boolean }) {
     return prisma.dataType.create({
       data: { ...data, tenantId },
     });
   },
 
-  update(id: number, tenantId: number, data: { name?: string; unit?: string; color?: string; sortOrder?: number; isActive?: boolean }) {
+  update(id: number, tenantId: number, data: { name?: string; unit?: Unit; color?: string; sortOrder?: number; isActive?: boolean }) {
     return prisma.dataType.updateMany({
       where: { id, tenantId },
       data,
@@ -61,7 +62,7 @@ export const dataTypeRepository = {
     return prisma.dataType.create({
       data: {
         name: '売上',
-        unit: '円',
+        unit: 'MAN_YEN',
         isDefault: true,
         isActive: true,
         sortOrder: 0,

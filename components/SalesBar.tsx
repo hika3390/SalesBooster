@@ -2,7 +2,7 @@
 
 import { SalesPerson } from '@/types';
 import { formatNumber } from '@/lib/currency';
-import { DEFAULT_UNIT } from '@/constants/units';
+import { DEFAULT_UNIT, getUnitLabel } from '@/constants/units';
 
 interface SalesBarProps {
   person: SalesPerson;
@@ -81,7 +81,7 @@ export default function SalesBar({ person, index, maxSales, top20Index, low20Ind
                 transition: 'box-shadow 0.5s ease',
               }}
             >
-              {formatNumber(person.sales)}{unit}
+              {formatNumber(person.sales)}{getUnitLabel(unit)}
             </div>
           </div>
 

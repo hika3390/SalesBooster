@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { UNIT_OPTIONS, DEFAULT_UNIT } from '@/constants/units';
+import { UNIT_OPTIONS, DEFAULT_UNIT, getUnitLabel } from '@/constants/units';
 
 interface DataTypeInput {
   name: string;
@@ -10,9 +10,9 @@ interface DataTypeInput {
 }
 
 const DEFAULT_SUGGESTIONS = [
-  { name: '売上', unit: '万円' },
-  { name: '粗利', unit: '万円' },
-  { name: '契約件数', unit: '件' },
+  { name: '売上', unit: 'MAN_YEN' as const },
+  { name: '粗利', unit: 'MAN_YEN' as const },
+  { name: '契約件数', unit: 'KEN' as const },
 ];
 
 export default function StepDataTypes() {
@@ -56,7 +56,7 @@ export default function StepDataTypes() {
       const res = await fetch('/api/data-types', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: dt.name.trim(), unit: dt.unit.trim() || undefined }),
+        body: JSON.stringify({ name: dt.name.trim(), unit: dt.unit || undefined }),
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
@@ -127,7 +127,7 @@ export default function StepDataTypes() {
                   : 'bg-white text-gray-700 border-gray-300 hover:border-blue-400 hover:text-blue-600'
               }`}
             >
-              {s.name}（{s.unit}）
+              {s.name}（{getUnitLabel(s.unit)}）
             </button>
           );
         })}

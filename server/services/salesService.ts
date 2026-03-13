@@ -8,15 +8,15 @@ import { convertByUnit } from '@/lib/currency';
 type UserWithDepartment = Awaited<ReturnType<typeof memberRepository.findAll>>[number];
 type SalesRecordWithUser = Awaited<ReturnType<typeof salesRecordRepository.findByPeriod>>[number];
 
-/** dataTypeIdからunitを取得（未指定や見つからない場合は'万円'）- 同一IDは1度だけDB問い合わせ */
+/** dataTypeIdからunitを取得（未指定や見つからない場合は'MAN_YEN'）- 同一IDは1度だけDB問い合わせ */
 const unitCache = new Map<string, Promise<string>>();
 function resolveUnit(tenantId: number, dataTypeId?: number): Promise<string> {
-  if (!dataTypeId) return Promise.resolve('万円');
+  if (!dataTypeId) return Promise.resolve('MAN_YEN');
   const key = `${tenantId}:${dataTypeId}`;
   const cached = unitCache.get(key);
   if (cached) return cached;
   const promise = dataTypeRepository.findById(dataTypeId, tenantId)
-    .then((dt) => dt?.unit || '万円')
+    .then((dt) => dt?.unit || 'MAN_YEN')
     .finally(() => { unitCache.delete(key); });
   unitCache.set(key, promise);
   return promise;
@@ -71,7 +71,7 @@ function buildSalesPeople(
   users: UserWithDepartment[],
   salesMap: Map<string, number>,
   targetMap: Map<string, number>,
-  unit: string = '万円',
+  unit: string = 'MAN_YEN',
 ): SalesPerson[] {
   const salesPeople: SalesPerson[] = users.map((user) => {
     const salesRaw = salesMap.get(user.id) || 0;

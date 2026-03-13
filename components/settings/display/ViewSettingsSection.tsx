@@ -5,6 +5,7 @@ import { DisplayConfig, DisplayViewConfig, CustomSlideData, NumberBoardMetricCon
 import { VIEW_TYPE_LABELS, NumberBoardMetric, NUMBER_BOARD_METRIC_LABELS } from '@/types';
 import Button from '@/components/common/Button';
 import { extractYouTubeId } from '@/lib/youtube';
+import { getUnitLabel } from '@/constants/units';
 
 const ALL_METRICS: NumberBoardMetric[] = ['TOTAL_SALES', 'TOTAL_COUNT', 'AVG_ACHIEVEMENT', 'TEAM_TARGET'];
 
@@ -183,7 +184,7 @@ export default function ViewSettingsSection({
         >
           <option value="">デフォルト</option>
           {dataTypes.map((dt) => (
-            <option key={dt.id} value={String(dt.id)}>{dt.name}（{dt.unit}）</option>
+            <option key={dt.id} value={String(dt.id)}>{dt.name}（{getUnitLabel(dt.unit)}）</option>
           ))}
         </select>
       </div>
@@ -220,7 +221,7 @@ export default function ViewSettingsSection({
                 >
                   <option value="">デフォルト</option>
                   {dataTypes.map((dt) => (
-                    <option key={dt.id} value={String(dt.id)}>{dt.name}（{dt.unit}）</option>
+                    <option key={dt.id} value={String(dt.id)}>{dt.name}（{getUnitLabel(dt.unit)}）</option>
                   ))}
                 </select>
               )}

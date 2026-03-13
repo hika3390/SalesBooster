@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Dialog } from '@/components/common/Dialog';
-import { UNIT_OPTIONS } from '@/constants/units';
+import { UNIT_OPTIONS, DEFAULT_UNIT, getUnitLabel } from '@/constants/units';
+import type { UnitValue } from '@/constants/units';
 import type { DataTypeInfo } from '@/types';
 
 const DEFAULT_COLORS = [
@@ -118,7 +119,7 @@ export default function DataTypeSettings() {
                       </div>
                       {dt.unit && (
                         <div className="mt-0.5">
-                          <span className="text-xs text-gray-400">単位: {dt.unit}</span>
+                          <span className="text-xs text-gray-400">単位: {getUnitLabel(dt.unit)}</span>
                         </div>
                       )}
                     </div>
@@ -202,7 +203,7 @@ interface DataTypeFormModalProps {
 function DataTypeFormModal({ isOpen, onClose, onSaved, dataType }: DataTypeFormModalProps) {
   const isEdit = !!dataType;
   const [name, setName] = useState('');
-  const [unit, setUnit] = useState('');
+  const [unit, setUnit] = useState(DEFAULT_UNIT);
   const [color, setColor] = useState(DEFAULT_COLORS[0]);
   const [submitting, setSubmitting] = useState(false);
 
@@ -214,7 +215,7 @@ function DataTypeFormModal({ isOpen, onClose, onSaved, dataType }: DataTypeFormM
         setColor(dataType.color || DEFAULT_COLORS[0]);
       } else {
         setName('');
-        setUnit('');
+        setUnit(DEFAULT_UNIT);
         setColor(DEFAULT_COLORS[Math.floor(Math.random() * DEFAULT_COLORS.length)]);
       }
     }
@@ -233,7 +234,7 @@ function DataTypeFormModal({ isOpen, onClose, onSaved, dataType }: DataTypeFormM
       const res = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: name.trim(), unit: unit.trim(), color }),
+        body: JSON.stringify({ name: name.trim(), unit, color }),
       });
 
       if (res.ok) {
@@ -278,7 +279,7 @@ function DataTypeFormModal({ isOpen, onClose, onSaved, dataType }: DataTypeFormM
             <label className="block text-sm font-medium text-gray-700 mb-1">単位</label>
             <select
               value={unit}
-              onChange={(e) => setUnit(e.target.value)}
+              onChange={(e) => setUnit(e.target.value as UnitValue)}
               className="w-full border border-gray-300 rounded px-3 py-2 text-sm bg-white"
             >
               {UNIT_OPTIONS.map((opt) => (

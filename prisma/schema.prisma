@@ -69,6 +69,18 @@ enum PlanType {
   ENTERPRISE
 }
 
+enum Unit {
+  MAN_YEN
+  SEN_YEN
+  YEN
+  KEN
+  HOUR
+  MIN
+  PIECE
+  TIME
+  PERSON
+}
+
 enum AuditAction {
   USER_LOGIN
   USER_LOGOUT
@@ -298,7 +310,7 @@ model GroupTarget {
 model DataType {
   id           Int            @id @default(autoincrement())
   name         String
-  unit         String         @default("")
+  unit         Unit           @default(MAN_YEN)
   color        String?
   sortOrder    Int            @default(0)
   isActive     Boolean        @default(true)

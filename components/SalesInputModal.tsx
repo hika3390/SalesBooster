@@ -9,6 +9,7 @@ import CustomFieldsRenderer from './sales/CustomFieldsRenderer';
 import type { CustomFieldDefinition, CustomFieldValues } from '@/types/customField';
 import type { DataTypeInfo } from '@/types';
 import { getValuePresets } from '@/lib/presets';
+import { getUnitLabel } from '@/constants/units';
 
 interface SalesInputModalProps {
   isOpen: boolean;
@@ -172,7 +173,7 @@ export default function SalesInputModal({ isOpen, onClose, onSubmit }: SalesInpu
               placeholder=""
             />
             {selectedDataType.unit && (
-              <span className="text-sm text-blue-600">{selectedDataType.unit}</span>
+              <span className="text-sm text-blue-600">{getUnitLabel(selectedDataType.unit)}</span>
             )}
           </div>
           <div className="flex flex-wrap gap-1.5 mt-2">

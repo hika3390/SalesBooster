@@ -9,7 +9,7 @@ import ContractBanner from './ContractBanner';
 import { COLUMN_WIDTH } from '../constants/chart';
 import { SalesPerson } from '@/types';
 import { formatNumber } from '@/lib/currency';
-import { DEFAULT_UNIT } from '@/constants/units';
+import { DEFAULT_UNIT, getUnitLabel } from '@/constants/units';
 
 interface SalesPerformanceProps {
   salesData: SalesPerson[];
@@ -109,13 +109,13 @@ export default function SalesPerformance({ salesData, recordCount, darkMode = fa
                   <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>■ 月間売上</div>
                   <div className={`text-lg font-bold mt-1 ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>
                     {formatNumber(maxSales)}
-                    <span className={`text-sm font-normal ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>{unit}</span>
+                    <span className={`text-sm font-normal ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>{getUnitLabel(unit)}</span>
                   </div>
                   <div className={`mt-3 pt-3 border-t ${darkMode ? 'border-gray-600' : 'border-gray-200'}`}>
                     <div className="text-xs text-blue-600">■ チーム計</div>
                     <div className="text-lg font-bold text-blue-700 mt-1">
                       {formatNumber(totalSales)}
-                      <span className="text-sm font-normal text-blue-500">{unit}</span>
+                      <span className="text-sm font-normal text-blue-500">{getUnitLabel(unit)}</span>
                     </div>
                   </div>
                   <div className={`mt-3 pt-3 border-t ${darkMode ? 'border-gray-600' : 'border-gray-200'}`}>
@@ -131,7 +131,7 @@ export default function SalesPerformance({ salesData, recordCount, darkMode = fa
                     <div className="text-xs text-orange-600">ノルマライン</div>
                     <div className="text-lg font-bold text-orange-600 mt-1">
                       {formatNumber(averageTarget)}
-                      <span className="text-sm font-normal text-orange-500">{unit}</span>
+                      <span className="text-sm font-normal text-orange-500">{getUnitLabel(unit)}</span>
                     </div>
                   </div>
                 )}
@@ -272,7 +272,7 @@ export default function SalesPerformance({ salesData, recordCount, darkMode = fa
               return (
                 <div key={person.name} className={`flex-1 text-center py-2${isChanged ? ' animate-card-flash' : ''}`} style={{ minWidth: `${columnWidth}px`, maxWidth: `${columnWidth}px` }}>
                   <div className={`text-base font-bold ${darkMode ? 'text-gray-100' : 'text-gray-800'}${isChanged ? ' animate-amount-flash' : ''}`}>
-                    {formatNumber(person.sales)}{unit}
+                    {formatNumber(person.sales)}{getUnitLabel(unit)}
                   </div>
                   <div className={`text-sm font-bold mt-1 ${person.achievement >= 100 ? 'text-red-600' : person.achievement >= 80 ? 'text-blue-600' : 'text-gray-600'}${isChanged ? ' animate-achievement-flash' : ''}`}>
                     {person.achievement}%
@@ -293,7 +293,7 @@ export default function SalesPerformance({ salesData, recordCount, darkMode = fa
           <div className="flex-1 flex px-1 gap-1">
             {salesData.map((person) => (
               <div key={person.name} className="flex-1 text-center py-2" style={{ minWidth: `${columnWidth}px`, maxWidth: `${columnWidth}px` }}>
-                <div className={`text-[11px] font-semibold ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>{formatNumber(person.target)}{unit}</div>
+                <div className={`text-[11px] font-semibold ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>{formatNumber(person.target)}{getUnitLabel(unit)}</div>
               </div>
             ))}
           </div>

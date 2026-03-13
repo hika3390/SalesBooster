@@ -6,9 +6,9 @@ export function toManyen(yen: number): number {
 /** 単位に応じて値を変換する */
 export function convertByUnit(value: number, unit: string): number {
   switch (unit) {
-    case '万円':
+    case 'MAN_YEN':
       return Math.floor(value / 10000);
-    case '千円':
+    case 'SEN_YEN':
       return Math.floor(value / 1000);
     default:
       return value;

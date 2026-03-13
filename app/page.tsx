@@ -17,7 +17,7 @@ import MobileRankingList from '@/components/mobile/MobileRankingList';
 import SetupWizard from '@/components/setup/SetupWizard';
 import type { OverlayLineType } from '@/components/FilterBar';
 import type { OverlayLine } from '@/components/AverageTargetLine';
-import { DEFAULT_UNIT } from '@/constants/units';
+import { DEFAULT_UNIT } from '@/types/units';
 
 const FETCH_DEBOUNCE_MS = 100;
 

@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Select from '@/components/common/Select';
 import SetupWizard from '@/components/setup/SetupWizard';
-import { UNIT_OPTIONS, DEFAULT_UNIT } from '@/constants/units';
+import { UNIT_OPTIONS, DEFAULT_UNIT } from '@/types/units';
 
 export default function SystemSettings() {
   const [showWizard, setShowWizard] = useState(false);

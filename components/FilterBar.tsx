@@ -8,7 +8,7 @@ import PeriodUnitToggle from './filter/PeriodUnitToggle';
 import PeriodNavigator, { PeriodSelection } from './filter/PeriodNavigator';
 import { ViewType, PeriodUnit } from '@/types';
 import type { DataTypeInfo } from '@/types';
-import { DEFAULT_UNIT } from '@/constants/units';
+import { DEFAULT_UNIT } from '@/types/units';
 
 export type OverlayLineType = 'norma' | 'prev_month' | 'prev_year';
 

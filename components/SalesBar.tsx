@@ -2,7 +2,7 @@
 
 import { SalesPerson } from '@/types';
 import { formatNumber } from '@/lib/currency';
-import { DEFAULT_UNIT } from '@/constants/units';
+import { DEFAULT_UNIT } from '@/types/units';
 import { getUnitLabel } from '@/lib/units';
 
 interface SalesBarProps {

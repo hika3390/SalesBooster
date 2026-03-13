@@ -6,10 +6,10 @@ import PerformanceLabels from './PerformanceLabels';
 import AverageTargetLine, { OverlayLine } from './AverageTargetLine';
 import SalesBar from './SalesBar';
 import ContractBanner from './ContractBanner';
-import { COLUMN_WIDTH } from '../constants/chart';
+import { COLUMN_WIDTH } from '@/types/chart';
 import { SalesPerson } from '@/types';
 import { formatNumber } from '@/lib/currency';
-import { DEFAULT_UNIT } from '@/constants/units';
+import { DEFAULT_UNIT } from '@/types/units';
 import { getUnitLabel } from '@/lib/units';
 
 interface SalesPerformanceProps {

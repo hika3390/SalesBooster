@@ -4,9 +4,9 @@ import React from 'react';
 import AverageTargetLine, { OverlayLine } from './AverageTargetLine';
 import SalesBar from './SalesBar';
 import SalesPersonCard from './SalesPersonCard';
-import { COLUMN_WIDTH } from '../constants/chart';
+import { COLUMN_WIDTH } from '@/types/chart';
 import { SalesPerson } from '@/types';
-import { DEFAULT_UNIT } from '@/constants/units';
+import { DEFAULT_UNIT } from '@/types/units';
 
 interface CumulativeChartProps {
   salesData: SalesPerson[];

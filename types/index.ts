@@ -1,4 +1,4 @@
-import type { UnitValue } from '@/constants/units';
+import type { UnitValue } from './units';
 
 export interface SalesPerson {
   rank: number;

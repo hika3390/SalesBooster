@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { SalesPerson, NumberBoardMetric, NUMBER_BOARD_METRIC_LABELS, DataTypeInfo } from '@/types';
 import { NumberBoardMetricConfig } from '@/types/display';
 import { formatNumber } from '@/lib/currency';
-import { DEFAULT_UNIT } from '@/constants/units';
+import { DEFAULT_UNIT } from '@/types/units';
 import { getUnitLabel } from '@/lib/units';
 
 interface NumberBoardProps {

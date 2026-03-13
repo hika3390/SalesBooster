@@ -4,7 +4,7 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { DisplayConfig, DisplayViewConfig, PeriodMode } from '@/types/display';
 import { SalesPerson, ReportData, RankingBoardData, TrendData, DataTypeInfo } from '@/types';
 import { useSalesPolling } from './useSalesPolling';
-import { DEFAULT_UNIT } from '@/constants/units';
+import { DEFAULT_UNIT } from '@/types/units';
 
 interface UseDisplayDataReturn {
   salesData: SalesPerson[];

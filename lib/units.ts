@@ -1,5 +1,5 @@
-import { UNIT_LABELS } from '@/constants/units';
-import type { UnitValue } from '@/constants/units';
+import { UNIT_LABELS } from '@/types/units';
+import type { UnitValue } from '@/types/units';
 
 /** enum キーから表示ラベルを取得 */
 export function getUnitLabel(unit: UnitValue | string): string {
